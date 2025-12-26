@@ -12,8 +12,8 @@ using WebApp.Data;
 namespace WebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251226190620_Initial")]
-    partial class Initial
+    [Migration("20251226204429_MigracionInicial")]
+    partial class MigracionInicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -278,6 +278,70 @@ namespace WebApp.Migrations
                     b.ToTable("Operadores", "operadores");
                 });
 
+            modelBuilder.Entity("WebApp.Models.OperadorRolOperador", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("FechaAsignacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("OperadorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RolOperadorId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RolOperadorId");
+
+                    b.HasIndex("OperadorId", "RolOperadorId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_OperadorRolesOperador_OperadorId_RolOperadorId");
+
+                    b.ToTable("OperadorRolesOperador", "operadores");
+                });
+
+            modelBuilder.Entity("WebApp.Models.RolOperador", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique()
+                        .HasDatabaseName("IX_RolesOperador_Nombre");
+
+                    b.ToTable("RolesOperador", "operadores");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -327,6 +391,35 @@ namespace WebApp.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("WebApp.Models.OperadorRolOperador", b =>
+                {
+                    b.HasOne("WebApp.Models.Operador", "Operador")
+                        .WithMany("OperadorRoles")
+                        .HasForeignKey("OperadorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApp.Models.RolOperador", "RolOperador")
+                        .WithMany("OperadorRoles")
+                        .HasForeignKey("RolOperadorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Operador");
+
+                    b.Navigation("RolOperador");
+                });
+
+            modelBuilder.Entity("WebApp.Models.Operador", b =>
+                {
+                    b.Navigation("OperadorRoles");
+                });
+
+            modelBuilder.Entity("WebApp.Models.RolOperador", b =>
+                {
+                    b.Navigation("OperadorRoles");
                 });
 #pragma warning restore 612, 618
         }

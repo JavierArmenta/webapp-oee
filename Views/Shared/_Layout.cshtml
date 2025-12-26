@@ -72,14 +72,43 @@
                 <div class="sidebar-section">
                     <ul class="nav nav-sidebar" data-nav-type="accordion">
 
+                        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                        {
+                            
+                        <li class="nav-item nav-item-submenu">
+                            <a href="#" class="nav-link"><i class="icon-fire"></i> <span>Adm Operadores</span></a>
+
+                            <ul class="nav nav-group-sub" data-submenu-title="Themes">
+                                <li class="nav-item"><a href="~/Operadores" class="nav-link ">Operadores</a></li>
+
+                            </ul>
+                            <ul class="nav nav-group-sub" data-submenu-title="Themes">
+                                <li class="nav-item"><a href="~/RolesOperador" class="nav-link ">Roles</a></li>
+
+                            </ul>
+                            
                         @if (SignInManager.IsSignedIn(User) && User.IsInRole("SuperAdmin"))
                         {
+                            <ul class="nav nav-group-sub" data-submenu-title="Themes">
+                                <li class="nav-item"><a href="~/Operadores/Lista" class="nav-link ">Lista Operadores</a></li>
 
-                        <li class="nav-item">
-                            <a href="~/Operadores/Index" class="nav-link"><i class="icon-fire"></i> <span>Operadores</span></a>
+                            </ul>
+                            <ul class="nav nav-group-sub" data-submenu-title="Themes">
+                                <li class="nav-item"><a href="~/RolesOperador/Lista" class="nav-link ">Lista Roles</a></li>
+
+                            </ul>
+                        }
+                       
+                            
+                            
+                        
+                        
 
                             
                         </li>
+
+
+
                         }
 
                         <li class="nav-item nav-item-submenu">

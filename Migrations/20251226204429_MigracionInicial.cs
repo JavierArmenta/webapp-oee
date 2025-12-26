@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace WebApp.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class MigracionInicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -78,6 +78,23 @@ namespace WebApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Operadores", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RolesOperador",
+                schema: "operadores",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Descripcion = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    Activo = table.Column<bool>(type: "boolean", nullable: false),
+                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RolesOperador", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -197,6 +214,36 @@ namespace WebApp.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "OperadorRolesOperador",
+                schema: "operadores",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    OperadorId = table.Column<int>(type: "integer", nullable: false),
+                    RolOperadorId = table.Column<int>(type: "integer", nullable: false),
+                    FechaAsignacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OperadorRolesOperador", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OperadorRolesOperador_Operadores_OperadorId",
+                        column: x => x.OperadorId,
+                        principalSchema: "operadores",
+                        principalTable: "Operadores",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OperadorRolesOperador_RolesOperador_RolOperadorId",
+                        column: x => x.RolOperadorId,
+                        principalSchema: "operadores",
+                        principalTable: "RolesOperador",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 schema: "authentication",
@@ -247,6 +294,26 @@ namespace WebApp.Migrations
                 table: "Operadores",
                 column: "NumeroEmpleado",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperadorRolesOperador_OperadorId_RolOperadorId",
+                schema: "operadores",
+                table: "OperadorRolesOperador",
+                columns: new[] { "OperadorId", "RolOperadorId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperadorRolesOperador_RolOperadorId",
+                schema: "operadores",
+                table: "OperadorRolesOperador",
+                column: "RolOperadorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolesOperador_Nombre",
+                schema: "operadores",
+                table: "RolesOperador",
+                column: "Nombre",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -273,7 +340,7 @@ namespace WebApp.Migrations
                 schema: "authentication");
 
             migrationBuilder.DropTable(
-                name: "Operadores",
+                name: "OperadorRolesOperador",
                 schema: "operadores");
 
             migrationBuilder.DropTable(
@@ -283,6 +350,14 @@ namespace WebApp.Migrations
             migrationBuilder.DropTable(
                 name: "AspNetUsers",
                 schema: "authentication");
+
+            migrationBuilder.DropTable(
+                name: "Operadores",
+                schema: "operadores");
+
+            migrationBuilder.DropTable(
+                name: "RolesOperador",
+                schema: "operadores");
         }
     }
 }

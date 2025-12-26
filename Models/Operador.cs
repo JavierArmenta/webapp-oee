@@ -35,5 +35,8 @@ namespace WebApp.Models
         // Propiedad calculada para nombre completo
         [NotMapped]
         public string NombreCompleto => $"{Nombre} {Apellido}";
+
+        // Relación muchos a muchos con RolesOperador
+        public ICollection<OperadorRolOperador> OperadorRoles { get; set; } = new List<OperadorRolOperador>();
     }
 }

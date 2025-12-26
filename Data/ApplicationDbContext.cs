@@ -14,12 +14,12 @@ namespace WebApp.Data
 
         // DbSet para Operadores
         public DbSet<Operador> Operadores { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            // Configurar el schema para la tabla de historial de migraciones
-            optionsBuilder.UseNpgsql(x => x.MigrationsHistoryTable("__EFMigrationsHistory", "authentication"));
-        }
+        
+        // DbSet para RolesOperador
+        public DbSet<RolOperador> RolesOperador { get; set; }
+        
+        // DbSet para la tabla intermedia
+        public DbSet<OperadorRolOperador> OperadorRolesOperador { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -69,7 +69,7 @@ namespace WebApp.Data
                 entity.ToTable("AspNetUserTokens", "authentication");
             });
 
-            // Configuración para Operadores en schema "produccion"
+            // Configuración para Operadores en schema "authentication"
             builder.Entity<Operador>(entity =>
             {
                 entity.ToTable("Operadores", "operadores");
@@ -80,6 +80,44 @@ namespace WebApp.Data
 
                 entity.Property(e => e.FechaCreacion)
                     .HasDefaultValueSql("NOW()");
+            });
+
+            // Configuración para RolesOperador en schema "authentication"
+            builder.Entity<RolOperador>(entity =>
+            {
+                entity.ToTable("RolesOperador", "operadores");
+                
+                entity.HasIndex(e => e.Nombre)
+                    .IsUnique()
+                    .HasDatabaseName("IX_RolesOperador_Nombre");
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("NOW()");
+            });
+
+            // Configuración para la tabla intermedia en schema "authentication"
+            builder.Entity<OperadorRolOperador>(entity =>
+            {
+                entity.ToTable("OperadorRolesOperador", "operadores");
+
+                // Índice compuesto único para evitar duplicados
+                entity.HasIndex(e => new { e.OperadorId, e.RolOperadorId })
+                    .IsUnique()
+                    .HasDatabaseName("IX_OperadorRolesOperador_OperadorId_RolOperadorId");
+
+                entity.Property(e => e.FechaAsignacion)
+                    .HasDefaultValueSql("NOW()");
+
+                // Configurar relaciones
+                entity.HasOne(e => e.Operador)
+                    .WithMany(o => o.OperadorRoles)
+                    .HasForeignKey(e => e.OperadorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.RolOperador)
+                    .WithMany(r => r.OperadorRoles)
+                    .HasForeignKey(e => e.RolOperadorId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

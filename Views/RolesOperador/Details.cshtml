@@ -1,0 +1,77 @@
+@model WebApp.Models.RolOperador
+
+@{
+    ViewData["Title"] = "Detalles del Rol";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Detalles del Rol</h2>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Nombre:</dt>
+                        <dd class="col-sm-8"><strong>@Model.Nombre</strong></dd>
+
+                        <dt class="col-sm-4">Descripción:</dt>
+                        <dd class="col-sm-8">@(Model.Descripcion ?? "Sin descripción")</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Activo)
+                            {
+                                <span class="badge bg-success">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactivo</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Fecha de Creación:</dt>
+                        <dd class="col-sm-8">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-4">Operadores Asignados:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.OperadorRoles.Any())
+                            {
+                                <ul class="list-unstyled">
+                                    @foreach (var operadorRol in Model.OperadorRoles)
+                                    {
+                                        <li>
+                                            <a asp-controller="Operadores" asp-action="Details" asp-route-id="@operadorRol.Operador.Id">
+                                                @operadorRol.Operador.NombreCompleto
+                                            </a>
+                                            <small class="text-muted">(@operadorRol.Operador.NumeroEmpleado)</small>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No hay operadores asignados</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
