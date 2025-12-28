@@ -1,4 +1,4 @@
-﻿@using WebApp.Enums
+@using WebApp.Enums
 @model ApplicationUser
 
 <div class="col-sm-12">
@@ -10,10 +10,29 @@
                     <div class="signup-card card-block auth-body mr-auto ml-auto">
 
                         <form asp-action="Update" method="post">
+                            <input type="hidden" asp-for="Id" />
+                            <input type="hidden" asp-for="IsLdapUser" />
 
                             <div class="row m-b-20">
                                 <div class="col-md-12">
                                     <h3 class="text-center txt-primary">Actualizar datos</h3>
+                                    
+                                    @if (Model.IsLdapUser)
+                                    {
+                                        <div class="alert alert-info text-center mt-3">
+                                            <i class="fas fa-building me-2"></i>
+                                            <strong>Usuario de Active Directory</strong>
+                                            <br />
+                                            <small>Este usuario se autentica mediante el dominio. No se puede cambiar la contraseña aquí.</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-secondary text-center mt-3">
+                                            <i class="fas fa-user me-2"></i>
+                                            <strong>Usuario Local</strong>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                             <hr />
@@ -21,7 +40,15 @@
 
                             <div class="form-group">
                                 <label asp-for="UserName"></label>
-                                <input asp-for="UserName" class="form-control" />
+                                @if (Model.IsLdapUser)
+                                {
+                                    <input asp-for="UserName" class="form-control" readonly />
+                                    <small class="text-muted">El nombre de usuario de AD no se puede modificar</small>
+                                }
+                                else
+                                {
+                                    <input asp-for="UserName" class="form-control" />
+                                }
                             </div>
 
                             <div class="form-group">
@@ -36,17 +63,22 @@
                                 <label asp-for="Email"></label>
                                 <input asp-for="Email" class="form-control" />
                             </div>
-                            <div class="form-group">
-                                <label for="password">Password</label>
-                                <input name="password" class="form-control" />
+                            
+                            @if (!Model.IsLdapUser)
+                            {
+                                <div class="form-group">
+                                    <label for="password">Nueva Contraseña</label>
+                                    <input name="password" type="password" class="form-control" placeholder="Dejar vacío para mantener la actual" />
+                                    <small class="text-muted">Solo complete si desea cambiar la contraseña</small>
+                                </div>
+                            }
+                            
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
                             </div>
-                            <button type="submit" class="btn btn-primary">Save</button>
-                            <a asp-action="Index" class="btn btn-secondary">Back</a>
 
                             <hr />
-                            <!---   -->
-
-
 
                         </form>
                         <!-- end of form -->
@@ -63,8 +95,5 @@
 
 @section Scripts
 {
-
-
-
 
 }

@@ -1,10 +1,11 @@
-﻿<!-- Content area -->
+@using WebApp.Models
+@model IEnumerable<ApplicationUser>
+
+<!-- Content area -->
 <div class="content">
 
     <!-- Mini table -->
     <div class="card">
-
-
         <div class="table-responsive">
             <table class="table table-xs">
                 <thead>
@@ -13,31 +14,81 @@
                         <th>Nombre</th>
                         <th>Apellido</th>
                         <th>Correo</th>
+                        <th>Autenticación</th>
+                        <th>Estado</th>
                         <th>Actualizar</th>
-                        <th>Borrar</th>
+                        <th>Activar/Desactivar</th>
                         <th>Roles</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (ApplicationUser user in Model)
                     {
-                        <tr>
-
+                        <tr class="@(!user.IsActive ? "table-secondary" : "")">
                             <td>@user.UserName</td>
                             <td>@user.FirstName</td>
                             <td>@user.LastName</td>
                             <td>@user.Email</td>
                             <td>
-                                <a class="btn btn-primary btn-sm" asp-action="Update" asp-route-id="@user.Id">
-                                    Actualizar
-                                </a>
+                                @if (user.IsLdapUser)
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-building me-1"></i>Active Directory
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-user me-1"></i>Local
+                                    </span>
+                                }
                             </td>
                             <td>
-                                <form asp-action="Delete" asp-route-id="@user.Id" method="post">
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        Borrar
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times me-1"></i>Inactivo
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsLdapUser)
+                                {
+                                    <button class="btn btn-primary btn-sm" disabled title="Los usuarios de AD no se pueden editar">
+                                        Actualizar
                                     </button>
-                                </form>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-primary btn-sm" asp-action="Update" asp-route-id="@user.Id">
+                                        Actualizar
+                                    </a>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <form asp-action="Deactivate" asp-route-id="@user.Id" method="post">
+                                        <button type="submit" class="btn btn-warning btn-sm" 
+                                                onclick="return confirm('¿Está seguro de desactivar este usuario?');">
+                                            <i class="fas fa-user-slash me-1"></i>Desactivar
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Activate" asp-route-id="@user.Id" method="post">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-user-check me-1"></i>Activar
+                                        </button>
+                                    </form>
+                                }
                             </td>
                             <td>
                                 <a class="btn btn-primary btn-sm" asp-controller="Admin" asp-action="Manage" asp-route-userId="@user.Id">Editar Roles</a>
@@ -52,9 +103,8 @@
 
 </div>
 <!-- /content area -->
+
 @section Scripts
 {
-
-
 
 }

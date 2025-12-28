@@ -63,6 +63,45 @@ namespace WebApp.Controllers
             return View(user);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Deactivate(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            user.IsActive = false;
+            var result = await userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                // Opcional: cerrar sesiones activas del usuario
+                await userManager.UpdateSecurityStampAsync(user);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Activa un usuario
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> Activate(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            user.IsActive = true;
+            await userManager.UpdateAsync(user);
+
+            return RedirectToAction(nameof(Index));
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Delete(string id)

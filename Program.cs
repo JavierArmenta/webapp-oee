@@ -21,7 +21,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddControllersWithViews();
-
+// Registrar servicio LDAP
+builder.Services.AddScoped<ILdapService, LdapService>();
 // ✅ MOVER ESTA LÍNEA AQUÍ (ANTES de builder.Build())
 builder.Services.AddScoped<IOperadorService, OperadorService>();
 
