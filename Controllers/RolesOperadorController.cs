@@ -153,47 +153,41 @@ namespace WebApp.Controllers
             return View(rol);
         }
 
-        // GET: RolesOperador/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var rol = await _context.RolesOperador
-                .Include(r => r.OperadorRoles)
-                    .ThenInclude(or => or.Operador)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (rol == null)
-            {
-                return NotFound();
-            }
-
-            return View(rol);
-        }
-
-        // POST: RolesOperador/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // POST: RolesOperador/Deactivate/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Deactivate(int id)
         {
-            var rol = await _context.RolesOperador
-                .Include(r => r.OperadorRoles)
-                .FirstOrDefaultAsync(r => r.Id == id);
-
+            var rol = await _context.RolesOperador.FindAsync(id);
             if (rol != null)
             {
-                if (rol.OperadorRoles.Any())
-                {
-                    TempData["Error"] = "No se puede eliminar el rol porque tiene operadores asignados.";
-                    return RedirectToAction(nameof(Delete), new { id });
-                }
-
-                _context.RolesOperador.Remove(rol);
+                rol.Activo = false;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Rol eliminado exitosamente.";
+                TempData["Success"] = "Rol desactivado exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar el rol.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: RolesOperador/Activate/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Activate(int id)
+        {
+            var rol = await _context.RolesOperador.FindAsync(id);
+            if (rol != null)
+            {
+                rol.Activo = true;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Rol activado exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar el rol.";
             }
 
             return RedirectToAction(nameof(Index));

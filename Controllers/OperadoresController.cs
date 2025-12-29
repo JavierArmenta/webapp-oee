@@ -275,38 +275,41 @@ namespace WebApp.Controllers
             return View(operador);
         }
 
-        // GET: Operadores/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var operador = await _context.Operadores
-                .Include(o => o.OperadorRoles)
-                    .ThenInclude(or => or.RolOperador)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            
-            if (operador == null)
-            {
-                return NotFound();
-            }
-
-            return View(operador);
-        }
-
-        // POST: Operadores/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // POST: Operadores/Deactivate/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Deactivate(int id)
         {
             var operador = await _context.Operadores.FindAsync(id);
             if (operador != null)
             {
-                _context.Operadores.Remove(operador);
+                operador.Activo = false;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Operador eliminado exitosamente.";
+                TempData["Success"] = "Operador desactivado exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar el operador.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Operadores/Activate/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Activate(int id)
+        {
+            var operador = await _context.Operadores.FindAsync(id);
+            if (operador != null)
+            {
+                operador.Activo = true;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Operador activado exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar el operador.";
             }
 
             return RedirectToAction(nameof(Index));

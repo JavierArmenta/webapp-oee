@@ -47,7 +47,7 @@
                         <tbody>
                         @foreach (var item in Model)
                         {
-                            <tr>
+                            <tr class="@(!item.Activo ? "table-secondary" : "")">
                                 <td>
                                     <strong>@item.Nombre</strong>
                                 </td>
@@ -55,28 +55,45 @@
                                 <td class="text-center">
                                     @if (item.Activo)
                                     {
-                                        <span class="badge bg-success">Activo</span>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Activo
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">Inactivo</span>
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Inactivo
+                                        </span>
                                     }
                                 </td>
                                 <td class="text-center">
                                     <span class="text-muted">@item.FechaCreacion.ToString("dd/MM/yyyy")</span>
                                 </td>
                                 <td>
-                                    <div class="btn-group" role="group">
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">
-                                            <i class="bi bi-eye"></i> Ver
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil"></i> Editar
-                                        </a>
-                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">
-                                            <i class="bi bi-trash"></i> Eliminar
-                                        </a>
-                                    </div>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    @if (item.Activo)
+                                    {
+                                        <form asp-action="Deactivate" asp-route-id="@item.Id" method="post" class="d-inline deactivate-form">
+                                            @Html.AntiForgeryToken()
+                                            <button type="button" class="btn btn-sm btn-warning deactivate-rol-btn">
+                                                <i class="bi bi-toggle-off me-1"></i>Desactivar
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="Activate" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-toggle-on me-1"></i>Activar
+                                            </button>
+                                        </form>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -115,11 +132,13 @@
             // Setting datatable defaults
             $.extend( $.fn.dataTable.defaults, {
                 autoWidth: false,
-                columnDefs: [{
-                    orderable: false,
-                    width: 100,
-                    targets: [ 4 ]
-                }],
+                columnDefs: [
+                    {
+                        orderable: false,
+                        targets: [ 4 ],
+                        width: '280px'
+                    }
+                ],
                 dom: '<"datatable-header"fl><"datatable-scroll"t><"datatable-footer"ip>',
                 language: {
                     search: '<span class="me-3">Filter:</span> <div class="form-control-feedback form-control-feedback-end flex-fill">_INPUT_<div class="form-control-feedback-icon"><i class="ph-magnifying-glass opacity-50"></i></div></div>',
@@ -136,6 +155,40 @@
         // Inicializar al cargar el documento
         document.addEventListener('DOMContentLoaded', function() {
             _componentDatatableBasic();
+
+            // Confirmación para desactivar rol
+            const deactivateButtons = document.querySelectorAll('.deactivate-rol-btn');
+
+            deactivateButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const form = this.closest('.deactivate-form');
+
+                    swalInit.fire({
+                        title: '¿Está seguro?',
+                        text: "¿Desea desactivar este rol?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, desactivar',
+                        cancelButtonText: 'No, cancelar',
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-danger'
+                        }
+                    }).then(function(result) {
+                        if(result.value) {
+                            form.submit();
+                        }
+                        else if(result.dismiss === swal.DismissReason.cancel) {
+                            swalInit.fire(
+                                'Cancelado',
+                                'El rol no ha sido desactivado',
+                                'info'
+                            );
+                        }
+                    });
+                });
+            });
 
             // Mostrar notificaciones de éxito
             @if (TempData["Success"] != null)
