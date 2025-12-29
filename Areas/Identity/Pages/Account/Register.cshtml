@@ -13,7 +13,6 @@
         <div class="col-sm-12">
             <div class="card marginBottomLess">
                 <div class="card-body">
-                    <partial name="_StatusMessage" model="Model.StatusMessage" />
                     <div class="row">
                         <div class="col-sm-12">
                             <!-- Authentication card start -->
@@ -30,7 +29,7 @@
                                     <div asp-validation-summary="All" class="text-danger"></div>
 
                                     <!-- Campo oculto para IsLdapUser -->
-                                    <input type="hidden" asp-for="Input.IsLdapUser" />
+                                    <input type="hidden" asp-for="Input.IsLdapUser" value="@(Model.Input?.IsLdapUser ?? false)" />
 
                                     <!-- Campo de usuario con botón de búsqueda -->
                                     <div class="form-group">
@@ -85,7 +84,7 @@
 
                                     <div class="row m-t-30">
                                         <div class="col-md-12">
-                                            <button type="submit" class="btn btn-primary btn-md btn-block waves-effect text-center m-b-20">
+                                            <button type="submit" asp-page-handler="" class="btn btn-primary btn-md btn-block waves-effect text-center m-b-20">
                                                 <i class="fas fa-user-plus me-2"></i>Registrar
                                             </button>
                                         </div>
@@ -113,4 +112,42 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <!-- Theme JS files -->
+    <script src="~/assets/js/vendor/notifications/noty.min.js"></script>
+
+    <script src="~/assets/demo/pages/extra_noty.js"></script>
+    <!-- /theme JS files -->
+
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var statusMessage = '@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StatusMessage))';
+                var message = JSON.parse(statusMessage);
+
+                // Determinar el tipo de notificación basado en el prefijo del mensaje
+                var notyType = 'info';
+                if (message.startsWith('Error:')) {
+                    notyType = 'error';
+                    message = message.substring(6).trim(); // Remover "Error:" del mensaje
+                } else if (message.includes('encontrado en Active Directory')) {
+                    notyType = 'success';
+                } else if (message.includes('no existe')) {
+                    notyType = 'error';
+                } else if (message.includes('registrado')) {
+                    notyType = 'success';
+                }
+
+                new Noty({
+                    layout: 'center',
+                    text: message,
+                    type: notyType,
+                    timeout: 4000,
+                    progressBar: true,
+                    modal: true
+                }).show();
+            });
+        </script>
+    }
 }

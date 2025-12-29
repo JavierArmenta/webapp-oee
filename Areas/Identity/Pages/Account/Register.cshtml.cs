@@ -108,6 +108,12 @@ namespace WebApp.Areas.Identity.Pages.Account
                 if (existingUser != null)
                 {
                     StatusMessage = $"Error: El usuario '{Input.UserName}' ya existe en el sistema";
+                    // Limpiar los campos para evitar autocompletado
+                    Input.FirstName = string.Empty;
+                    Input.LastName = string.Empty;
+                    Input.Email = string.Empty;
+                    Input.IsLdapUser = false;
+                    ModelState.Clear();
                     return Page();
                 }
 
@@ -117,6 +123,12 @@ namespace WebApp.Areas.Identity.Pages.Account
                 if (ldapUser == null)
                 {
                     StatusMessage = $"No se encontró el usuario '{Input.UserName}' en Active Directory";
+                    // Limpiar los campos para evitar autocompletado
+                    Input.FirstName = string.Empty;
+                    Input.LastName = string.Empty;
+                    Input.Email = string.Empty;
+                    Input.IsLdapUser = false;
+                    ModelState.Clear();
                     return Page();
                 }
 
@@ -134,6 +146,11 @@ namespace WebApp.Areas.Identity.Pages.Account
             {
                 _logger.LogError(ex, "Error al buscar usuario {Username} en LDAP", Input.UserName);
                 StatusMessage = "Error: No se pudo conectar con Active Directory";
+                // Limpiar los campos para evitar autocompletado
+                Input.FirstName = string.Empty;
+                Input.LastName = string.Empty;
+                Input.Email = string.Empty;
+                Input.IsLdapUser = false;
             }
 
             ModelState.Clear();

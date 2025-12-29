@@ -39,22 +39,30 @@ namespace WebApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Update(string id, string email, string password)
+        public async Task<IActionResult> Update(ApplicationUser model, string? password)
         {
-            ApplicationUser user = await userManager.FindByIdAsync(id);
+            ApplicationUser? user = await userManager.FindByIdAsync(model.Id);
             if (user != null)
             {
-                if (!string.IsNullOrEmpty(email))
-                    user.Email = email;
-                else
-                    ModelState.AddModelError("", "Email cannot be empty");
+                // Actualizar campos básicos
+                user.UserName = model.UserName;
+                user.FirstName = model.FirstName;
+                user.LastName = model.LastName;
+                user.Email = model.Email;
 
+                // Validar email
+                if (string.IsNullOrEmpty(user.Email))
+                {
+                    ModelState.AddModelError("", "El email no puede estar vacío");
+                }
+
+                // Solo actualizar contraseña si se proporciona una nueva
                 if (!string.IsNullOrEmpty(password))
+                {
                     user.PasswordHash = passwordHasher.HashPassword(user, password);
-                else
-                    ModelState.AddModelError("", "Password cannot be empty");
+                }
 
-                if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+                if (ModelState.IsValid)
                 {
                     IdentityResult result = await userManager.UpdateAsync(user);
                     if (result.Succeeded)
@@ -64,8 +72,10 @@ namespace WebApp.Controllers
                 }
             }
             else
-                ModelState.AddModelError("", "User Not Found");
-            return View(user);
+            {
+                ModelState.AddModelError("", "Usuario no encontrado");
+            }
+            return View(model);
         }
 
         [HttpPost]

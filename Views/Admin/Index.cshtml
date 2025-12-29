@@ -84,9 +84,8 @@
                             <td>
                                 @if (user.IsActive)
                                 {
-                                    <form asp-action="Deactivate" asp-route-id="@user.Id" method="post">
-                                        <button type="submit" class="btn btn-warning btn-sm" 
-                                                onclick="return confirm('¿Está seguro de desactivar este usuario?');">
+                                    <form asp-action="Deactivate" asp-route-id="@user.Id" method="post" class="deactivate-form">
+                                        <button type="button" class="btn btn-warning btn-sm deactivate-user-btn">
                                             <i class="fas fa-user-slash me-1"></i>Desactivar
                                         </button>
                                     </form>
@@ -116,9 +115,56 @@
 
 @section Scripts
 {
+    <script src="~/assets/js/vendor/notifications/sweet_alert.min.js"></script>
+    <script src="~/assets/demo/pages/extra_sweetalert.js"></script>
     <script>
         function toggleInactiveUsers(showInactive) {
             window.location.href = '@Url.Action("Index", "Admin")?showInactive=' + showInactive;
         }
+
+        // Inicializar SweetAlert
+        const swalInit = swal.mixin({
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-danger'
+            }
+        });
+
+        // Confirmación para desactivar usuario
+        document.addEventListener('DOMContentLoaded', function() {
+            const deactivateButtons = document.querySelectorAll('.deactivate-user-btn');
+
+            deactivateButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const form = this.closest('.deactivate-form');
+
+                    swalInit.fire({
+                        title: '¿Está seguro?',
+                        text: "¿Desea desactivar este usuario?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, desactivar',
+                        cancelButtonText: 'No, cancelar',
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-danger'
+                        }
+                    }).then(function(result) {
+                        if(result.value) {
+                            form.submit();
+                        }
+                        else if(result.dismiss === swal.DismissReason.cancel) {
+                            swalInit.fire(
+                                'Cancelado',
+                                'El usuario no ha sido desactivado',
+                                'info'
+                            );
+                        }
+                    });
+                });
+            });
+        });
     </script>
 }
