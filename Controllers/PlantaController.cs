@@ -131,40 +131,41 @@ namespace WebApp.Controllers
             return View(area);
         }
 
-        // GET: Planta/DeleteArea/5
-        public async Task<IActionResult> DeleteArea(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var area = await _context.Areas
-                .Include(a => a.Lineas)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (area == null) return NotFound();
-
-            return View(area);
-        }
-
-        // POST: Planta/DeleteArea/5
-        [HttpPost, ActionName("DeleteArea")]
+        // POST: Planta/DeactivateArea/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteAreaConfirmed(int id)
+        public async Task<IActionResult> DeactivateArea(int id)
         {
-            var area = await _context.Areas
-                .Include(a => a.Lineas)
-                .FirstOrDefaultAsync(a => a.Id == id);
-
+            var area = await _context.Areas.FindAsync(id);
             if (area != null)
             {
-                if (area.Lineas.Any())
-                {
-                    TempData["Error"] = "No se puede eliminar el área porque tiene líneas asignadas.";
-                    return RedirectToAction(nameof(DeleteArea), new { id });
-                }
-
-                _context.Areas.Remove(area);
+                area.Activo = false;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Área eliminada exitosamente.";
+                TempData["Success"] = "Área desactivada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar el área.";
+            }
+
+            return RedirectToAction(nameof(Areas));
+        }
+
+        // POST: Planta/ActivateArea/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateArea(int id)
+        {
+            var area = await _context.Areas.FindAsync(id);
+            if (area != null)
+            {
+                area.Activo = true;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Área activada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar el área.";
             }
 
             return RedirectToAction(nameof(Areas));
@@ -295,41 +296,41 @@ namespace WebApp.Controllers
             return View(linea);
         }
 
-        // GET: Planta/DeleteLinea/5
-        public async Task<IActionResult> DeleteLinea(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var linea = await _context.Lineas
-                .Include(l => l.Area)
-                .Include(l => l.Estaciones)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (linea == null) return NotFound();
-
-            return View(linea);
-        }
-
-        // POST: Planta/DeleteLinea/5
-        [HttpPost, ActionName("DeleteLinea")]
+        // POST: Planta/DeactivateLinea/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteLineaConfirmed(int id)
+        public async Task<IActionResult> DeactivateLinea(int id)
         {
-            var linea = await _context.Lineas
-                .Include(l => l.Estaciones)
-                .FirstOrDefaultAsync(l => l.Id == id);
-
+            var linea = await _context.Lineas.FindAsync(id);
             if (linea != null)
             {
-                if (linea.Estaciones.Any())
-                {
-                    TempData["Error"] = "No se puede eliminar la línea porque tiene estaciones asignadas.";
-                    return RedirectToAction(nameof(DeleteLinea), new { id });
-                }
-
-                _context.Lineas.Remove(linea);
+                linea.Activo = false;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Línea eliminada exitosamente.";
+                TempData["Success"] = "Línea desactivada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar la línea.";
+            }
+
+            return RedirectToAction(nameof(Lineas));
+        }
+
+        // POST: Planta/ActivateLinea/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateLinea(int id)
+        {
+            var linea = await _context.Lineas.FindAsync(id);
+            if (linea != null)
+            {
+                linea.Activo = true;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Línea activada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar la línea.";
             }
 
             return RedirectToAction(nameof(Lineas));
@@ -462,42 +463,41 @@ namespace WebApp.Controllers
             return View(estacion);
         }
 
-        // GET: Planta/DeleteEstacion/5
-        public async Task<IActionResult> DeleteEstacion(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var estacion = await _context.Estaciones
-                .Include(e => e.Linea)
-                    .ThenInclude(l => l.Area)
-                .Include(e => e.Maquinas)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (estacion == null) return NotFound();
-
-            return View(estacion);
-        }
-
-        // POST: Planta/DeleteEstacion/5
-        [HttpPost, ActionName("DeleteEstacion")]
+        // POST: Planta/DeactivateEstacion/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteEstacionConfirmed(int id)
+        public async Task<IActionResult> DeactivateEstacion(int id)
         {
-            var estacion = await _context.Estaciones
-                .Include(e => e.Maquinas)
-                .FirstOrDefaultAsync(e => e.Id == id);
-
+            var estacion = await _context.Estaciones.FindAsync(id);
             if (estacion != null)
             {
-                if (estacion.Maquinas.Any())
-                {
-                    TempData["Error"] = "No se puede eliminar la estación porque tiene máquinas asignadas.";
-                    return RedirectToAction(nameof(DeleteEstacion), new { id });
-                }
-
-                _context.Estaciones.Remove(estacion);
+                estacion.Activo = false;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Estación eliminada exitosamente.";
+                TempData["Success"] = "Estación desactivada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar la estación.";
+            }
+
+            return RedirectToAction(nameof(Estaciones));
+        }
+
+        // POST: Planta/ActivateEstacion/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateEstacion(int id)
+        {
+            var estacion = await _context.Estaciones.FindAsync(id);
+            if (estacion != null)
+            {
+                estacion.Activo = true;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Estación activada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar la estación.";
             }
 
             return RedirectToAction(nameof(Estaciones));
@@ -646,33 +646,41 @@ namespace WebApp.Controllers
             return View(maquina);
         }
 
-        // GET: Planta/DeleteMaquina/5
-        public async Task<IActionResult> DeleteMaquina(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var maquina = await _context.Maquinas
-                .Include(m => m.Estacion)
-                    .ThenInclude(e => e.Linea)
-                        .ThenInclude(l => l.Area)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (maquina == null) return NotFound();
-
-            return View(maquina);
-        }
-
-        // POST: Planta/DeleteMaquina/5
-        [HttpPost, ActionName("DeleteMaquina")]
+        // POST: Planta/DeactivateMaquina/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteMaquinaConfirmed(int id)
+        public async Task<IActionResult> DeactivateMaquina(int id)
         {
             var maquina = await _context.Maquinas.FindAsync(id);
             if (maquina != null)
             {
-                _context.Maquinas.Remove(maquina);
+                maquina.Activo = false;
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Máquina eliminada exitosamente.";
+                TempData["Success"] = "Máquina desactivada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar la máquina.";
+            }
+
+            return RedirectToAction(nameof(Maquinas));
+        }
+
+        // POST: Planta/ActivateMaquina/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateMaquina(int id)
+        {
+            var maquina = await _context.Maquinas.FindAsync(id);
+            if (maquina != null)
+            {
+                maquina.Activo = true;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Máquina activada exitosamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo encontrar la máquina.";
             }
 
             return RedirectToAction(nameof(Maquinas));
