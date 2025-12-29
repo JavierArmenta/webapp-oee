@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-xs">
+            <table class="table table-xs datatable-basic">
                 <thead>
                     <tr>
                         <th>Usuario</th>
@@ -115,8 +115,16 @@
 
 @section Scripts
 {
+
+
+    <script src="~/assets/js/jquery/jquery.min.js"></script>
+    <script src="~/assets/js/vendor/tables/datatables/datatables.min.js"></script>
+
+
     <script src="~/assets/js/vendor/notifications/sweet_alert.min.js"></script>
     <script src="~/assets/demo/pages/extra_sweetalert.js"></script>
+
+
     <script>
         function toggleInactiveUsers(showInactive) {
             window.location.href = '@Url.Action("Index", "Admin")?showInactive=' + showInactive;
@@ -131,8 +139,39 @@
             }
         });
 
+        // Inicializar DataTables
+        const _componentDatatableBasic = function() {
+            if (!$().DataTable) {
+                console.warn('Warning - datatables.min.js is not loaded.');
+                return;
+            }
+
+            // Setting datatable defaults
+            $.extend( $.fn.dataTable.defaults, {
+                autoWidth: false,
+                columnDefs: [{
+                    orderable: false,
+                    width: 100,
+                    targets: [ 5 ]
+                }],
+                dom: '<"datatable-header"fl><"datatable-scroll"t><"datatable-footer"ip>',
+                language: {
+                    search: '<span class="me-3">Filter:</span> <div class="form-control-feedback form-control-feedback-end flex-fill">_INPUT_<div class="form-control-feedback-icon"><i class="ph-magnifying-glass opacity-50"></i></div></div>',
+                    searchPlaceholder: 'Type to filter...',
+                    lengthMenu: '<span class="me-3">Show:</span> _MENU_',
+                    paginate: { 'first': 'First', 'last': 'Last', 'next': document.dir == "rtl" ? '&larr;' : '&rarr;', 'previous': document.dir == "rtl" ? '&rarr;' : '&larr;' }
+                }
+            });
+
+            // Basic datatable
+            $('.datatable-basic').DataTable();
+        };
+
         // Confirmación para desactivar usuario
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar DataTable
+            _componentDatatableBasic();
+
             const deactivateButtons = document.querySelectorAll('.deactivate-user-btn');
 
             deactivateButtons.forEach(function(button) {
