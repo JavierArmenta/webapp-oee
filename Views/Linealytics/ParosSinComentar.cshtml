@@ -5,164 +5,185 @@
     var parosConComentar = Model.Where(p => p.Comentarios.Any()).Count();
 }
 
-<!-- Header Card -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="mb-2">
-                    <i class="bi bi-chat-left-text text-warning me-2"></i>
-                    Comentarios de Paros Cerrados
-                </h2>
-                <p class="text-muted mb-0">
-                    Documente y visualice observaciones sobre paros de línea cerrados.
-                </p>
-            </div>
-            <div>
-                <span class="badge bg-secondary text-white fs-5 me-2">
-                    <i class="bi bi-chat-left me-1"></i>Sin comentar: @parosSinComentar
-                </span>
-                <span class="badge bg-success text-white fs-5">
-                    <i class="bi bi-chat-left-text me-1"></i>Con comentarios: @parosConComentar
-                </span>
+<div class="container-fluid">
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-chat-left-text me-2"></i>Comentarios de Paros Cerrados
+                </h1>
+                <div>
+                    <span class="badge bg-secondary fs-6 me-2">
+                        <i class="bi bi-chat-left me-1"></i>Sin comentar: @parosSinComentar
+                    </span>
+                    <span class="badge bg-success fs-6">
+                        <i class="bi bi-chat-left-text me-1"></i>Con comentarios: @parosConComentar
+                    </span>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Tabla de Paros -->
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table id="tableParosSinComentar" class="table table-xs datatable-basic">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Máquina</th>
-                        <th>Línea</th>
-                        <th>Estación</th>
-                        <th>Departamento</th>
-                        <th>Botón</th>
-                        <th>Operador</th>
-                        <th>Inicio</th>
-                        <th>Fin</th>
-                        <th>Duración</th>
-                        <th class="text-center">Comentarios</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var paro in Model)
-                    {
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <p class="text-muted mt-3">No hay paros cerrados registrados.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle datatable-basic">
+                        <thead class="table-light">
                         <tr>
-                            <td>@paro.Id</td>
-                            <td>
-                                <strong>@paro.Maquina?.Nombre</strong>
-                                <br />
-                                <small class="text-muted">@paro.Maquina?.Codigo</small>
-                            </td>
-                            <td>@paro.Maquina?.Estacion?.Linea?.Nombre</td>
-                            <td>@paro.Maquina?.Estacion?.Nombre</td>
-                            <td>@paro.DepartamentoOperador?.Nombre</td>
-                            <td>
-                                @if (paro.Boton != null)
-                                {
-                                    <strong>@paro.Boton.Nombre</strong>
-                                    <br />
-                                    <small class="text-muted">@paro.Boton.Codigo</small>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td>
-                                @if (paro.Operador != null)
-                                {
-                                    <strong>@paro.Operador.NombreCompleto</strong>
-                                    <br />
-                                    <small class="text-muted">@paro.Operador.NumeroEmpleado</small>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td data-order="@paro.FechaHoraInicio.ToString("yyyy-MM-dd HH:mm:ss")">
-                                @paro.FechaHoraInicio.ToString("dd/MM/yyyy")
-                                <br />
-                                <small class="text-muted">@paro.FechaHoraInicio.ToString("HH:mm:ss")</small>
-                            </td>
-                            <td data-order="@(paro.FechaHoraFin?.ToString("yyyy-MM-dd HH:mm:ss") ?? "")">
-                                @if (paro.FechaHoraFin.HasValue)
-                                {
-                                    @paro.FechaHoraFin.Value.ToString("dd/MM/yyyy")
-                                    <br />
-                                    <small class="text-muted">@paro.FechaHoraFin.Value.ToString("HH:mm:ss")</small>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td>
-                                @if (paro.DuracionMinutos.HasValue)
-                                {
-                                    var horas = paro.DuracionMinutos.Value / 60;
-                                    var minutos = paro.DuracionMinutos.Value % 60;
-                                    if (horas > 0)
+                            <th>ID</th>
+                            <th>Máquina</th>
+                            <th>Línea</th>
+                            <th>Estación</th>
+                            <th>Departamento</th>
+                            <th>Botón</th>
+                            <th>Operador</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Duración</th>
+                            <th class="text-center">Comentarios</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var paro in Model)
+                        {
+                            <tr>
+                                <td>@paro.Id</td>
+                                <td>
+                                    <strong>@paro.Maquina?.Nombre</strong>
+                                    @if (!string.IsNullOrEmpty(paro.Maquina?.Codigo))
                                     {
-                                        <text>@horas h @minutos m</text>
+                                        <br><small class="text-muted">@paro.Maquina?.Codigo</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@paro.Maquina?.Estacion?.Linea?.Nombre</span>
+                                </td>
+                                <td>@paro.Maquina?.Estacion?.Nombre</td>
+                                <td>@paro.DepartamentoOperador?.Nombre</td>
+                                <td>
+                                    @if (paro.Boton != null)
+                                    {
+                                        <strong>@paro.Boton.Nombre</strong>
+                                        @if (!string.IsNullOrEmpty(paro.Boton.Codigo))
+                                        {
+                                            <br><small class="text-muted">@paro.Boton.Codigo</small>
+                                        }
                                     }
                                     else
                                     {
-                                        <text>@minutos m</text>
+                                        <span class="text-muted">Sin asignar</span>
                                     }
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                @if (paro.Comentarios?.Any() == true)
-                                {
-                                    <button type="button" class="btn btn-sm btn-success"
+                                </td>
+                                <td>
+                                    @if (paro.Operador != null)
+                                    {
+                                        <strong>@paro.Operador.NombreCompleto</strong>
+                                        @if (!string.IsNullOrEmpty(paro.Operador.NumeroEmpleado))
+                                        {
+                                            <br><small class="text-muted">@paro.Operador.NumeroEmpleado</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin asignar</span>
+                                    }
+                                </td>
+                                <td data-order="@paro.FechaHoraInicio.ToString("yyyy-MM-dd HH:mm:ss")">
+                                    @paro.FechaHoraInicio.ToString("dd/MM/yyyy")
+                                    <br><small class="text-muted">@paro.FechaHoraInicio.ToString("HH:mm:ss")</small>
+                                </td>
+                                <td data-order="@(paro.FechaHoraFin?.ToString("yyyy-MM-dd HH:mm:ss") ?? "")">
+                                    @if (paro.FechaHoraFin.HasValue)
+                                    {
+                                        @paro.FechaHoraFin.Value.ToString("dd/MM/yyyy")
+                                        <br><small class="text-muted">@paro.FechaHoraFin.Value.ToString("HH:mm:ss")</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin asignar</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (paro.DuracionMinutos.HasValue)
+                                    {
+                                        var horas = paro.DuracionMinutos.Value / 60;
+                                        var minutos = paro.DuracionMinutos.Value % 60;
+                                        if (horas > 0)
+                                        {
+                                            <text>@horas h @minutos m</text>
+                                        }
+                                        else
+                                        {
+                                            <text>@minutos m</text>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin asignar</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (paro.Comentarios?.Any() == true)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-success"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalVerComentarios"
+                                                data-paro-id="@paro.Id"
+                                                data-paro-maquina="@paro.Maquina?.Nombre"
+                                                data-paro-codigo="@paro.Maquina?.Codigo"
+                                                data-paro-linea="@paro.Maquina?.Estacion?.Linea?.Nombre"
+                                                data-paro-estacion="@paro.Maquina?.Estacion?.Nombre"
+                                                data-paro-boton="@paro.Boton?.Nombre"
+                                                data-paro-boton-codigo="@paro.Boton?.Codigo"
+                                                data-paro-inicio="@paro.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm:ss")"
+                                                data-paro-fin="@(paro.FechaHoraFin?.ToString("dd/MM/yyyy HH:mm:ss") ?? "N/A")"
+                                                data-paro-duracion="@(paro.DuracionMinutos.HasValue ? $"{paro.DuracionMinutos.Value / 60}h {paro.DuracionMinutos.Value % 60}m" : "N/A")"
+                                                data-comentarios='@System.Text.Json.JsonSerializer.Serialize(paro.Comentarios.Select(c => new {
+                                                    Id = c.Id,
+                                                    Usuario = c.User?.UserName ?? "Usuario Desconocido",
+                                                    NombreCompleto = c.User?.FullName ?? "N/A",
+                                                    Email = c.User?.Email ?? "N/A",
+                                                    Comentario = c.Comentario,
+                                                    Fecha = c.FechaCreacion.ToString("dd/MM/yyyy HH:mm:ss"),
+                                                    FechaRelativa = c.FechaCreacion
+                                                }))'>
+                                            <i class="bi bi-chat-left-text me-1"></i>Ver (@paro.Comentarios.Count)
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-chat-left me-1"></i>Sin comentarios
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-warning"
                                             data-bs-toggle="modal"
-                                            data-bs-target="#modalVerComentarios"
+                                            data-bs-target="#modalAgregarComentario"
                                             data-paro-id="@paro.Id"
-                                            data-paro-maquina="@paro.Maquina?.Nombre"
-                                            data-paro-boton="@paro.Boton?.Nombre"
-                                            data-comentarios='@System.Text.Json.JsonSerializer.Serialize(paro.Comentarios.Select(c => new {
-                                                Usuario = c.User?.UserName ?? "Usuario Desconocido",
-                                                Comentario = c.Comentario,
-                                                Fecha = c.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
-                                            }))'>
-                                        <i class="bi bi-chat-left-text me-1"></i>
-                                        Ver (@paro.Comentarios.Count)
+                                            data-maquina="@paro.Maquina?.Nombre"
+                                            data-boton="@paro.Boton?.Nombre">
+                                        <i class="bi bi-chat-left-text me-1"></i>Agregar
                                     </button>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">
-                                        <i class="bi bi-chat-left me-1"></i>Sin comentarios
-                                    </span>
-                                }
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-warning"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalAgregarComentario"
-                                        data-paro-id="@paro.Id"
-                                        data-maquina="@paro.Maquina?.Nombre"
-                                        data-boton="@paro.Boton?.Nombre">
-                                    <i class="bi bi-chat-left-text me-1"></i>Agregar Comentario
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -220,7 +241,7 @@
 
 <!-- Modal para Ver Comentarios -->
 <div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="modalVerComentariosLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="modalVerComentariosLabel">
@@ -229,12 +250,59 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info" role="alert">
-                    <strong>Paro #<span id="verParoIdDisplay"></span></strong> -
-                    Máquina: <span id="verMaquinaDisplay"></span> -
-                    Botón: <span id="verBotonDisplay"></span>
+                <!-- Información detallada del paro -->
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>Detalles del Paro #<span id="verParoIdDisplay"></span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-gear me-1 text-primary"></i>Máquina:</strong>
+                                    <span id="verMaquinaDisplay"></span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-code-square me-1 text-secondary"></i>Código:</strong>
+                                    <span id="verCodigoDisplay" class="badge bg-info"></span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-diagram-3 me-1 text-success"></i>Línea:</strong>
+                                    <span id="verLineaDisplay" class="badge bg-secondary"></span>
+                                </p>
+                                <p class="mb-0">
+                                    <strong><i class="bi bi-pin-map me-1 text-warning"></i>Estación:</strong>
+                                    <span id="verEstacionDisplay"></span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-hand-index me-1 text-danger"></i>Botón:</strong>
+                                    <span id="verBotonDisplay"></span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-clock-history me-1 text-info"></i>Inicio:</strong>
+                                    <span id="verInicioDisplay"></span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-clock me-1 text-success"></i>Fin:</strong>
+                                    <span id="verFinDisplay"></span>
+                                </p>
+                                <p class="mb-0">
+                                    <strong><i class="bi bi-hourglass-split me-1 text-warning"></i>Duración:</strong>
+                                    <span id="verDuracionDisplay" class="badge bg-warning text-dark"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Lista de comentarios -->
+                <h6 class="mb-3">
+                    <i class="bi bi-chat-dots me-2"></i>Comentarios (<span id="totalComentarios"></span>)
+                </h6>
                 <div id="listaComentarios">
                     <!-- Los comentarios se cargarán aquí dinámicamente -->
                 </div>
@@ -249,94 +317,163 @@
 </div>
 
 @section Scripts {
-
     <script src="~/assets/js/jquery/jquery.min.js"></script>
     <script src="~/assets/js/vendor/tables/datatables/datatables.min.js"></script>
-
-
     <script src="~/assets/js/vendor/notifications/sweet_alert.min.js"></script>
     <script src="~/assets/demo/pages/extra_sweetalert.js"></script>
 
-
     <script>
-        $(document).ready(function () {
-            // Inicializar DataTable
-            $('#tableParosSinComentar').DataTable({
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                },
-                order: [[8, 'desc']], // Ordenar por FechaHoraFin descendente
-                pageLength: 25,
-                columnDefs: [
-                    { targets: [10, 11], orderable: false } // Comentarios y Acciones no ordenables
-                ]
-            });
+        const swalInit = swal.mixin({
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-danger'
+            }
+        });
 
-            // Manejar apertura del modal de Ver Comentarios con delegación de eventos
+        const _componentDatatableBasic = function() {
+            if (!$().DataTable) {
+                console.warn('Warning - datatables.min.js is not loaded.');
+                return;
+            }
+
+            $.extend( $.fn.dataTable.defaults, {
+                autoWidth: false,
+                columnDefs: [{
+                    orderable: false,
+                    targets: [ 10, 11 ]
+                }],
+                dom: '<"datatable-header"fl>t<"datatable-footer"ip>',
+                language: {
+                    search: '<span class="me-3">Filter:</span> <div class="form-control-feedback form-control-feedback-end flex-fill">_INPUT_<div class="form-control-feedback-icon"><i class="ph-magnifying-glass opacity-50"></i></div></div>',
+                    searchPlaceholder: 'Type to filter...',
+                    lengthMenu: '<span class="me-3">Show:</span> _MENU_',
+                    paginate: { 'first': 'First', 'last': 'Last', 'next': document.dir == "rtl" ? '&larr;' : '&rarr;', 'previous': document.dir == "rtl" ? '&rarr;' : '&larr;' }
+                },
+                order: [[8, 'desc']],
+                pageLength: 25
+            });
+            $('.datatable-basic').DataTable();
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            _componentDatatableBasic();
+
+            // Manejar apertura del modal de Ver Comentarios
             $(document).on('click', '[data-bs-target="#modalVerComentarios"]', function() {
                 var paroId = $(this).data('paro-id');
                 var maquina = $(this).data('paro-maquina');
+                var codigo = $(this).data('paro-codigo');
+                var linea = $(this).data('paro-linea');
+                var estacion = $(this).data('paro-estacion');
                 var boton = $(this).data('paro-boton');
+                var botonCodigo = $(this).data('paro-boton-codigo');
+                var inicio = $(this).data('paro-inicio');
+                var fin = $(this).data('paro-fin');
+                var duracion = $(this).data('paro-duracion');
                 var comentariosJson = $(this).data('comentarios');
 
                 // Actualizar información del paro
                 $('#verParoIdDisplay').text(paroId);
                 $('#verMaquinaDisplay').text(maquina || '-');
-                $('#verBotonDisplay').text(boton || '-');
+                $('#verCodigoDisplay').text(codigo || 'N/A');
+                $('#verLineaDisplay').text(linea || 'N/A');
+                $('#verEstacionDisplay').text(estacion || 'N/A');
 
-                // Limpiar lista de comentarios
+                var botonTexto = boton || 'N/A';
+                if (botonCodigo) {
+                    botonTexto += ' (' + botonCodigo + ')';
+                }
+                $('#verBotonDisplay').text(botonTexto);
+
+                $('#verInicioDisplay').text(inicio || 'N/A');
+                $('#verFinDisplay').text(fin || 'N/A');
+                $('#verDuracionDisplay').text(duracion || 'N/A');
+
                 $('#listaComentarios').empty();
 
-                // Renderizar comentarios
                 if (comentariosJson && comentariosJson.length > 0) {
+                    $('#totalComentarios').text(comentariosJson.length);
+
                     comentariosJson.forEach(function(comentario, index) {
                         var comentarioHtml = `
-                            <div class="card mb-3 ${index === 0 ? 'border-success' : ''}">
+                            <div class="card mb-3 shadow-sm ${index === 0 ? 'border-success border-2' : ''}">
                                 <div class="card-header ${index === 0 ? 'bg-success text-white' : 'bg-light'}">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <strong>
-                                            <i class="bi bi-person-circle me-1"></i>${comentario.Usuario}
-                                        </strong>
-                                        <small>
-                                            <i class="bi bi-clock me-1"></i>${comentario.Fecha}
-                                        </small>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person-circle fs-4 me-2"></i>
+                                                <div>
+                                                    <strong class="d-block">${comentario.NombreCompleto}</strong>
+                                                    <small class="${index === 0 ? 'text-white-50' : 'text-muted'}">
+                                                        <i class="bi bi-at me-1"></i>${comentario.Usuario}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                                            <div>
+                                                <i class="bi bi-calendar-event me-1"></i>${comentario.Fecha}
+                                            </div>
+                                            <small class="${index === 0 ? 'text-white-50' : 'text-muted'}">
+                                                <i class="bi bi-hash me-1"></i>Comentario #${comentario.Id}
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="card-body">
-                                    <p class="mb-0" style="white-space: pre-wrap;">${comentario.Comentario}</p>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label class="form-label text-muted mb-1">
+                                                <i class="bi bi-chat-square-text me-1"></i>Comentario:
+                                            </label>
+                                            <div class="p-3 bg-light rounded" style="white-space: pre-wrap; min-height: 60px;">
+                                                ${comentario.Comentario}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ${comentario.Email !== 'N/A' ? `
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <small class="text-muted">
+                                                <i class="bi bi-envelope me-1"></i>Email: ${comentario.Email}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;
                         $('#listaComentarios').append(comentarioHtml);
                     });
                 } else {
-                    $('#listaComentarios').html('<p class="text-muted text-center">No hay comentarios para este paro.</p>');
+                    $('#totalComentarios').text('0');
+                    $('#listaComentarios').html(`
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No hay comentarios para este paro.</p>
+                        </div>
+                    `);
                 }
             });
 
-            // Manejar apertura del modal de Agregar Comentario con delegación de eventos
+            // Manejar apertura del modal de Agregar Comentario
             $(document).on('click', '[data-bs-target="#modalAgregarComentario"]', function() {
                 var paroId = $(this).data('paro-id');
                 var maquina = $(this).data('maquina');
                 var boton = $(this).data('boton');
 
-                console.log('Abriendo modal para paro ID:', paroId);
-
-                // Actualizar contenido del modal
                 $('#paroIdInput').val(paroId);
                 $('#paroIdDisplay').text(paroId);
                 $('#maquinaDisplay').text(maquina || '-');
                 $('#botonDisplay').text(boton || '-');
-
-                // Limpiar textarea
                 $('#comentario').val('');
                 $('#charCount').text('0');
             });
 
             // Contador de caracteres
             $('#comentario').on('input', function () {
-                var length = $(this).val().length;
-                $('#charCount').text(length);
+                $('#charCount').text($(this).val().length);
             });
 
             // Validación antes de enviar
@@ -344,44 +481,37 @@
                 var comentario = $('#comentario').val().trim();
                 var paroId = $('#paroIdInput').val();
 
-                console.log('Intentando enviar formulario');
-                console.log('ParoId:', paroId);
-                console.log('Comentario:', comentario);
-
                 if (comentario.length === 0) {
                     e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
+                    swalInit.fire({
                         title: 'Error',
                         text: 'El comentario no puede estar vacío.',
-                        confirmButtonColor: '#ffc107'
+                        icon: 'error',
+                        confirmButtonText: 'OK'
                     });
                     return false;
                 }
 
                 if (!paroId || paroId === '') {
                     e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
+                    swalInit.fire({
                         title: 'Error',
                         text: 'No se pudo identificar el paro. Por favor, intente nuevamente.',
-                        confirmButtonColor: '#ffc107'
+                        icon: 'error',
+                        confirmButtonText: 'OK'
                     });
                     return false;
                 }
-
-                console.log('Formulario válido, enviando...');
             });
 
-            // Mostrar mensajes de TempData con SweetAlert
             @if (TempData["Success"] != null)
             {
                 <text>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Éxito',
+                swalInit.fire({
+                    title: '¡Éxito!',
                     text: '@TempData["Success"]',
-                    confirmButtonColor: '#ffc107'
+                    icon: 'success',
+                    confirmButtonText: 'OK'
                 });
                 </text>
             }
@@ -389,11 +519,11 @@
             @if (TempData["Error"] != null)
             {
                 <text>
-                Swal.fire({
-                    icon: 'error',
+                swalInit.fire({
                     title: 'Error',
                     text: '@TempData["Error"]',
-                    confirmButtonColor: '#ffc107'
+                    icon: 'error',
+                    confirmButtonText: 'OK'
                 });
                 </text>
             }
