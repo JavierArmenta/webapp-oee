@@ -4,81 +4,81 @@
     ViewData["Title"] = "Editar Botón";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-edit"></i> Editar Botón</h4>
+<div class="container-fluid">
+    <div class="card shadow-sm mt-3">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="bi bi-pencil me-2"></i>Editar Botón
+            </h4>
+        </div>
+        <div class="card-body">
+            <form asp-controller="Linealytics" asp-action="EditBoton" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="FechaCreacion" />
+                <input type="hidden" asp-for="FechaUltimaActivacion" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Codigo" class="form-label">Código del Botón</label>
+                        <input asp-for="Codigo" class="form-control" readonly style="background-color: #e9ecef; cursor: not-allowed;" />
+                        <small class="text-muted">El código no se puede modificar</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Nombre" class="form-label">Nombre del Botón</label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Botón de Emergencia 1" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form asp-controller="Linealytics" asp-action="EditBoton" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-                        <input type="hidden" asp-for="Id" />
-                        <input type="hidden" asp-for="FechaCreacion" />
-                        <input type="hidden" asp-for="FechaUltimaActivacion" />
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Codigo" class="form-label"></label>
-                                <input asp-for="Codigo" class="form-control" placeholder="Ej: BTN-001" />
-                                <span asp-validation-for="Codigo" class="text-danger"></span>
-                            </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DepartamentoOperadorId" class="form-label">Departamento</label>
+                        <select asp-for="DepartamentoOperadorId" class="form-select" asp-items="ViewBag.Departamentos">
+                            <option value="">-- Seleccione un Departamento --</option>
+                        </select>
+                        <span asp-validation-for="DepartamentoOperadorId" class="text-danger"></span>
+                    </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Nombre" class="form-label"></label>
-                                <input asp-for="Nombre" class="form-control" placeholder="Ej: Botón de Emergencia 1" />
-                                <span asp-validation-for="Nombre" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="DepartamentoOperadorId" class="form-label"></label>
-                            <select asp-for="DepartamentoOperadorId" class="form-select" asp-items="ViewBag.Departamentos">
-                                <option value="">-- Seleccione un Departamento --</option>
-                            </select>
-                            <span asp-validation-for="DepartamentoOperadorId" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Descripcion" class="form-label"></label>
-                            <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción del botón (opcional)"></textarea>
-                            <span asp-validation-for="Descripcion" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" asp-for="Activo" id="switchActivo">
-                                <label class="form-check-label" for="switchActivo">
-                                    Botón Activo
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info" role="alert">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>Fecha de creación:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")<br />
-                            @if (Model.FechaUltimaActivacion.HasValue)
-                            {
-                                <strong>Última activación:</strong> @Model.FechaUltimaActivacion.Value.ToString("dd/MM/yyyy HH:mm")
-                            }
-                            else
-                            {
-                                <text><strong>Última activación:</strong> Nunca</text>
-                            }
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a asp-action="Botones" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar Cambios
-                            </button>
-                        </div>
-                    </form>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Descripcion" class="form-label">Descripción (opcional)</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción del botón"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
                 </div>
-            </div>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="Activo" id="switchActivo">
+                        <label class="form-check-label" for="switchActivo">
+                            Botón Activo
+                        </label>
+                    </div>
+                </div>
+
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Fecha de creación:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")<br />
+                    @if (Model.FechaUltimaActivacion.HasValue)
+                    {
+                        <strong>Última activación:</strong> @Model.FechaUltimaActivacion.Value.ToString("dd/MM/yyyy HH:mm")
+                    }
+                    else
+                    {
+                        <strong>Última activación:</strong> <span class="text-muted">Nunca</span>
+                    }
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Guardar Cambios
+                    </button>
+                    <a asp-action="Botones" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

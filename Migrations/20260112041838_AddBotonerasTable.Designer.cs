@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebApp.Data;
@@ -11,9 +12,11 @@ using WebApp.Data;
 namespace WebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112041838_AddBotonerasTable")]
+    partial class AddBotonerasTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -578,42 +581,6 @@ namespace WebApp.Migrations
                     b.ToTable("CausasParo", "linealytics");
                 });
 
-            modelBuilder.Entity("WebApp.Models.Linealytics.ComentarioParoBotonera", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comentario")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<int>("RegistroParoBotoneraId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RegistroParoBotoneraId")
-                        .HasDatabaseName("IX_ComentariosParoBotonera_RegistroParoBotoneraId");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_ComentariosParoBotonera_UserId");
-
-                    b.ToTable("ComentariosParoBotonera", "linealytics");
-                });
-
             modelBuilder.Entity("WebApp.Models.Linealytics.Dispositivo", b =>
                 {
                     b.Property<int>("Id")
@@ -1058,9 +1025,6 @@ namespace WebApp.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("BotonId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("DepartamentoId")
                         .HasColumnType("integer");
 
@@ -1089,8 +1053,6 @@ namespace WebApp.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BotonId");
 
                     b.HasIndex("DepartamentoId");
 
@@ -1557,25 +1519,6 @@ namespace WebApp.Migrations
                     b.Navigation("CategoriaParo");
                 });
 
-            modelBuilder.Entity("WebApp.Models.Linealytics.ComentarioParoBotonera", b =>
-                {
-                    b.HasOne("WebApp.Models.Linealytics.RegistroParoBotonera", "RegistroParoBotonera")
-                        .WithMany("Comentarios")
-                        .HasForeignKey("RegistroParoBotoneraId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WebApp.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("RegistroParoBotonera");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("WebApp.Models.Linealytics.Dispositivo", b =>
                 {
                     b.HasOne("WebApp.Models.Maquina", "Maquina")
@@ -1747,10 +1690,6 @@ namespace WebApp.Migrations
 
             modelBuilder.Entity("WebApp.Models.Linealytics.RegistroParoBotonera", b =>
                 {
-                    b.HasOne("WebApp.Models.Boton", "Boton")
-                        .WithMany()
-                        .HasForeignKey("BotonId");
-
                     b.HasOne("WebApp.Models.DepartamentoOperador", "DepartamentoOperador")
                         .WithMany()
                         .HasForeignKey("DepartamentoId")
@@ -1766,8 +1705,6 @@ namespace WebApp.Migrations
                     b.HasOne("WebApp.Models.Operador", "Operador")
                         .WithMany()
                         .HasForeignKey("OperadorId");
-
-                    b.Navigation("Boton");
 
                     b.Navigation("DepartamentoOperador");
 
@@ -1903,11 +1840,6 @@ namespace WebApp.Migrations
             modelBuilder.Entity("WebApp.Models.Linealytics.RegistroParo", b =>
                 {
                     b.Navigation("HistorialCambios");
-                });
-
-            modelBuilder.Entity("WebApp.Models.Linealytics.RegistroParoBotonera", b =>
-                {
-                    b.Navigation("Comentarios");
                 });
 
             modelBuilder.Entity("WebApp.Models.Linealytics.SesionProduccion", b =>

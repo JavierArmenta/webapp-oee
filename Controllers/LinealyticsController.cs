@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using WebApp.Data;
 using WebApp.Models;
 using WebApp.Models.Linealytics;
@@ -332,122 +333,6 @@ namespace WebApp.Controllers
             return RedirectToAction(nameof(CategoriasParo));
         }
 
-        // ========== CAUSAS DE PARO ==========
-
-        public async Task<IActionResult> CausasParo()
-        {
-            var causas = await _context.CausasParo
-                .Include(c => c.CategoriaParo)
-                .OrderBy(c => c.CategoriaParo.Nombre)
-                .ThenBy(c => c.Nombre)
-                .ToListAsync();
-            return View(causas);
-        }
-
-        public async Task<IActionResult> CreateCausaParo()
-        {
-            ViewBag.Categorias = new SelectList(
-                await _context.CategoriasParo.Where(c => c.Activo).ToListAsync(),
-                "Id", "Nombre");
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCausaParo([Bind("CategoriaParoId,Nombre,Descripcion,CodigoInterno,RequiereMantenimiento")] CausaParo causa)
-        {
-            if (ModelState.IsValid)
-            {
-                causa.Activo = true;
-                _context.Add(causa);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Causa de paro creada exitosamente.";
-                return RedirectToAction(nameof(CausasParo));
-            }
-            ViewBag.Categorias = new SelectList(
-                await _context.CategoriasParo.Where(c => c.Activo).ToListAsync(),
-                "Id", "Nombre", causa.CategoriaParoId);
-            return View(causa);
-        }
-
-        public async Task<IActionResult> EditCausaParo(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var causa = await _context.CausasParo.FindAsync(id);
-            if (causa == null) return NotFound();
-
-            ViewBag.Categorias = new SelectList(
-                await _context.CategoriasParo.Where(c => c.Activo).ToListAsync(),
-                "Id", "Nombre", causa.CategoriaParoId);
-            return View(causa);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCausaParo(int id, [Bind("Id,CategoriaParoId,Nombre,Descripcion,CodigoInterno,RequiereMantenimiento,Activo")] CausaParo causa)
-        {
-            if (id != causa.Id) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(causa);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Causa de paro actualizada exitosamente.";
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CausaParoExists(causa.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
-                return RedirectToAction(nameof(CausasParo));
-            }
-            ViewBag.Categorias = new SelectList(
-                await _context.CategoriasParo.Where(c => c.Activo).ToListAsync(),
-                "Id", "Nombre", causa.CategoriaParoId);
-            return View(causa);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeactivateCausaParo(int id)
-        {
-            var causa = await _context.CausasParo.FindAsync(id);
-            if (causa != null)
-            {
-                causa.Activo = false;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Causa de paro desactivada exitosamente.";
-            }
-            else
-            {
-                TempData["Error"] = "No se pudo encontrar la causa de paro.";
-            }
-            return RedirectToAction(nameof(CausasParo));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ActivateCausaParo(int id)
-        {
-            var causa = await _context.CausasParo.FindAsync(id);
-            if (causa != null)
-            {
-                causa.Activo = true;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Causa de paro activada exitosamente.";
-            }
-            else
-            {
-                TempData["Error"] = "No se pudo encontrar la causa de paro.";
-            }
-            return RedirectToAction(nameof(CausasParo));
-        }
-
         // ========== BOTONES ==========
 
         public async Task<IActionResult> Botones()
@@ -469,16 +354,47 @@ namespace WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateBoton([Bind("Nombre,Codigo,DepartamentoOperadorId,Descripcion")] Boton boton)
+        public async Task<IActionResult> CreateBoton([Bind("Nombre,DepartamentoOperadorId,Descripcion")] Boton boton)
         {
+            // Remover validación de la propiedad de navegación
+            ModelState.Remove("DepartamentoOperador");
+            // Remover validación de Codigo ya que se genera automáticamente
+            ModelState.Remove("Codigo");
+
             if (ModelState.IsValid)
             {
-                boton.Activo = true;
-                _context.Add(boton);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Botón creado exitosamente.";
-                return RedirectToAction(nameof(Botones));
+                // Usar una transacción para asegurar consistencia
+                using (var transaction = await _context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        boton.Activo = true;
+                        boton.FechaCreacion = DateTime.UtcNow;
+                        // Temporalmente asignar un valor único para evitar conflicto con índice único
+                        boton.Codigo = $"TEMP-{Guid.NewGuid()}";
+
+                        _context.Add(boton);
+                        await _context.SaveChangesAsync();
+
+                        // Generar el código automáticamente: BTN-{Id}
+                        boton.Codigo = $"BTN-{boton.Id}";
+                        _context.Update(boton);
+                        await _context.SaveChangesAsync();
+
+                        await transaction.CommitAsync();
+
+                        TempData["Success"] = "Botón creado exitosamente.";
+                        return RedirectToAction(nameof(Botones));
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
             }
+
+            // Si llegamos aquí, hay errores de validación
             ViewBag.Departamentos = new SelectList(
                 await _context.DepartamentosOperador.Where(d => d.Activo).OrderBy(d => d.Nombre).ToListAsync(),
                 "Id", "Nombre", boton.DepartamentoOperadorId);
@@ -502,27 +418,39 @@ namespace WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditBoton(int id, [Bind("Id,Nombre,Codigo,DepartamentoOperadorId,Descripcion,Activo,FechaCreacion,FechaUltimaActivacion")] Boton boton)
+        public async Task<IActionResult> EditBoton(int id, [Bind("Id,Nombre,DepartamentoOperadorId,Descripcion,Activo,FechaCreacion,FechaUltimaActivacion")] Boton boton)
         {
             if (id != boton.Id)
                 return NotFound();
+
+            // Remover validación de la propiedad de navegación
+            ModelState.Remove("DepartamentoOperador");
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Obtener la entidad existente de la base de datos
+                    var botonExistente = await _context.Botones.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+                    if (botonExistente == null)
+                        return NotFound();
+
+                    // Preservar el código automático
+                    boton.Codigo = botonExistente.Codigo;
+
+                    // Actualizar la entidad
                     _context.Update(boton);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "Botón actualizado exitosamente.";
+                    return RedirectToAction(nameof(Botones));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!BotonExists(boton.Id))
                         return NotFound();
-                    else
-                        throw;
+
+                    throw;
                 }
-                return RedirectToAction(nameof(Botones));
             }
             ViewBag.Departamentos = new SelectList(
                 await _context.DepartamentosOperador.Where(d => d.Activo).OrderBy(d => d.Nombre).ToListAsync(),
@@ -566,6 +494,319 @@ namespace WebApp.Controllers
             return RedirectToAction(nameof(Botones));
         }
 
+        // ========== PAROS DE LÍNEA (BOTONERA) ==========
+
+        public async Task<IActionResult> ParosLinea()
+        {
+            var paros = await _context.RegistrosParoBotonera
+                .Include(p => p.Maquina)
+                    .ThenInclude(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                .Include(p => p.DepartamentoOperador)
+                .Include(p => p.Boton)
+                .Include(p => p.Operador)
+                .Include(p => p.Comentarios)
+                .OrderByDescending(p => p.FechaHoraInicio)
+                .ToListAsync();
+            return View(paros);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> ParosSinComentar()
+        {
+            var parosCerrados = await _context.RegistrosParoBotonera
+                .Include(p => p.Maquina)
+                    .ThenInclude(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                .Include(p => p.DepartamentoOperador)
+                .Include(p => p.Boton)
+                .Include(p => p.Operador)
+                .Include(p => p.Comentarios!)
+                    .ThenInclude(c => c.User)
+                .Where(p => p.Estado == "Cerrado")
+                .OrderByDescending(p => p.FechaHoraFin)
+                .ToListAsync();
+
+            return View(parosCerrados);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AgregarComentario(int paroId, string comentario)
+        {
+            if (string.IsNullOrWhiteSpace(comentario))
+            {
+                TempData["Error"] = "El comentario no puede estar vacío.";
+                return RedirectToAction(nameof(ParosSinComentar));
+            }
+
+            var paro = await _context.RegistrosParoBotonera
+                .FirstOrDefaultAsync(p => p.Id == paroId);
+
+            if (paro == null)
+            {
+                TempData["Error"] = "Paro no encontrado.";
+                return RedirectToAction(nameof(ParosSinComentar));
+            }
+
+            if (paro.Estado != "Cerrado")
+            {
+                TempData["Error"] = "Solo se pueden comentar paros cerrados.";
+                return RedirectToAction(nameof(ParosSinComentar));
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["Error"] = "No se pudo identificar al usuario. Por favor, inicie sesión nuevamente.";
+                return RedirectToAction(nameof(ParosSinComentar));
+            }
+
+            var nuevoComentario = new ComentarioParoBotonera
+            {
+                RegistroParoBotoneraId = paroId,
+                UserId = userId!,
+                Comentario = comentario,
+                FechaCreacion = DateTime.UtcNow
+            };
+
+            _context.ComentariosParoBotonera.Add(nuevoComentario);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Comentario agregado exitosamente.";
+            return RedirectToAction(nameof(ParosSinComentar));
+        }
+
+        // ========== BOTONERAS ==========
+
+        public async Task<IActionResult> Botoneras()
+        {
+            var botoneras = await _context.Botoneras
+                .Include(b => b.Maquina)
+                    .ThenInclude(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                .OrderBy(b => b.Nombre)
+                .ToListAsync();
+            return View(botoneras);
+        }
+
+        public async Task<IActionResult> CreateBotonera()
+        {
+            ViewBag.Maquinas = new SelectList(
+                await _context.Maquinas
+                    .Include(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Nombre)
+                    .ToListAsync(),
+                "Id",
+                "Nombre"
+            );
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateBotonera([Bind("Nombre,Descripcion,DireccionIP,MaquinaId")] Botonera botonera)
+        {
+            // Remover errores de validación de la propiedad de navegación
+            ModelState.Remove("Maquina");
+            // Remover validación de NumeroSerie ya que se genera automáticamente
+            ModelState.Remove("NumeroSerie");
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    botonera.Activo = true;
+
+                    // Usar una transacción para asegurar consistencia
+                    using (var transaction = await _context.Database.BeginTransactionAsync())
+                    {
+                        try
+                        {
+                            // Temporalmente asignar un valor único para evitar conflicto con índice único
+                            botonera.NumeroSerie = $"TEMP-{Guid.NewGuid()}";
+
+                            _context.Add(botonera);
+                            await _context.SaveChangesAsync();
+
+                            // Generar el número de serie automáticamente: BTNR-{Id}
+                            botonera.NumeroSerie = $"BTNR-{botonera.Id}";
+                            _context.Update(botonera);
+                            await _context.SaveChangesAsync();
+
+                            await transaction.CommitAsync();
+
+                            TempData["Success"] = "Botonera creada exitosamente.";
+                            return RedirectToAction(nameof(Botoneras));
+                        }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    }
+                }
+                catch (DbUpdateException ex)
+                {
+                    if (ex.InnerException?.Message.Contains("IX_Botoneras_DireccionIP") == true)
+                    {
+                        ModelState.AddModelError("DireccionIP", "Esta dirección IP ya está registrada para otra botonera.");
+                    }
+                    else if (ex.InnerException?.Message.Contains("IX_Botoneras_NumeroSerie") == true)
+                    {
+                        ModelState.AddModelError("NumeroSerie", "Este número de serie ya está registrado para otra botonera.");
+                    }
+                    else
+                    {
+                        TempData["Error"] = "Error al crear la botonera.";
+                    }
+                }
+            }
+
+            ViewBag.Maquinas = new SelectList(
+                await _context.Maquinas
+                    .Include(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Nombre)
+                    .ToListAsync(),
+                "Id",
+                "Nombre",
+                botonera.MaquinaId
+            );
+            return View(botonera);
+        }
+
+        public async Task<IActionResult> EditBotonera(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var botonera = await _context.Botoneras.FindAsync(id);
+            if (botonera == null) return NotFound();
+
+            ViewBag.Maquinas = new SelectList(
+                await _context.Maquinas
+                    .Include(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Nombre)
+                    .ToListAsync(),
+                "Id",
+                "Nombre",
+                botonera.MaquinaId
+            );
+            return View(botonera);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditBotonera(int id, [Bind("Id,Nombre,Descripcion,DireccionIP,MaquinaId,Activo,FechaCreacion")] Botonera botonera)
+        {
+            if (id != botonera.Id) return NotFound();
+
+            // Remover errores de validación de la propiedad de navegación
+            ModelState.Remove("Maquina");
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingBotonera = await _context.Botoneras.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+                    if (existingBotonera == null) return NotFound();
+
+                    botonera.FechaCreacion = existingBotonera.FechaCreacion;
+                    botonera.NumeroSerie = existingBotonera.NumeroSerie; // Preservar NumeroSerie
+
+                    _context.Update(botonera);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Botonera actualizada exitosamente.";
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!BotoneraExists(botonera.Id))
+                        return NotFound();
+                    else
+                        throw;
+                }
+                catch (DbUpdateException ex)
+                {
+                    if (ex.InnerException?.Message.Contains("IX_Botoneras_DireccionIP") == true)
+                    {
+                        ModelState.AddModelError("DireccionIP", "Esta dirección IP ya está registrada para otra botonera.");
+                    }
+                    else if (ex.InnerException?.Message.Contains("IX_Botoneras_NumeroSerie") == true)
+                    {
+                        ModelState.AddModelError("NumeroSerie", "Este número de serie ya está registrado para otra botonera.");
+                    }
+                    else
+                    {
+                        TempData["Error"] = "Error al actualizar la botonera.";
+                    }
+
+                    ViewBag.Maquinas = new SelectList(
+                        await _context.Maquinas
+                            .Include(m => m.Estacion)
+                                .ThenInclude(e => e.Linea)
+                            .Where(m => m.Activo)
+                            .OrderBy(m => m.Nombre)
+                            .ToListAsync(),
+                        "Id",
+                        "Nombre",
+                        botonera.MaquinaId
+                    );
+                    return View(botonera);
+                }
+                return RedirectToAction(nameof(Botoneras));
+            }
+
+            ViewBag.Maquinas = new SelectList(
+                await _context.Maquinas
+                    .Include(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Nombre)
+                    .ToListAsync(),
+                "Id",
+                "Nombre",
+                botonera.MaquinaId
+            );
+            return View(botonera);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeactivateBotonera(int id)
+        {
+            var botonera = await _context.Botoneras.FindAsync(id);
+            if (botonera != null)
+            {
+                botonera.Activo = false;
+                _context.Update(botonera);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Botonera desactivada exitosamente.";
+            }
+            return RedirectToAction(nameof(Botoneras));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateBotonera(int id)
+        {
+            var botonera = await _context.Botoneras.FindAsync(id);
+            if (botonera != null)
+            {
+                botonera.Activo = true;
+                _context.Update(botonera);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Botonera activada exitosamente.";
+            }
+            return RedirectToAction(nameof(Botoneras));
+        }
+
         // ========== MÉTODOS AUXILIARES ==========
 
         private bool TurnoExists(int id)
@@ -583,14 +824,14 @@ namespace WebApp.Controllers
             return _context.CategoriasParo.Any(e => e.Id == id);
         }
 
-        private bool CausaParoExists(int id)
-        {
-            return _context.CausasParo.Any(e => e.Id == id);
-        }
-
         private bool BotonExists(int id)
         {
             return _context.Botones.Any(e => e.Id == id);
+        }
+
+        private bool BotoneraExists(int id)
+        {
+            return _context.Botoneras.Any(e => e.Id == id);
         }
     }
 }

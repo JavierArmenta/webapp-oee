@@ -28,6 +28,7 @@ namespace WebApp.Data
         public DbSet<Estacion> Estaciones { get; set; }
         public DbSet<Maquina> Maquinas { get; set; }
         public DbSet<Boton> Botones { get; set; }
+        public DbSet<Modelo> Modelos { get; set; }
 
         // DbSet para Linealytics
         public DbSet<Turno> Turnos { get; set; }
@@ -41,6 +42,13 @@ namespace WebApp.Data
         public DbSet<HistorialCambioParo> HistorialCambiosParos { get; set; }
         public DbSet<Dispositivo> Dispositivos { get; set; }
         public DbSet<LecturaContador> LecturasContador { get; set; }
+
+        // DbSet para Nuevo Sistema Linealytics
+        public DbSet<Botonera> Botoneras { get; set; }
+        public DbSet<RegistroParoBotonera> RegistrosParoBotonera { get; set; }
+        public DbSet<RegistroFalla> RegistrosFallas { get; set; }
+        public DbSet<RegistroContador> RegistrosContadores { get; set; }
+        public DbSet<ComentarioParoBotonera> ComentariosParoBotonera { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -218,6 +226,19 @@ namespace WebApp.Data
                     .WithMany()
                     .HasForeignKey(e => e.DepartamentoOperadorId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuración para Modelos en schema "planta"
+            builder.Entity<Modelo>(entity =>
+            {
+                entity.ToTable("Modelos", "planta");
+
+                entity.HasIndex(e => e.Codigo)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Modelos_Codigo");
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("NOW()");
             });
 
             // ========== CONFIGURACIÓN LINEALYTICS ==========
@@ -469,6 +490,145 @@ namespace WebApp.Data
                     .WithMany()
                     .HasForeignKey(e => e.MetricasMaquinaId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // ========== CONFIGURACIÓN NUEVO SISTEMA LINEALYTICS ==========
+
+            // Configuración para Botoneras
+            builder.Entity<Botonera>(entity =>
+            {
+                entity.ToTable("Botoneras", "linealytics");
+
+                entity.HasIndex(e => e.DireccionIP)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Botoneras_DireccionIP");
+
+                entity.HasIndex(e => e.NumeroSerie)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Botoneras_NumeroSerie");
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.Maquina)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaquinaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuración para RegistrosParoBotonera
+            builder.Entity<RegistroParoBotonera>(entity =>
+            {
+                entity.ToTable("RegistrosParoBotonera", "linealytics");
+
+                entity.HasIndex(e => new { e.MaquinaId, e.FechaHoraInicio })
+                    .HasDatabaseName("IX_RegistrosParoBotonera_MaquinaId_FechaHoraInicio");
+
+                entity.HasIndex(e => e.Estado)
+                    .HasDatabaseName("IX_RegistrosParoBotonera_Estado");
+
+                entity.Property(e => e.FechaHoraInicio)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.Property(e => e.Estado)
+                    .HasDefaultValue("Abierto");
+
+                entity.HasOne(e => e.Maquina)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaquinaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.DepartamentoOperador)
+                    .WithMany()
+                    .HasForeignKey(e => e.DepartamentoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuración para RegistrosFallas
+            builder.Entity<RegistroFalla>(entity =>
+            {
+                entity.ToTable("RegistrosFallas", "linealytics");
+
+                entity.HasIndex(e => new { e.MaquinaId, e.FechaHoraLectura })
+                    .HasDatabaseName("IX_RegistrosFallas_MaquinaId_FechaHoraLectura");
+
+                entity.HasIndex(e => e.FallaId)
+                    .HasDatabaseName("IX_RegistrosFallas_FallaId");
+
+                entity.Property(e => e.FechaHoraLectura)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.Maquina)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaquinaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.CausaParo)
+                    .WithMany()
+                    .HasForeignKey(e => e.FallaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Modelo)
+                    .WithMany()
+                    .HasForeignKey(e => e.ModeloId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configuración para RegistrosContadores
+            builder.Entity<RegistroContador>(entity =>
+            {
+                entity.ToTable("RegistrosContadores", "linealytics");
+
+                entity.HasIndex(e => new { e.MaquinaId, e.FechaHoraLectura })
+                    .HasDatabaseName("IX_RegistrosContadores_MaquinaId_FechaHoraLectura");
+
+                entity.Property(e => e.FechaHoraLectura)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.Property(e => e.ContadorOK)
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.ContadorNOK)
+                    .HasDefaultValue(0);
+
+                entity.HasOne(e => e.Maquina)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaquinaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Modelo)
+                    .WithMany()
+                    .HasForeignKey(e => e.ModeloId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configuración para ComentariosParoBotonera
+            builder.Entity<ComentarioParoBotonera>(entity =>
+            {
+                entity.ToTable("ComentariosParoBotonera", "linealytics");
+
+                entity.Property(e => e.Comentario)
+                    .HasMaxLength(1000)
+                    .IsRequired();
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.RegistroParoBotonera)
+                    .WithMany(p => p.Comentarios)
+                    .HasForeignKey(e => e.RegistroParoBotoneraId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.RegistroParoBotoneraId)
+                    .HasDatabaseName("IX_ComentariosParoBotonera_RegistroParoBotoneraId");
+
+                entity.HasIndex(e => e.UserId)
+                    .HasDatabaseName("IX_ComentariosParoBotonera_UserId");
             });
         }
     }

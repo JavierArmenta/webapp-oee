@@ -57,19 +57,6 @@
             </div>
         </div>
 
-        <!-- Causas de Paro -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-list-ul display-4 text-danger"></i>
-                    <h5 class="card-title mt-3">Causas de Paro</h5>
-                    <p class="card-text text-muted">Detalle de causas</p>
-                    <a asp-action="CausasParo" class="btn btn-danger">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                    </a>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="row mt-3">
@@ -77,11 +64,53 @@
         <div class="col-md-3 mb-3">
             <div class="card shadow-sm h-100">
                 <div class="card-body text-center">
-                    <i class="fas fa-toggle-on display-4 text-info"></i>
+                    <i class="bi bi-toggle-on display-4 text-info"></i>
                     <h5 class="card-title mt-3">Botones</h5>
                     <p class="card-text text-muted">Gestión de botones por departamento</p>
                     <a asp-action="Botones" class="btn btn-info">
                         <i class="bi bi-arrow-right-circle me-1"></i>Administrar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botoneras -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-hdd-network display-4 text-secondary"></i>
+                    <h5 class="card-title mt-3">Botoneras</h5>
+                    <p class="card-text text-muted">Dispositivos de control por máquina</p>
+                    <a asp-action="Botoneras" class="btn btn-secondary">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paros de Línea -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-stop-circle display-4 text-danger"></i>
+                    <h5 class="card-title mt-3">Paros de Línea</h5>
+                    <p class="card-text text-muted">Registro de paros por botonera</p>
+                    <a asp-action="ParosLinea" class="btn btn-danger">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Ver Paros
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comentarios de Paros -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-left-text display-4 text-warning"></i>
+                    <h5 class="card-title mt-3">Comentarios de Paros</h5>
+                    <p class="card-text text-muted">Ver y documentar paros cerrados</p>
+                    <a asp-action="ParosSinComentar" class="btn btn-warning">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Gestionar Comentarios
                     </a>
                 </div>
             </div>

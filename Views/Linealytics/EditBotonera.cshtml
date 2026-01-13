@@ -1,0 +1,105 @@
+@model WebApp.Models.Linealytics.Botonera
+
+@{
+    ViewData["Title"] = "Editar Botonera";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm mt-3">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="bi bi-pencil me-2"></i>Editar Botonera
+            </h4>
+        </div>
+        <div class="card-body">
+            <form asp-controller="Linealytics" asp-action="EditBotonera" method="post">
+                @Html.AntiForgeryToken()
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <strong>Error de validación:</strong>
+                        <ul>
+                            @foreach (var key in ViewData.ModelState.Keys)
+                            {
+                                var errors = ViewData.ModelState[key]?.Errors;
+                                if (errors != null)
+                                {
+                                    foreach (var error in errors)
+                                    {
+                                        <li>@key: @error.ErrorMessage</li>
+                                    }
+                                }
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="FechaCreacion" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Nombre" class="form-label">Nombre de la Botonera</label>
+                        <input asp-for="Nombre" class="form-control" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DireccionIP" class="form-label">Dirección IP</label>
+                        <input asp-for="DireccionIP" class="form-control" />
+                        <span asp-validation-for="DireccionIP" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NumeroSerie" class="form-label">Número de Serie</label>
+                        <input asp-for="NumeroSerie" class="form-control" readonly style="background-color: #e9ecef; cursor: not-allowed;" />
+                        <small class="text-muted">El número de serie no se puede modificar</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="MaquinaId" class="form-label">Máquina</label>
+                        <select asp-for="MaquinaId" class="form-select" asp-items="ViewBag.Maquinas">
+                            <option value="">-- Seleccione una Máquina --</option>
+                        </select>
+                        <span asp-validation-for="MaquinaId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Descripcion" class="form-label">Descripción (opcional)</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check mt-4">
+                            <input asp-for="Activo" class="form-check-input" type="checkbox" />
+                            <label asp-for="Activo" class="form-check-label">
+                                Activo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Guardar Cambios
+                    </button>
+                    <a asp-action="Botoneras" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

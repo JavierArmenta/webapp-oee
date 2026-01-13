@@ -1,0 +1,429 @@
+@model IEnumerable<WebApp.Models.Linealytics.RegistroParoBotonera>
+
+@{
+    ViewData["Title"] = "Paros de Línea (Botonera)";
+    var parosAbiertos = Model.Where(p => p.Estado == "Abierto").ToList();
+    var parosCerrados = Model.Where(p => p.Estado == "Cerrado").ToList();
+}
+
+<div class="container-fluid">
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-stop-circle me-2"></i>Paros de Línea (Botonera)
+                </h1>
+                <div>
+                    <span class="badge bg-danger fs-6 me-2">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Abiertos: @parosAbiertos.Count
+                    </span>
+                    <span class="badge bg-secondary fs-6">
+                        <i class="bi bi-check-circle me-1"></i>Cerrados: @parosCerrados.Count
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* PAROS ABIERTOS *@
+    @if (parosAbiertos.Any())
+    {
+        <div class="card shadow-sm mt-3">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Paros Activos (Abiertos)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Máquina</th>
+                            <th>Línea</th>
+                            <th>Estación</th>
+                            <th>Departamento</th>
+                            <th>Botón</th>
+                            <th>Operador</th>
+                            <th>Inicio</th>
+                            <th>Tiempo Transcurrido</th>
+                            <th class="text-center">Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var paro in parosAbiertos)
+                        {
+                            var tiempoTranscurrido = DateTime.UtcNow - paro.FechaHoraInicio;
+                            <tr class="table-danger">
+                                <td><strong>#@paro.Id</strong></td>
+                                <td>
+                                    <strong>@paro.Maquina.Nombre</strong>
+                                    <br />
+                                    <small class="text-muted">@paro.Maquina.Codigo</small>
+                                </td>
+                                <td>@paro.Maquina.Estacion.Linea.Nombre</td>
+                                <td>@paro.Maquina.Estacion.Nombre</td>
+                                <td>
+                                    <span class="badge bg-info">@paro.DepartamentoOperador.Nombre</span>
+                                </td>
+                                <td>
+                                    @if (paro.Boton != null)
+                                    {
+                                        <strong>@paro.Boton.Nombre</strong>
+                                        <br />
+                                        <small class="text-muted">@paro.Boton.Codigo</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (paro.Operador != null)
+                                    {
+                                        <strong>@paro.Operador.NombreCompleto</strong>
+                                        <br />
+                                        <small class="text-muted">@paro.Operador.NumeroEmpleado</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @paro.FechaHoraInicio.ToLocalTime().ToString("dd/MM/yyyy")
+                                    <br />
+                                    <small class="text-muted">@paro.FechaHoraInicio.ToLocalTime().ToString("HH:mm:ss")</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark fs-6">
+                                        <i class="bi bi-clock-history me-1"></i>
+                                        @if (tiempoTranscurrido.TotalHours >= 1)
+                                        {
+                                            <text>@((int)tiempoTranscurrido.TotalHours)h @tiempoTranscurrido.Minutes m</text>
+                                        }
+                                        else
+                                        {
+                                            <text>@tiempoTranscurrido.Minutes m @tiempoTranscurrido.Seconds s</text>
+                                        }
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-circle me-1"></i>ABIERTO
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success mt-3" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>No hay paros activos en este momento.</strong> Todas las líneas están operando normalmente.
+        </div>
+    }
+
+    @* PAROS CERRADOS *@
+    <div class="card shadow-sm mt-3">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-archive me-2"></i>Historial de Paros (Cerrados)
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (!parosCerrados.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <p class="text-muted mt-3">No hay paros cerrados registrados.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle datatable-paros">
+                        <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Máquina</th>
+                            <th>Línea</th>
+                            <th>Estación</th>
+                            <th>Departamento</th>
+                            <th>Botón</th>
+                            <th>Operador</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Duración</th>
+                            <th class="text-center">Comentarios</th>
+                            <th class="text-center">Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var paro in parosCerrados)
+                        {
+                            <tr>
+                                <td><strong>#@paro.Id</strong></td>
+                                <td>
+                                    <strong>@paro.Maquina.Nombre</strong>
+                                    <br />
+                                    <small class="text-muted">@paro.Maquina.Codigo</small>
+                                </td>
+                                <td>@paro.Maquina.Estacion.Linea.Nombre</td>
+                                <td>@paro.Maquina.Estacion.Nombre</td>
+                                <td>
+                                    <span class="badge bg-info">@paro.DepartamentoOperador.Nombre</span>
+                                </td>
+                                <td>
+                                    @if (paro.Boton != null)
+                                    {
+                                        <strong>@paro.Boton.Nombre</strong>
+                                        <br />
+                                        <small class="text-muted">@paro.Boton.Codigo</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (paro.Operador != null)
+                                    {
+                                        <strong>@paro.Operador.NombreCompleto</strong>
+                                        <br />
+                                        <small class="text-muted">@paro.Operador.NumeroEmpleado</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @paro.FechaHoraInicio.ToLocalTime().ToString("dd/MM/yyyy")
+                                    <br />
+                                    <small class="text-muted">@paro.FechaHoraInicio.ToLocalTime().ToString("HH:mm:ss")</small>
+                                </td>
+                                <td>
+                                    @if (paro.FechaHoraFin.HasValue)
+                                    {
+                                        @paro.FechaHoraFin.Value.ToLocalTime().ToString("dd/MM/yyyy")
+                                        <br />
+                                        <small class="text-muted">@paro.FechaHoraFin.Value.ToLocalTime().ToString("HH:mm:ss")</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (paro.DuracionMinutos.HasValue)
+                                    {
+                                        if (paro.DuracionMinutos.Value >= 60)
+                                        {
+                                            var horas = paro.DuracionMinutos.Value / 60;
+                                            var minutos = paro.DuracionMinutos.Value % 60;
+                                            <span class="badge bg-secondary">
+                                                @horas h @minutos min
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                @paro.DuracionMinutos min
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (paro.Comentarios?.Any() == true)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-chat-left-text me-1"></i>
+                                            @paro.Comentarios.Count
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-chat-left me-1"></i>0
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>CERRADO
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ESTADÍSTICAS RESUMIDAS *@
+    @if (parosCerrados.Any())
+    {
+        var totalParos = parosCerrados.Count;
+        var duracionTotal = parosCerrados.Where(p => p.DuracionMinutos.HasValue).Sum(p => p.DuracionMinutos.Value);
+        var duracionPromedio = parosCerrados.Where(p => p.DuracionMinutos.HasValue).Any()
+            ? parosCerrados.Where(p => p.DuracionMinutos.HasValue).Average(p => p.DuracionMinutos.Value)
+            : 0;
+        var paroMasLargo = parosCerrados.Where(p => p.DuracionMinutos.HasValue).OrderByDescending(p => p.DuracionMinutos).FirstOrDefault();
+
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total Paros Cerrados</h6>
+                        <h2 class="text-primary">@totalParos</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Duración Total</h6>
+                        <h2 class="text-danger">
+                            @if (duracionTotal >= 60)
+                            {
+                                var horas = duracionTotal / 60;
+                                var minutos = duracionTotal % 60;
+                                <text>@horas h @minutos m</text>
+                            }
+                            else
+                            {
+                                <text>@duracionTotal min</text>
+                            }
+                        </h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Duración Promedio</h6>
+                        <h2 class="text-warning">@((int)duracionPromedio) min</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Paro Más Largo</h6>
+                        @if (paroMasLargo != null)
+                        {
+                            <h2 class="text-info">@paroMasLargo.DuracionMinutos min</h2>
+                            <small class="text-muted">@paroMasLargo.Maquina.Nombre</small>
+                        }
+                        else
+                        {
+                            <h2 class="text-muted">-</h2>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    <script src="~/assets/js/jquery/jquery.min.js"></script>
+    <script src="~/assets/js/vendor/tables/datatables/datatables.min.js"></script>
+    <script src="~/assets/js/vendor/notifications/sweet_alert.min.js"></script>
+    <script src="~/assets/demo/pages/extra_sweetalert.js"></script>
+
+    <script>
+        const swalInit = swal.mixin({
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-danger'
+            }
+        });
+
+        const _componentDatatableBasic = function() {
+            if (!$().DataTable) {
+                console.warn('Warning - datatables.min.js is not loaded.');
+                return;
+            }
+
+            $.extend( $.fn.dataTable.defaults, {
+                autoWidth: false,
+                columnDefs: [{
+                    orderable: false,
+                    targets: [ 10, 11 ] // Comentarios y Estado no ordenables
+                }],
+                dom: '<"datatable-header"fl>t<"datatable-footer"ip>',
+                language: {
+                    search: '<span class="me-3">Filter:</span> <div class="form-control-feedback form-control-feedback-end flex-fill">_INPUT_<div class="form-control-feedback-icon"><i class="ph-magnifying-glass opacity-50"></i></div></div>',
+                    searchPlaceholder: 'Type to filter...',
+                    lengthMenu: '<span class="me-3">Show:</span> _MENU_',
+                    paginate: { 'first': 'First', 'last': 'Last', 'next': document.dir == "rtl" ? '&larr;' : '&rarr;', 'previous': document.dir == "rtl" ? '&rarr;' : '&larr;' }
+                },
+                order: [[8, 'desc']] // Ordenar por fecha de fin descendente
+            });
+            $('.datatable-paros').DataTable();
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            _componentDatatableBasic();
+
+            // Auto-refrescar la página cada 30 segundos si hay paros abiertos
+            @if (parosAbiertos.Any())
+            {
+                <text>
+                setTimeout(function() {
+                    location.reload();
+                }, 30000); // 30 segundos
+                </text>
+            }
+
+            @if (TempData["Success"] != null)
+            {
+                <text>
+                swalInit.fire({
+                    title: '¡Éxito!',
+                    text: '@TempData["Success"]',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-success'
+                    }
+                });
+                </text>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <text>
+                swalInit.fire({
+                    title: 'Error',
+                    text: '@TempData["Error"]',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-danger'
+                    }
+                });
+                </text>
+            }
+        });
+    </script>
+}

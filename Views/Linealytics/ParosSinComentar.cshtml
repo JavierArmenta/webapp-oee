@@ -1,0 +1,402 @@
+@model IEnumerable<WebApp.Models.Linealytics.RegistroParoBotonera>
+@{
+    ViewData["Title"] = "Comentarios de Paros Cerrados";
+    var parosSinComentar = Model.Where(p => !p.Comentarios.Any()).Count();
+    var parosConComentar = Model.Where(p => p.Comentarios.Any()).Count();
+}
+
+<!-- Header Card -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-2">
+                    <i class="bi bi-chat-left-text text-warning me-2"></i>
+                    Comentarios de Paros Cerrados
+                </h2>
+                <p class="text-muted mb-0">
+                    Documente y visualice observaciones sobre paros de línea cerrados.
+                </p>
+            </div>
+            <div>
+                <span class="badge bg-secondary text-white fs-5 me-2">
+                    <i class="bi bi-chat-left me-1"></i>Sin comentar: @parosSinComentar
+                </span>
+                <span class="badge bg-success text-white fs-5">
+                    <i class="bi bi-chat-left-text me-1"></i>Con comentarios: @parosConComentar
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Paros -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="tableParosSinComentar" class="table table-xs datatable-basic">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Máquina</th>
+                        <th>Línea</th>
+                        <th>Estación</th>
+                        <th>Departamento</th>
+                        <th>Botón</th>
+                        <th>Operador</th>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th>Duración</th>
+                        <th class="text-center">Comentarios</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var paro in Model)
+                    {
+                        <tr>
+                            <td>@paro.Id</td>
+                            <td>
+                                <strong>@paro.Maquina?.Nombre</strong>
+                                <br />
+                                <small class="text-muted">@paro.Maquina?.Codigo</small>
+                            </td>
+                            <td>@paro.Maquina?.Estacion?.Linea?.Nombre</td>
+                            <td>@paro.Maquina?.Estacion?.Nombre</td>
+                            <td>@paro.DepartamentoOperador?.Nombre</td>
+                            <td>
+                                @if (paro.Boton != null)
+                                {
+                                    <strong>@paro.Boton.Nombre</strong>
+                                    <br />
+                                    <small class="text-muted">@paro.Boton.Codigo</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (paro.Operador != null)
+                                {
+                                    <strong>@paro.Operador.NombreCompleto</strong>
+                                    <br />
+                                    <small class="text-muted">@paro.Operador.NumeroEmpleado</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td data-order="@paro.FechaHoraInicio.ToString("yyyy-MM-dd HH:mm:ss")">
+                                @paro.FechaHoraInicio.ToString("dd/MM/yyyy")
+                                <br />
+                                <small class="text-muted">@paro.FechaHoraInicio.ToString("HH:mm:ss")</small>
+                            </td>
+                            <td data-order="@(paro.FechaHoraFin?.ToString("yyyy-MM-dd HH:mm:ss") ?? "")">
+                                @if (paro.FechaHoraFin.HasValue)
+                                {
+                                    @paro.FechaHoraFin.Value.ToString("dd/MM/yyyy")
+                                    <br />
+                                    <small class="text-muted">@paro.FechaHoraFin.Value.ToString("HH:mm:ss")</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (paro.DuracionMinutos.HasValue)
+                                {
+                                    var horas = paro.DuracionMinutos.Value / 60;
+                                    var minutos = paro.DuracionMinutos.Value % 60;
+                                    if (horas > 0)
+                                    {
+                                        <text>@horas h @minutos m</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@minutos m</text>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (paro.Comentarios?.Any() == true)
+                                {
+                                    <button type="button" class="btn btn-sm btn-success"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalVerComentarios"
+                                            data-paro-id="@paro.Id"
+                                            data-paro-maquina="@paro.Maquina?.Nombre"
+                                            data-paro-boton="@paro.Boton?.Nombre"
+                                            data-comentarios='@System.Text.Json.JsonSerializer.Serialize(paro.Comentarios.Select(c => new {
+                                                Usuario = c.User?.UserName ?? "Usuario Desconocido",
+                                                Comentario = c.Comentario,
+                                                Fecha = c.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                                            }))'>
+                                        <i class="bi bi-chat-left-text me-1"></i>
+                                        Ver (@paro.Comentarios.Count)
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-chat-left me-1"></i>Sin comentarios
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-warning"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalAgregarComentario"
+                                        data-paro-id="@paro.Id"
+                                        data-maquina="@paro.Maquina?.Nombre"
+                                        data-boton="@paro.Boton?.Nombre">
+                                    <i class="bi bi-chat-left-text me-1"></i>Agregar Comentario
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Comentario -->
+<div class="modal fade" id="modalAgregarComentario" tabindex="-1" aria-labelledby="modalAgregarComentarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form asp-action="AgregarComentario" method="post" id="formAgregarComentario">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="modalAgregarComentarioLabel">
+                        <i class="bi bi-chat-left-text me-2"></i>Agregar Comentario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="paroId" id="paroIdInput" />
+
+                    <div class="alert alert-info" role="alert">
+                        <strong>Paro #<span id="paroIdDisplay"></span></strong> -
+                        Máquina: <span id="maquinaDisplay"></span> -
+                        Botón: <span id="botonDisplay"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">
+                            <strong>Comentario</strong>
+                            <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control"
+                                  id="comentario"
+                                  name="comentario"
+                                  rows="6"
+                                  maxlength="1000"
+                                  required
+                                  placeholder="Escriba sus observaciones sobre este paro de línea..."></textarea>
+                        <div class="form-text">
+                            <span id="charCount">0</span> / 1000 caracteres
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-save me-1"></i>Guardar Comentario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Ver Comentarios -->
+<div class="modal fade" id="modalVerComentarios" tabindex="-1" aria-labelledby="modalVerComentariosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalVerComentariosLabel">
+                    <i class="bi bi-chat-left-text me-2"></i>Comentarios del Paro
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info" role="alert">
+                    <strong>Paro #<span id="verParoIdDisplay"></span></strong> -
+                    Máquina: <span id="verMaquinaDisplay"></span> -
+                    Botón: <span id="verBotonDisplay"></span>
+                </div>
+
+                <div id="listaComentarios">
+                    <!-- Los comentarios se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/assets/js/jquery/jquery.min.js"></script>
+    <script src="~/assets/js/vendor/tables/datatables/datatables.min.js"></script>
+
+
+    <script src="~/assets/js/vendor/notifications/sweet_alert.min.js"></script>
+    <script src="~/assets/demo/pages/extra_sweetalert.js"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            // Inicializar DataTable
+            $('#tableParosSinComentar').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                },
+                order: [[8, 'desc']], // Ordenar por FechaHoraFin descendente
+                pageLength: 25,
+                columnDefs: [
+                    { targets: [10, 11], orderable: false } // Comentarios y Acciones no ordenables
+                ]
+            });
+
+            // Manejar apertura del modal de Ver Comentarios con delegación de eventos
+            $(document).on('click', '[data-bs-target="#modalVerComentarios"]', function() {
+                var paroId = $(this).data('paro-id');
+                var maquina = $(this).data('paro-maquina');
+                var boton = $(this).data('paro-boton');
+                var comentariosJson = $(this).data('comentarios');
+
+                // Actualizar información del paro
+                $('#verParoIdDisplay').text(paroId);
+                $('#verMaquinaDisplay').text(maquina || '-');
+                $('#verBotonDisplay').text(boton || '-');
+
+                // Limpiar lista de comentarios
+                $('#listaComentarios').empty();
+
+                // Renderizar comentarios
+                if (comentariosJson && comentariosJson.length > 0) {
+                    comentariosJson.forEach(function(comentario, index) {
+                        var comentarioHtml = `
+                            <div class="card mb-3 ${index === 0 ? 'border-success' : ''}">
+                                <div class="card-header ${index === 0 ? 'bg-success text-white' : 'bg-light'}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>
+                                            <i class="bi bi-person-circle me-1"></i>${comentario.Usuario}
+                                        </strong>
+                                        <small>
+                                            <i class="bi bi-clock me-1"></i>${comentario.Fecha}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0" style="white-space: pre-wrap;">${comentario.Comentario}</p>
+                                </div>
+                            </div>
+                        `;
+                        $('#listaComentarios').append(comentarioHtml);
+                    });
+                } else {
+                    $('#listaComentarios').html('<p class="text-muted text-center">No hay comentarios para este paro.</p>');
+                }
+            });
+
+            // Manejar apertura del modal de Agregar Comentario con delegación de eventos
+            $(document).on('click', '[data-bs-target="#modalAgregarComentario"]', function() {
+                var paroId = $(this).data('paro-id');
+                var maquina = $(this).data('maquina');
+                var boton = $(this).data('boton');
+
+                console.log('Abriendo modal para paro ID:', paroId);
+
+                // Actualizar contenido del modal
+                $('#paroIdInput').val(paroId);
+                $('#paroIdDisplay').text(paroId);
+                $('#maquinaDisplay').text(maquina || '-');
+                $('#botonDisplay').text(boton || '-');
+
+                // Limpiar textarea
+                $('#comentario').val('');
+                $('#charCount').text('0');
+            });
+
+            // Contador de caracteres
+            $('#comentario').on('input', function () {
+                var length = $(this).val().length;
+                $('#charCount').text(length);
+            });
+
+            // Validación antes de enviar
+            $('#formAgregarComentario').on('submit', function (e) {
+                var comentario = $('#comentario').val().trim();
+                var paroId = $('#paroIdInput').val();
+
+                console.log('Intentando enviar formulario');
+                console.log('ParoId:', paroId);
+                console.log('Comentario:', comentario);
+
+                if (comentario.length === 0) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El comentario no puede estar vacío.',
+                        confirmButtonColor: '#ffc107'
+                    });
+                    return false;
+                }
+
+                if (!paroId || paroId === '') {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo identificar el paro. Por favor, intente nuevamente.',
+                        confirmButtonColor: '#ffc107'
+                    });
+                    return false;
+                }
+
+                console.log('Formulario válido, enviando...');
+            });
+
+            // Mostrar mensajes de TempData con SweetAlert
+            @if (TempData["Success"] != null)
+            {
+                <text>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: '@TempData["Success"]',
+                    confirmButtonColor: '#ffc107'
+                });
+                </text>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '@TempData["Error"]',
+                    confirmButtonColor: '#ffc107'
+                });
+                </text>
+            }
+        });
+    </script>
+}

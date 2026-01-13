@@ -1,0 +1,68 @@
+@model WebApp.Models.Linealytics.Botonera
+
+@{
+    ViewData["Title"] = "Crear Botonera";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm mt-3">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="bi bi-plus-circle me-2"></i>Crear Nueva Botonera
+            </h4>
+        </div>
+        <div class="card-body">
+            <form asp-controller="Linealytics" asp-action="CreateBotonera" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Nombre" class="form-label">Nombre de la Botonera</label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Botonera Línea 1" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DireccionIP" class="form-label">Dirección IP</label>
+                        <input asp-for="DireccionIP" class="form-control" placeholder="Ej: 192.168.1.100" />
+                        <span asp-validation-for="DireccionIP" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="MaquinaId" class="form-label">Máquina</label>
+                        <select asp-for="MaquinaId" class="form-select" asp-items="ViewBag.Maquinas">
+                            <option value="">-- Seleccione una Máquina --</option>
+                        </select>
+                        <span asp-validation-for="MaquinaId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Descripcion" class="form-label">Descripción (opcional)</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción de la botonera"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Nota:</strong> El número de serie se generará automáticamente con el formato BTNR-{ID} después de crear la botonera.
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Guardar
+                    </button>
+                    <a asp-action="Botoneras" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
