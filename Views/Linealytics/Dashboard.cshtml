@@ -11,6 +11,53 @@
         </div>
     </div>
 
+    <!-- Select with search -->
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5 class="mb-0">Filtros</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-4">
+                    <label class="form-label">Área</label>
+                    <select class="form-control select" id="select-area">
+                        <option value="">Todas las áreas</option>
+                        @foreach (var area in (List<WebApp.Models.Area>)ViewBag.Areas)
+                        {
+                            <option value="@area.Id">@area.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label">Línea</label>
+                    <select class="form-control select" id="select-linea" disabled>
+                        <option value="">Seleccione un área primero</option>
+                        @foreach (var linea in (List<WebApp.Models.Linea>)ViewBag.Lineas)
+                        {
+                            <option value="@linea.Id" data-area="@linea.AreaId">@linea.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label">Máquina</label>
+                    <select class="form-control select" id="select-maquina" disabled>
+                        <option value="">Seleccione un área primero</option>
+                        @foreach (var maquina in (List<WebApp.Models.Maquina>)ViewBag.Maquinas)
+                        {
+                            <option value="@maquina.Id" data-linea="@maquina.Estacion.LineaId" data-area="@maquina.Estacion.Linea.AreaId">
+                                @maquina.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /select with search -->
+
     <!-- Stacked column chart -->
     <div class="card mt-3">
         <div class="card-header">
@@ -29,7 +76,10 @@
 </div>
 
 @section Scripts {
+        <script src="~/assets/js/jquery/jquery.min.js"></script>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="~/assets/js/vendor/forms/selects/select2.min.js"></script>
+
 
     <script>
         var GoogleBarStacked = function() {
@@ -175,5 +225,165 @@
         // ------------------------------
 
         GoogleBarStacked.init();
+
+        // Select2 Initialization
+        // ------------------------------
+        var Select2Filters = function() {
+
+            // Guardar todas las opciones originales
+            var todasLineas = [];
+            var todasMaquinas = [];
+
+            var _componentSelect2 = function() {
+                if (!$().select2) {
+                    console.warn('Warning - select2.min.js is not loaded.');
+                    return;
+                }
+
+                // Guardar todas las opciones al inicio
+                $('#select-linea option').each(function() {
+                    if ($(this).val() !== '') {
+                        todasLineas.push({
+                            value: $(this).val(),
+                            text: $(this).text(),
+                            area: $(this).data('area')
+                        });
+                    }
+                });
+
+                $('#select-maquina option').each(function() {
+                    if ($(this).val() !== '') {
+                        todasMaquinas.push({
+                            value: $(this).val(),
+                            text: $(this).text(),
+                            linea: $(this).data('linea'),
+                            area: $(this).data('area')
+                        });
+                    }
+                });
+
+                // Initialize all selects with Select2
+                $('.select').select2({
+                    placeholder: 'Seleccionar...',
+                    allowClear: true
+                });
+
+                // Filtros en cascada
+                $('#select-area').on('change', function() {
+                    var areaId = $(this).val();
+
+                    if (!areaId) {
+                        // Si no hay área seleccionada, deshabilitar líneas y máquinas
+                        $('#select-linea').prop('disabled', true);
+                        $('#select-maquina').prop('disabled', true);
+
+                        $('#select-linea').empty().append('<option value="">Seleccione un área primero</option>');
+                        $('#select-maquina').empty().append('<option value="">Seleccione un área primero</option>');
+
+                        $('#select-linea').val('').trigger('change');
+                        $('#select-maquina').val('').trigger('change');
+                    } else {
+                        // Habilitar select de líneas
+                        $('#select-linea').prop('disabled', false);
+
+                        // Filtrar y reconstruir líneas
+                        $('#select-linea').empty().append('<option value="">Todas las líneas</option>');
+
+                        todasLineas.filter(function(linea) {
+                            return linea.area == areaId;
+                        }).forEach(function(linea) {
+                            $('#select-linea').append(
+                                $('<option></option>')
+                                    .attr('value', linea.value)
+                                    .attr('data-area', linea.area)
+                                    .text(linea.text)
+                            );
+                        });
+
+                        // Habilitar select de máquinas
+                        $('#select-maquina').prop('disabled', false);
+
+                        // Filtrar y reconstruir máquinas por área
+                        $('#select-maquina').empty().append('<option value="">Todas las máquinas</option>');
+
+                        todasMaquinas.filter(function(maquina) {
+                            return maquina.area == areaId;
+                        }).forEach(function(maquina) {
+                            $('#select-maquina').append(
+                                $('<option></option>')
+                                    .attr('value', maquina.value)
+                                    .attr('data-linea', maquina.linea)
+                                    .attr('data-area', maquina.area)
+                                    .text(maquina.text)
+                            );
+                        });
+
+                        // Reset selects dependientes
+                        $('#select-linea').val('').trigger('change');
+                        $('#select-maquina').val('').trigger('change');
+                    }
+                });
+
+                $('#select-linea').on('change', function() {
+                    var lineaId = $(this).val();
+                    var areaId = $('#select-area').val();
+
+                    // Filtrar y reconstruir máquinas
+                    $('#select-maquina').empty().append('<option value="">Todas las máquinas</option>');
+
+                    var maquinasFiltradas = todasMaquinas;
+
+                    // Filtrar por área si está seleccionada
+                    if (areaId) {
+                        maquinasFiltradas = maquinasFiltradas.filter(function(maquina) {
+                            return maquina.area == areaId;
+                        });
+                    }
+
+                    // Filtrar por línea si está seleccionada
+                    if (lineaId) {
+                        maquinasFiltradas = maquinasFiltradas.filter(function(maquina) {
+                            return maquina.linea == lineaId;
+                        });
+                    }
+
+                    // Agregar opciones filtradas
+                    maquinasFiltradas.forEach(function(maquina) {
+                        $('#select-maquina').append(
+                            $('<option></option>')
+                                .attr('value', maquina.value)
+                                .attr('data-linea', maquina.linea)
+                                .attr('data-area', maquina.area)
+                                .text(maquina.text)
+                        );
+                    });
+
+                    // Reset select de máquinas
+                    $('#select-maquina').val('').trigger('change');
+                });
+
+                // Evento cuando cambia cualquier filtro - actualizar gráfica
+                $('.select').on('change', function() {
+                    console.log('Filtro cambiado:', {
+                        area: $('#select-area').val(),
+                        linea: $('#select-linea').val(),
+                        maquina: $('#select-maquina').val()
+                    });
+                    // Aquí puedes llamar a una función para recargar la gráfica con los filtros
+                    // updateChart();
+                });
+            };
+
+            return {
+                init: function() {
+                    _componentSelect2();
+                }
+            }
+        }();
+
+        // Initialize Select2
+        document.addEventListener('DOMContentLoaded', function() {
+            Select2Filters.init();
+        });
     </script>
 }

@@ -26,8 +26,31 @@ namespace WebApp.Controllers
             return View();
         }
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
+            // Cargar datos de planta para los filtros
+            ViewBag.Areas = await _context.Areas
+                .Where(a => a.Activo)
+                .OrderBy(a => a.Nombre)
+                .ToListAsync();
+
+            ViewBag.Lineas = await _context.Lineas
+                .Include(l => l.Area)
+                .Where(l => l.Activo)
+                .OrderBy(l => l.Area.Nombre)
+                .ThenBy(l => l.Nombre)
+                .ToListAsync();
+
+            ViewBag.Maquinas = await _context.Maquinas
+                .Include(m => m.Estacion)
+                    .ThenInclude(e => e.Linea)
+                        .ThenInclude(l => l.Area)
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Estacion.Linea.Area.Nombre)
+                .ThenBy(m => m.Estacion.Linea.Nombre)
+                .ThenBy(m => m.Nombre)
+                .ToListAsync();
+
             return View();
         }
 
