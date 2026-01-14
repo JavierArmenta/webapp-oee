@@ -71,224 +71,33 @@
     </div>
     <!-- /select with search -->
 
-    <!-- Stacked column chart -->
+
+    <!-- ECharts Stacked bar chart -->
     <div class="card mt-3">
         <div class="card-header">
             <h5 class="mb-0">
-                <i class="bi bi-bar-chart me-2"></i>Paros por Línea (Últimos 7 días)
+                <i class="bi bi-bar-chart-horizontal me-2"></i>Paros por Máquina y Departamento (Últimos 7 días)
             </h5>
         </div>
 
         <div class="card-body">
-            <p class="mb-3">Gráfica de barras apiladas que muestra la duración total de paros (en minutos) por línea de producción durante los últimos 7 días. Cada barra representa un día y los segmentos de color representan diferentes líneas de producción.</p>
-
+            <p class="mb-3">Gráfica de barras horizontales apiladas que muestra la duración total de paros (en minutos) por máquina durante los últimos 7 días. Cada barra representa una máquina y los segmentos de color representan los diferentes departamentos operadores responsables de los paros.</p>
             <div class="chart-container">
-                <div class="chart" id="google-bar-stacked"></div>
+                <div class="chart has-fixed-height" id="bars_stacked"></div>
             </div>
         </div>
     </div>
-    <!-- /stacked column chart -->
+    <!-- /stacked bar chart -->
+
 </div>
 
 @section Scripts {
         <script src="~/assets/js/jquery/jquery.min.js"></script>
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="~/assets/js/vendor/visualization/echarts/echarts.min.js"></script>
     <script src="~/assets/js/vendor/forms/selects/select2.min.js"></script>
 
 
     <script>
-        var GoogleBarStacked = function() {
-
-            var chartInstance = null;
-
-            // Switch colors in dark and light themes
-            function color_theme(darkColor, lightColor) {
-                return document.documentElement.getAttribute('data-color-theme') == 'dark' ? darkColor : lightColor
-            }
-
-            // Stacked bar chart
-            var _googleBarStacked = function() {
-                if (typeof google == 'undefined') {
-                    console.warn('Warning - Google Charts library is not loaded.');
-                    return;
-                }
-
-                // Initialize chart
-                google.charts.load('current', {
-                    callback: function () {
-
-                        // Draw chart with empty data
-                        drawBarStacked(null);
-
-                        // Resize on sidebar width change
-                        var sidebarToggle = document.querySelectorAll('.sidebar-control');
-                        if (sidebarToggle) {
-                            sidebarToggle.forEach(function(togglers) {
-                                togglers.addEventListener('click', function() {
-                                    if (chartInstance) {
-                                        chartInstance.draw();
-                                    }
-                                });
-                            });
-                        }
-
-                        // Resize on window resize
-                        var resizeBarStacked;
-                        window.addEventListener('resize', function() {
-                            clearTimeout(resizeBarStacked);
-                            resizeBarStacked = setTimeout(function () {
-                                if (chartInstance) {
-                                    chartInstance.draw();
-                                }
-                            }, 200);
-                        });
-
-                        // Redraw chart when color theme is changed
-                        document.querySelectorAll('[name="main-theme"]').forEach(function(radio) {
-                            radio.addEventListener('change', function() {
-                                if (chartInstance) {
-                                    chartInstance.draw();
-                                }
-                            });
-                        });
-                    },
-                    packages: ['corechart']
-                });
-            };
-
-            // Chart settings
-            function drawBarStacked(datosParos) {
-                var bar_stacked_element = document.getElementById('google-bar-stacked');
-
-                var data;
-                if (!datosParos || !datosParos.lineas || datosParos.lineas.length === 0) {
-                    // Datos de ejemplo si no hay datos
-                    data = google.visualization.arrayToDataTable([
-                        ['Fecha', 'Sin datos'],
-                        ['Selecciona un área', 0]
-                    ]);
-                } else {
-                    // Construir encabezado con las líneas
-                    var header = ['Fecha'].concat(datosParos.lineas);
-
-                    // Construir filas de datos
-                    var rows = [];
-                    datosParos.fechas.forEach(function(fecha) {
-                        var row = [fecha];
-
-                        // Para cada línea, buscar el total de minutos en esa fecha
-                        datosParos.lineas.forEach(function(linea) {
-                            var dato = datosParos.datos.find(function(d) {
-                                return d.fecha === fecha && d.linea === linea;
-                            });
-                            row.push(dato ? dato.totalMinutos : 0);
-                        });
-
-                        rows.push(row);
-                    });
-
-                    // Crear array para Google Charts
-                    var dataArray = [header].concat(rows);
-                    data = google.visualization.arrayToDataTable(dataArray);
-                }
-
-                // Options
-                var options_bar_stacked = {
-                    fontName: 'var(--body-font-family)',
-                    height: 400,
-                    fontSize: 12,
-                    backgroundColor: 'transparent',
-                    chartArea: {
-                        left: '3%',
-                        width: '95%',
-                        height: 350
-                    },
-                    isStacked: true,
-                    tooltip: {
-                        textStyle: {
-                            fontSize: 14
-                        }
-                    },
-                    vAxis: {
-                        title: 'Minutos de paro',
-                        textStyle: {
-                            color: color_theme('#fff', '#333')
-                        }
-                    },
-                    hAxis: {
-                        title: 'Fecha',
-                        baselineColor: color_theme('#6e6f71', '#9CA3AF'),
-                        textStyle: {
-                            color: color_theme('#fff', '#333')
-                        },
-                        gridlines:{
-                            color: color_theme('#4d4d51', '#E5E7EB'),
-                            count: 10
-                        },
-                        minorGridlines: {
-                            color: color_theme('#3f4044', '#F3F4F6')
-                        }
-                    },
-                    legend: {
-                        position: 'top',
-                        alignment: 'center',
-                        textStyle: {
-                            color: color_theme('#fff', '#333')
-                        }
-                    },
-                    colors: ['#2ec7c9', '#b6a2de', '#5ab1ef', '#ffb980', '#d87a80', '#8d98b3', '#e7bcf3', '#9c27b0']
-                };
-
-                // Draw chart
-                var bar_stacked = new google.visualization.BarChart(bar_stacked_element);
-                bar_stacked.draw(data, options_bar_stacked);
-
-                chartInstance = {
-                    draw: function() {
-                        bar_stacked.draw(data, options_bar_stacked);
-                    }
-                };
-            }
-
-            // Función para actualizar la gráfica con nuevos datos
-            function updateChart(areaId, lineaId, estacionId, maquinaId) {
-                var url = '/Linealytics/GetDatosParos?';
-                var params = [];
-
-                if (areaId) params.push('areaId=' + areaId);
-                if (lineaId) params.push('lineaId=' + lineaId);
-                if (estacionId) params.push('estacionId=' + estacionId);
-                if (maquinaId) params.push('maquinaId=' + maquinaId);
-
-                url += params.join('&');
-
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    success: function(data) {
-                        console.log('Datos recibidos:', data);
-                        drawBarStacked(data);
-                    },
-                    error: function(error) {
-                        console.error('Error al cargar datos:', error);
-                    }
-                });
-            }
-
-            return {
-                init: function() {
-                    _googleBarStacked();
-                },
-                update: function(areaId, lineaId, estacionId, maquinaId) {
-                    updateChart(areaId, lineaId, estacionId, maquinaId);
-                }
-            }
-        }();
-
-        // Initialize module
-        // ------------------------------
-
-        GoogleBarStacked.init();
 
         // Select2 Initialization
         // ------------------------------
@@ -557,7 +366,7 @@
 
                     // Si hay área seleccionada, actualizar la gráfica
                     if (areaId) {
-                        GoogleBarStacked.update(areaId, lineaId || null, estacionId || null, maquinaId || null);
+                        EchartsBarsStackedLight.update(areaId, lineaId || null, estacionId || null, maquinaId || null);
                     }
                 });
             };
@@ -572,6 +381,321 @@
         // Initialize Select2
         document.addEventListener('DOMContentLoaded', function() {
             Select2Filters.init();
+        });
+
+        // ECharts Stacked Bars
+        // ------------------------------
+        var EchartsBarsStackedLight = function() {
+
+            var chartInstance = null;
+
+            // Stacked bar chart
+            var _barsStackedLightExample = function() {
+                if (typeof echarts == 'undefined') {
+                    console.warn('Warning - echarts.min.js is not loaded.');
+                    return;
+                }
+
+                // Define element
+                var bars_stacked_element = document.getElementById('bars_stacked');
+
+                // Charts configuration
+                if (bars_stacked_element) {
+
+                    // Initialize chart
+                    var bars_stacked = echarts.init(bars_stacked_element, null, { renderer: 'svg' });
+                    chartInstance = bars_stacked;
+
+                    // Draw chart with empty data
+                    drawBarsStacked(null);
+
+                    // Resize handlers
+                    var triggerChartResize = function() {
+                        bars_stacked_element && bars_stacked.resize();
+                    };
+
+                    // On sidebar width change
+                    var sidebarToggle = document.querySelectorAll('.sidebar-control');
+                    if (sidebarToggle) {
+                        sidebarToggle.forEach(function(togglers) {
+                            togglers.addEventListener('click', triggerChartResize);
+                        });
+                    }
+
+                    // On window resize
+                    var resizeCharts;
+                    window.addEventListener('resize', function() {
+                        clearTimeout(resizeCharts);
+                        resizeCharts = setTimeout(function () {
+                            triggerChartResize();
+                        }, 200);
+                    });
+                }
+            };
+
+            // Chart settings
+            function drawBarsStacked(datosParos) {
+                if (!chartInstance) return;
+
+                var legendData = [];
+                var yAxisData = [];
+                var series = [];
+                var xAxisMin = null;
+                var xAxisMax = null;
+
+                if (!datosParos || !datosParos.maquinas || datosParos.maquinas.length === 0) {
+                    // Datos de ejemplo si no hay datos
+                    legendData = ['Sin datos'];
+                    yAxisData = ['Selecciona un área'];
+                    series = [{
+                        name: 'Sin datos',
+                        type: 'bar',
+                        stack: 'Total',
+                        barWidth: 36,
+                        itemStyle: {
+                            color: '#ccc',
+                            barBorderRadius: [0, 4, 4, 0]
+                        },
+                        data: [[0, 0, 0]]
+                    }];
+                } else {
+                    console.log('Datos recibidos:', datosParos);
+                    console.log('Maquinas:', datosParos.maquinas);
+                    console.log('Departamentos:', datosParos.departamentos);
+                    console.log('Datos paros:', datosParos.datos);
+
+                    // Construir leyenda con departamentos (minúsculas por JSON camelCase)
+                    legendData = datosParos.departamentos.map(function(d) {
+                        return d.departamento;
+                    });
+                    console.log('Legend data:', legendData);
+
+                    // Usar las máquinas como eje Y (minúsculas por JSON camelCase)
+                    yAxisData = datosParos.maquinas.map(function(m) {
+                        return m.nombre;
+                    });
+                    console.log('Y-axis data (maquinas):', yAxisData);
+
+                    // Configurar rango de fechas para el eje X
+                    xAxisMin = new Date(datosParos.fechaMin).getTime();
+                    xAxisMax = new Date(datosParos.fechaMax).getTime();
+
+                    // Construir series para cada departamento
+                    series = datosParos.departamentos.map(function(dept, deptIndex) {
+                        // Para cada máquina, obtener todos los paros de este departamento
+                        var data = [];
+
+                        datosParos.maquinas.forEach(function(maquina, maqIndex) {
+                            console.log('Procesando maquina:', maquina.nombre, 'ID:', maquina.id, 'para departamento:', dept.departamento);
+
+                            // Filtrar paros de esta máquina y departamento
+                            var parosMaquina = datosParos.datos.filter(function(d) {
+                                return d.maquinaId === maquina.id && d.departamento === dept.departamento;
+                            });
+                            console.log('Paros encontrados:', parosMaquina.length, parosMaquina);
+
+                            // Acumular duración total por máquina y departamento
+                            var totalMinutos = 0;
+                            parosMaquina.forEach(function(paro) {
+                                totalMinutos += paro.duracionMinutos;
+                            });
+                            console.log('Total minutos para', maquina.nombre, '-', dept.departamento, ':', totalMinutos);
+
+                            // Agregar dato para todas las máquinas (incluir 0 para mantener estructura)
+                            data.push(totalMinutos);
+                        });
+
+                        console.log('Data array para departamento', dept.departamento, ':', data);
+
+                        // Determinar si es el último departamento para aplicar bordes redondeados
+                        var isLast = deptIndex === datosParos.departamentos.length - 1;
+
+                        return {
+                            name: dept.departamento,
+                            type: 'bar',
+                            stack: 'Total',
+                            barWidth: 36,
+                            itemStyle: {
+                                color: dept.color || '#666666',
+                                barBorderRadius: isLast ? [0, 4, 4, 0] : [0, 0, 0, 0]
+                            },
+                            label: {
+                                show: true,
+                                position: 'insideRight',
+                                fontSize: 12,
+                                fontWeight: 500,
+                                formatter: function(params) {
+                                    return params.value > 0 ? params.value + ' min' : '';
+                                }
+                            },
+                            data: data
+                        };
+                    });
+                }
+
+                // Configurar opciones de la gráfica
+                var options = {
+                    // Global text styles
+                    textStyle: {
+                        fontFamily: 'var(--body-font-family)',
+                        color: 'var(--body-color)',
+                        fontSize: 14,
+                        lineHeight: 22,
+                        textBorderColor: 'transparent'
+                    },
+
+                    // Chart animation duration
+                    animationDuration: 750,
+
+                    // Setup grid
+                    grid: {
+                        left: 0,
+                        right: 30,
+                        top: 35,
+                        bottom: 0,
+                        containLabel: true
+                    },
+
+                    // Add legend
+                    legend: {
+                        data: legendData,
+                        itemHeight: 8,
+                        itemGap: 30,
+                        textStyle: {
+                            color: 'var(--body-color)',
+                            padding: [0, 5]
+                        }
+                    },
+
+                    // Add tooltip
+                    tooltip: {
+                        trigger: 'axis',
+                        className: 'shadow-sm rounded',
+                        backgroundColor: 'var(--white)',
+                        borderColor: 'var(--gray-400)',
+                        padding: 15,
+                        textStyle: {
+                            color: '#000'
+                        },
+                        axisPointer: {
+                            type: 'shadow',
+                            shadowStyle: {
+                                color: 'rgba(var(--body-color-rgb), 0.025)'
+                            }
+                        },
+                        formatter: function(params) {
+                            if (!params || params.length === 0) return '';
+
+                            var maquinaNombre = yAxisData[params[0].value[0]] || 'Desconocido';
+                            var result = '<strong>' + maquinaNombre + '</strong><br/>';
+                            var total = 0;
+
+                            params.forEach(function(item) {
+                                if (item.value && item.value[1] > 0) {
+                                    result += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + item.color + ';"></span>';
+                                    result += item.seriesName + ': ' + item.value[1] + ' min<br/>';
+                                    total += item.value[1];
+                                }
+                            });
+                            result += '<strong>Total: ' + total + ' min</strong>';
+                            return result;
+                        }
+                    },
+
+                    // Horizontal axis
+                    xAxis: [{
+                        type: 'value',
+                        axisLabel: {
+                            color: 'rgba(var(--body-color-rgb), .65)',
+                            formatter: '{value} min'
+                        },
+                        axisLine: {
+                            show: true,
+                            lineStyle: {
+                                color: 'var(--gray-500)'
+                            }
+                        },
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                                color: 'var(--gray-300)',
+                                type: 'dashed'
+                            }
+                        }
+                    }],
+
+                    // Vertical axis
+                    yAxis: [{
+                        type: 'category',
+                        data: yAxisData,
+                        axisLabel: {
+                            color: 'rgba(var(--body-color-rgb), .65)'
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                color: 'var(--gray-500)'
+                            }
+                        },
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                                color: 'var(--gray-300)'
+                            }
+                        },
+                        splitArea: {
+                            show: true,
+                            areaStyle: {
+                                color: ['rgba(var(--white-rgb), .01)', 'rgba(var(--black-rgb), .01)']
+                            }
+                        }
+                    }],
+
+                    // Add series
+                    series: series
+                };
+
+                // Aplicar opciones a la gráfica
+                chartInstance.setOption(options, true);
+            }
+
+            // Función para actualizar la gráfica con nuevos datos
+            function updateChart(areaId, lineaId, estacionId, maquinaId) {
+                var url = '/Linealytics/GetDatosParosPorDepartamento?';
+                var params = [];
+
+                if (areaId) params.push('areaId=' + areaId);
+                if (lineaId) params.push('lineaId=' + lineaId);
+                if (estacionId) params.push('estacionId=' + estacionId);
+                if (maquinaId) params.push('maquinaId=' + maquinaId);
+
+                url += params.join('&');
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        console.log('Datos de departamentos recibidos:', data);
+                        drawBarsStacked(data);
+                    },
+                    error: function(error) {
+                        console.error('Error al cargar datos de departamentos:', error);
+                    }
+                });
+            }
+
+            return {
+                init: function() {
+                    _barsStackedLightExample();
+                },
+                update: function(areaId, lineaId, estacionId, maquinaId) {
+                    updateChart(areaId, lineaId, estacionId, maquinaId);
+                }
+            }
+        }();
+
+        // Initialize ECharts
+        document.addEventListener('DOMContentLoaded', function() {
+            EchartsBarsStackedLight.init();
         });
     </script>
 }

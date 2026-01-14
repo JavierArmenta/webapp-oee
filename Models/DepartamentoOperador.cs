@@ -18,6 +18,10 @@ namespace WebApp.Models
         [Display(Name = "Descripción")]
         public string? Descripcion { get; set; }
 
+        [StringLength(7)]
+        [Display(Name = "Color")]
+        public string? Color { get; set; } = "#666666";
+
         [Display(Name = "Activo")]
         public bool Activo { get; set; } = true;
 

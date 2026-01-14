@@ -135,6 +135,96 @@ namespace WebApp.Controllers
             return Json(resultado);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetDatosParosPorDepartamento(int? areaId, int? lineaId, int? estacionId, int? maquinaId)
+        {
+            var fechaInicio = DateTime.UtcNow.AddDays(-7); // Últimos 7 días
+
+            // Query base de paros de botonera
+            var query = _context.RegistrosParoBotonera
+                .Include(p => p.Maquina)
+                    .ThenInclude(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                            .ThenInclude(l => l.Area)
+                .Include(p => p.DepartamentoOperador)
+                .Where(p => p.FechaHoraInicio >= fechaInicio && p.DuracionMinutos.HasValue);
+
+            // Aplicar filtros
+            if (areaId.HasValue)
+            {
+                query = query.Where(p => p.Maquina.Estacion.Linea.AreaId == areaId.Value);
+            }
+
+            if (lineaId.HasValue)
+            {
+                query = query.Where(p => p.Maquina.Estacion.LineaId == lineaId.Value);
+            }
+
+            if (estacionId.HasValue)
+            {
+                query = query.Where(p => p.Maquina.EstacionId == estacionId.Value);
+            }
+
+            if (maquinaId.HasValue)
+            {
+                query = query.Where(p => p.MaquinaId == maquinaId.Value);
+            }
+
+            var paros = await query
+                .OrderBy(p => p.FechaHoraInicio)
+                .ToListAsync();
+
+            // Preparar datos para la gráfica: cada paro individual con su información
+            var datosParos = paros
+                .Where(p => p.DepartamentoOperador != null)
+                .Select(p => new
+                {
+                    Maquina = p.Maquina.Nombre,
+                    MaquinaId = p.MaquinaId,
+                    Departamento = p.DepartamentoOperador!.Nombre,
+                    Color = p.DepartamentoOperador.Color ?? "#666666",
+                    FechaInicio = p.FechaHoraInicio,
+                    FechaFin = p.FechaHoraFin,
+                    DuracionMinutos = p.DuracionMinutos ?? 0
+                })
+                .ToList();
+
+            // Obtener todas las máquinas únicas
+            var maquinas = datosParos
+                .GroupBy(d => new { d.MaquinaId, d.Maquina })
+                .Select(g => new {
+                    Id = g.Key.MaquinaId,
+                    Nombre = g.Key.Maquina
+                })
+                .OrderBy(m => m.Nombre)
+                .ToList();
+
+            // Obtener todos los departamentos únicos
+            var departamentos = datosParos
+                .GroupBy(d => new { d.Departamento, d.Color })
+                .Select(g => new {
+                    Departamento = g.Key.Departamento,
+                    Color = g.Key.Color
+                })
+                .ToList();
+
+            // Calcular fecha mínima y máxima para el rango
+            var fechaMin = paros.Any() ? paros.Min(p => p.FechaHoraInicio) : DateTime.UtcNow;
+            var fechaMax = paros.Any() ? paros.Max(p => p.FechaHoraFin ?? p.FechaHoraInicio) : DateTime.UtcNow;
+
+            // Construir estructura para la gráfica
+            var resultado = new
+            {
+                Maquinas = maquinas,
+                Departamentos = departamentos,
+                Datos = datosParos,
+                FechaMin = fechaMin,
+                FechaMax = fechaMax
+            };
+
+            return Json(resultado);
+        }
+
         // ========== TURNOS ==========
 
         public async Task<IActionResult> Turnos()
@@ -915,6 +1005,53 @@ namespace WebApp.Controllers
                 TempData["Success"] = "Botonera activada exitosamente.";
             }
             return RedirectToAction(nameof(Botoneras));
+        }
+
+        // ========== MÉTODOS TEMPORALES DE CONFIGURACIÓN ==========
+
+        [HttpGet]
+        public async Task<IActionResult> AsignarColoresDepartamentos()
+        {
+            // Colores predefinidos para los departamentos
+            var colores = new List<string>
+            {
+                "#42A5F5", // Azul
+                "#ef5350", // Rojo
+                "#66bb6a", // Verde
+                "#ff7043", // Naranja
+                "#26a69a", // Turquesa
+                "#AB47BC", // Púrpura
+                "#FFA726", // Naranja claro
+                "#EC407A", // Rosa
+                "#5C6BC0", // Índigo
+                "#FFCA28"  // Amarillo
+            };
+
+            var departamentos = await _context.DepartamentosOperador
+                .Where(d => d.Activo)
+                .OrderBy(d => d.Id)
+                .ToListAsync();
+
+            for (int i = 0; i < departamentos.Count; i++)
+            {
+                // Asignar color cíclicamente
+                departamentos[i].Color = colores[i % colores.Count];
+            }
+
+            await _context.SaveChangesAsync();
+
+            var resultado = departamentos.Select(d => new
+            {
+                d.Id,
+                d.Nombre,
+                d.Color
+            }).ToList();
+
+            return Json(new
+            {
+                mensaje = "Colores asignados exitosamente",
+                departamentos = resultado
+            });
         }
 
         // ========== MÉTODOS AUXILIARES ==========
