@@ -474,8 +474,75 @@
                     xAxisMin = new Date(datosParos.fechaMin).getTime();
                     xAxisMax = new Date(datosParos.fechaMax).getTime();
 
+                    // Primero, crear serie de producción (espacios sin paros) - verde
+                    var dataProduccion = [];
+                    datosParos.maquinas.forEach(function(maquina, maqIndex) {
+                        // Obtener todos los paros de esta máquina, ordenados por fecha
+                        var parosMaquina = datosParos.datos
+                            .filter(function(d) { return d.maquinaId === maquina.id; })
+                            .map(function(p) {
+                                return {
+                                    inicio: new Date(p.fechaInicio).getTime(),
+                                    fin: p.fechaFin ? new Date(p.fechaFin).getTime() : new Date(p.fechaInicio).getTime()
+                                };
+                            })
+                            .sort(function(a, b) { return a.inicio - b.inicio; });
+
+                        // Si no hay paros, todo el período es producción
+                        if (parosMaquina.length === 0) {
+                            dataProduccion.push({
+                                name: maquina.nombre,
+                                value: [maqIndex, xAxisMin, xAxisMax],
+                                itemStyle: { color: '#66bb6a', borderRadius: 4 },
+                                tipo: 'Producción',
+                                maquina: maquina.nombre
+                            });
+                        } else {
+                            // Producción desde el inicio hasta el primer paro
+                            if (parosMaquina[0].inicio > xAxisMin) {
+                                dataProduccion.push({
+                                    name: maquina.nombre,
+                                    value: [maqIndex, xAxisMin, parosMaquina[0].inicio],
+                                    itemStyle: { color: '#66bb6a', borderRadius: 4 },
+                                    tipo: 'Producción',
+                                    maquina: maquina.nombre
+                                });
+                            }
+
+                            // Producción entre paros
+                            for (var i = 0; i < parosMaquina.length - 1; i++) {
+                                var finParoActual = parosMaquina[i].fin;
+                                var inicioSiguienteParo = parosMaquina[i + 1].inicio;
+                                if (inicioSiguienteParo > finParoActual) {
+                                    dataProduccion.push({
+                                        name: maquina.nombre,
+                                        value: [maqIndex, finParoActual, inicioSiguienteParo],
+                                        itemStyle: { color: '#66bb6a', borderRadius: 4 },
+                                        tipo: 'Producción',
+                                        maquina: maquina.nombre
+                                    });
+                                }
+                            }
+
+                            // Producción desde el último paro hasta el final
+                            var ultimoParo = parosMaquina[parosMaquina.length - 1];
+                            if (ultimoParo.fin < xAxisMax) {
+                                dataProduccion.push({
+                                    name: maquina.nombre,
+                                    value: [maqIndex, ultimoParo.fin, xAxisMax],
+                                    itemStyle: { color: '#66bb6a', borderRadius: 4 },
+                                    tipo: 'Producción',
+                                    maquina: maquina.nombre
+                                });
+                            }
+                        }
+                    });
+
+                    // Agregar "Producción" a la leyenda al inicio
+                    legendData.unshift('Producción');
+
                     // Construir series para cada departamento - ahora cada paro es un segmento individual
-                    series = datosParos.departamentos.map(function(dept) {
+                    series = datosParos.departamentos.map(function(dept, deptIndex) {
                         var data = [];
 
                         // Filtrar todos los paros de este departamento
@@ -550,6 +617,42 @@
                             data: data
                         };
                     });
+
+                    // Agregar serie de producción al principio
+                    series.unshift({
+                        name: 'Producción',
+                        type: 'custom',
+                        renderItem: function(params, api) {
+                            var categoryIndex = api.value(0);
+                            var start = api.coord([api.value(1), categoryIndex]);
+                            var end = api.coord([api.value(2), categoryIndex]);
+                            var height = api.size([0, 1])[1] * 0.6;
+
+                            var rectShape = echarts.graphic.clipRectByRect({
+                                x: start[0],
+                                y: start[1] - height / 2,
+                                width: end[0] - start[0],
+                                height: height
+                            }, {
+                                x: params.coordSys.x,
+                                y: params.coordSys.y,
+                                width: params.coordSys.width,
+                                height: params.coordSys.height
+                            });
+
+                            return rectShape && {
+                                type: 'rect',
+                                transition: ['shape'],
+                                shape: rectShape,
+                                style: api.style()
+                            };
+                        },
+                        encode: {
+                            x: [1, 2],
+                            y: 0
+                        },
+                        data: dataProduccion
+                    });
                 }
 
                 // Configurar opciones de la gráfica
@@ -600,14 +703,23 @@
                             if (!params || !params.value) return '';
 
                             var maquina = params.data.maquina;
-                            var departamento = params.data.departamento;
-                            var duracion = params.data.duracionMinutos;
                             var fechaInicio = new Date(params.value[1]);
                             var fechaFin = new Date(params.value[2]);
+                            var duracionMs = params.value[2] - params.value[1];
+                            var duracionMin = Math.round(duracionMs / 60000);
 
                             var result = '<strong>' + maquina + '</strong><br/>';
                             result += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + params.color + ';"></span>';
-                            result += departamento + '<br/>';
+
+                            // Si es producción
+                            if (params.data.tipo === 'Producción') {
+                                result += 'Producción<br/>';
+                            } else {
+                                // Si es paro (tiene departamento)
+                                var departamento = params.data.departamento;
+                                result += departamento + '<br/>';
+                            }
+
                             result += '<strong>Inicio:</strong> ' + fechaInicio.toLocaleString('es-MX', {
                                 year: 'numeric',
                                 month: '2-digit',
@@ -624,7 +736,7 @@
                                 minute: '2-digit',
                                 hour12: false
                             }) + '<br/>';
-                            result += '<strong>Duración:</strong> ' + duracion + ' min';
+                            result += '<strong>Duración:</strong> ' + duracionMin + ' min';
 
                             return result;
                         }
