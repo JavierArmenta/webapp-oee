@@ -41,6 +41,15 @@ namespace WebApp.Controllers
                 .ThenBy(l => l.Nombre)
                 .ToListAsync();
 
+            ViewBag.Estaciones = await _context.Estaciones
+                .Include(e => e.Linea)
+                    .ThenInclude(l => l.Area)
+                .Where(e => e.Activo)
+                .OrderBy(e => e.Linea.Area.Nombre)
+                .ThenBy(e => e.Linea.Nombre)
+                .ThenBy(e => e.Nombre)
+                .ToListAsync();
+
             ViewBag.Maquinas = await _context.Maquinas
                 .Include(m => m.Estacion)
                     .ThenInclude(e => e.Linea)
@@ -52,6 +61,78 @@ namespace WebApp.Controllers
                 .ToListAsync();
 
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDatosParos(int? areaId, int? lineaId, int? estacionId, int? maquinaId)
+        {
+            var fechaInicio = DateTime.UtcNow.AddDays(-7); // Últimos 7 días
+
+            // Query base de paros de botonera
+            var query = _context.RegistrosParoBotonera
+                .Include(p => p.Maquina)
+                    .ThenInclude(m => m.Estacion)
+                        .ThenInclude(e => e.Linea)
+                            .ThenInclude(l => l.Area)
+                .Where(p => p.FechaHoraInicio >= fechaInicio && p.DuracionMinutos.HasValue);
+
+            // Aplicar filtros
+            if (areaId.HasValue)
+            {
+                query = query.Where(p => p.Maquina.Estacion.Linea.AreaId == areaId.Value);
+            }
+
+            if (lineaId.HasValue)
+            {
+                query = query.Where(p => p.Maquina.Estacion.LineaId == lineaId.Value);
+            }
+
+            if (estacionId.HasValue)
+            {
+                query = query.Where(p => p.Maquina.EstacionId == estacionId.Value);
+            }
+
+            if (maquinaId.HasValue)
+            {
+                query = query.Where(p => p.MaquinaId == maquinaId.Value);
+            }
+
+            var paros = await query.ToListAsync();
+
+            // Agrupar por día y línea
+            var datosAgrupados = paros
+                .GroupBy(p => new
+                {
+                    Fecha = p.FechaHoraInicio.Date,
+                    Linea = p.Maquina.Estacion.Linea.Nombre,
+                    LineaId = p.Maquina.Estacion.LineaId
+                })
+                .Select(g => new
+                {
+                    Fecha = g.Key.Fecha.ToString("dd/MM"),
+                    Linea = g.Key.Linea,
+                    LineaId = g.Key.LineaId,
+                    TotalMinutos = g.Sum(p => p.DuracionMinutos ?? 0),
+                    CantidadParos = g.Count()
+                })
+                .OrderBy(x => x.Fecha)
+                .ToList();
+
+            // Obtener todas las líneas únicas
+            var lineas = datosAgrupados.Select(d => d.Linea).Distinct().ToList();
+
+            // Obtener todas las fechas únicas
+            var fechas = datosAgrupados.Select(d => d.Fecha).Distinct().ToList();
+
+            // Construir estructura para la gráfica
+            var resultado = new
+            {
+                Lineas = lineas,
+                Fechas = fechas,
+                Datos = datosAgrupados
+            };
+
+            return Json(resultado);
         }
 
         // ========== TURNOS ==========

@@ -19,7 +19,7 @@
 
         <div class="card-body">
             <div class="row">
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <label class="form-label">Área</label>
                     <select class="form-control select" id="select-area">
                         <option value="">Todas las áreas</option>
@@ -30,7 +30,7 @@
                     </select>
                 </div>
 
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <label class="form-label">Línea</label>
                     <select class="form-control select" id="select-linea" disabled>
                         <option value="">Seleccione un área primero</option>
@@ -41,13 +41,26 @@
                     </select>
                 </div>
 
-                <div class="col-lg-4">
+                <div class="col-lg-3">
+                    <label class="form-label">Estación</label>
+                    <select class="form-control select" id="select-estacion" disabled>
+                        <option value="">Seleccione una línea primero</option>
+                        @foreach (var estacion in (List<WebApp.Models.Estacion>)ViewBag.Estaciones)
+                        {
+                            <option value="@estacion.Id" data-linea="@estacion.LineaId" data-area="@estacion.Linea.AreaId">
+                                @estacion.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-3">
                     <label class="form-label">Máquina</label>
                     <select class="form-control select" id="select-maquina" disabled>
-                        <option value="">Seleccione un área primero</option>
+                        <option value="">Seleccione una estación primero</option>
                         @foreach (var maquina in (List<WebApp.Models.Maquina>)ViewBag.Maquinas)
                         {
-                            <option value="@maquina.Id" data-linea="@maquina.Estacion.LineaId" data-area="@maquina.Estacion.Linea.AreaId">
+                            <option value="@maquina.Id" data-estacion="@maquina.EstacionId" data-linea="@maquina.Estacion.LineaId" data-area="@maquina.Estacion.Linea.AreaId">
                                 @maquina.Nombre
                             </option>
                         }
@@ -61,11 +74,13 @@
     <!-- Stacked column chart -->
     <div class="card mt-3">
         <div class="card-header">
-            <h5 class="mb-0">Stacked column chart</h5>
+            <h5 class="mb-0">
+                <i class="bi bi-bar-chart me-2"></i>Paros por Línea (Últimos 7 días)
+            </h5>
         </div>
 
         <div class="card-body">
-            <p class="mb-3">Stacked <code>column</code> charts present the information in the same sequence on each bar. The stacked bar chart stacks bars that represent different groups on top of each other. The height of the resulting bar shows the combined result of the groups. However, stacked bar charts are not suited to datasets where some groups have negative values. In such cases, grouped bar charts are preferable.</p>
+            <p class="mb-3">Gráfica de barras apiladas que muestra la duración total de paros (en minutos) por línea de producción durante los últimos 7 días. Cada barra representa un día y los segmentos de color representan diferentes líneas de producción.</p>
 
             <div class="chart-container">
                 <div class="chart" id="google-bar-stacked"></div>
@@ -84,9 +99,12 @@
     <script>
         var GoogleBarStacked = function() {
 
-            //
-            // Setup module components
-            //
+            var chartInstance = null;
+
+            // Switch colors in dark and light themes
+            function color_theme(darkColor, lightColor) {
+                return document.documentElement.getAttribute('data-color-theme') == 'dark' ? darkColor : lightColor
+            }
 
             // Stacked bar chart
             var _googleBarStacked = function() {
@@ -95,23 +113,22 @@
                     return;
                 }
 
-                // Switch colors in dark and light themes
-                function color_theme(darkColor, lightColor) {
-                    return document.documentElement.getAttribute('data-color-theme') == 'dark' ? darkColor : lightColor
-                }
-
                 // Initialize chart
                 google.charts.load('current', {
                     callback: function () {
 
-                        // Draw chart
-                        drawBarStacked();
+                        // Draw chart with empty data
+                        drawBarStacked(null);
 
                         // Resize on sidebar width change
                         var sidebarToggle = document.querySelectorAll('.sidebar-control');
                         if (sidebarToggle) {
                             sidebarToggle.forEach(function(togglers) {
-                                togglers.addEventListener('click', drawBarStacked);
+                                togglers.addEventListener('click', function() {
+                                    if (chartInstance) {
+                                        chartInstance.draw();
+                                    }
+                                });
                             });
                         }
 
@@ -120,103 +137,150 @@
                         window.addEventListener('resize', function() {
                             clearTimeout(resizeBarStacked);
                             resizeBarStacked = setTimeout(function () {
-                                drawBarStacked();
+                                if (chartInstance) {
+                                    chartInstance.draw();
+                                }
                             }, 200);
                         });
 
                         // Redraw chart when color theme is changed
                         document.querySelectorAll('[name="main-theme"]').forEach(function(radio) {
-                            radio.addEventListener('change', drawBarStacked);
+                            radio.addEventListener('change', function() {
+                                if (chartInstance) {
+                                    chartInstance.draw();
+                                }
+                            });
                         });
                     },
                     packages: ['corechart']
                 });
-
-                // Chart settings
-                function drawBarStacked() {
-
-                    // Define charts element
-                    var bar_stacked_element = document.getElementById('google-bar-stacked');
-
-                    // Data
-                    var data = google.visualization.arrayToDataTable([
-                        ['Genre', 'Fantasy & Sci Fi', 'Romance', 'Mystery/Crime', 'General', 'Western', 'Literature', { role: 'annotation' } ],
-                        ['2000', 20, 30, 35, 40, 45, 30, ''],
-                        ['2005', 14, 20, 25, 30, 48, 30, ''],
-                        ['2010', 10, 24, 20, 32, 18, 5, ''],
-                        ['2015', 15, 25, 30, 35, 20, 15, ''],
-                        ['2020', 16, 22, 23, 30, 16, 9, ''],
-                        ['2025', 12, 26, 20, 40, 20, 30, ''],
-                        ['2030', 28, 19, 29, 30, 12, 13, '']
-                    ]);
-
-                    // Options
-                    var options_bar_stacked = {
-                        fontName: 'var(--body-font-family)',
-                        height: 400,
-                        fontSize: 12,
-                        backgroundColor: 'transparent',
-                        chartArea: {
-                            left: '3%',
-                            width: '95%',
-                            height: 350
-                        },
-                        isStacked: true,
-                        tooltip: {
-                            textStyle: {
-                                fontSize: 14
-                            }
-                        },
-                        vAxis: {
-                            textStyle: {
-                                color: color_theme('#fff', '#333')
-                            }
-                        },
-                        hAxis: {
-                            baselineColor: color_theme('#6e6f71', '#9CA3AF'),
-                            textStyle: {
-                                color: color_theme('#fff', '#333')
-                            },
-                            gridlines:{
-                                color: color_theme('#4d4d51', '#E5E7EB'),
-                                count: 10
-                            },
-                            minorGridlines: {
-                                color: color_theme('#3f4044', '#F3F4F6')
-                            },
-                            minValue: 0
-                        },
-                        legend: {
-                            position: 'top',
-                            alignment: 'center',
-                            textStyle: {
-                                color: color_theme('#fff', '#333')
-                            }
-                        },
-                        series: {
-                            0: { color: '#2ec7c9' },
-                            1: { color: '#b6a2de' },
-                            2: { color: '#5ab1ef' },
-                            3: { color: '#ffb980' },
-                            4: { color: '#d87a80' },
-                            5: { color: '#8d98b3' }
-                        }
-                    };
-
-                    // Draw chart
-                    var bar_stacked = new google.visualization.BarChart(bar_stacked_element);
-                    bar_stacked.draw(data, options_bar_stacked);
-                }
-
             };
 
-            //
-            // Return objects assigned to module
-            //
+            // Chart settings
+            function drawBarStacked(datosParos) {
+                var bar_stacked_element = document.getElementById('google-bar-stacked');
+
+                var data;
+                if (!datosParos || !datosParos.Lineas || datosParos.Lineas.length === 0) {
+                    // Datos de ejemplo si no hay datos
+                    data = google.visualization.arrayToDataTable([
+                        ['Fecha', 'Sin datos'],
+                        ['Selecciona un área', 0]
+                    ]);
+                } else {
+                    // Construir encabezado con las líneas
+                    var header = ['Fecha'].concat(datosParos.Lineas);
+
+                    // Construir filas de datos
+                    var rows = [];
+                    datosParos.Fechas.forEach(function(fecha) {
+                        var row = [fecha];
+
+                        // Para cada línea, buscar el total de minutos en esa fecha
+                        datosParos.Lineas.forEach(function(linea) {
+                            var dato = datosParos.Datos.find(function(d) {
+                                return d.Fecha === fecha && d.Linea === linea;
+                            });
+                            row.push(dato ? dato.TotalMinutos : 0);
+                        });
+
+                        rows.push(row);
+                    });
+
+                    // Crear array para Google Charts
+                    var dataArray = [header].concat(rows);
+                    data = google.visualization.arrayToDataTable(dataArray);
+                }
+
+                // Options
+                var options_bar_stacked = {
+                    fontName: 'var(--body-font-family)',
+                    height: 400,
+                    fontSize: 12,
+                    backgroundColor: 'transparent',
+                    chartArea: {
+                        left: '3%',
+                        width: '95%',
+                        height: 350
+                    },
+                    isStacked: true,
+                    tooltip: {
+                        textStyle: {
+                            fontSize: 14
+                        }
+                    },
+                    vAxis: {
+                        title: 'Minutos de paro',
+                        textStyle: {
+                            color: color_theme('#fff', '#333')
+                        }
+                    },
+                    hAxis: {
+                        title: 'Fecha',
+                        baselineColor: color_theme('#6e6f71', '#9CA3AF'),
+                        textStyle: {
+                            color: color_theme('#fff', '#333')
+                        },
+                        gridlines:{
+                            color: color_theme('#4d4d51', '#E5E7EB'),
+                            count: 10
+                        },
+                        minorGridlines: {
+                            color: color_theme('#3f4044', '#F3F4F6')
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        alignment: 'center',
+                        textStyle: {
+                            color: color_theme('#fff', '#333')
+                        }
+                    },
+                    colors: ['#2ec7c9', '#b6a2de', '#5ab1ef', '#ffb980', '#d87a80', '#8d98b3', '#e7bcf3', '#9c27b0']
+                };
+
+                // Draw chart
+                var bar_stacked = new google.visualization.BarChart(bar_stacked_element);
+                bar_stacked.draw(data, options_bar_stacked);
+
+                chartInstance = {
+                    draw: function() {
+                        bar_stacked.draw(data, options_bar_stacked);
+                    }
+                };
+            }
+
+            // Función para actualizar la gráfica con nuevos datos
+            function updateChart(areaId, lineaId, estacionId, maquinaId) {
+                var url = '/Linealytics/GetDatosParos?';
+                var params = [];
+
+                if (areaId) params.push('areaId=' + areaId);
+                if (lineaId) params.push('lineaId=' + lineaId);
+                if (estacionId) params.push('estacionId=' + estacionId);
+                if (maquinaId) params.push('maquinaId=' + maquinaId);
+
+                url += params.join('&');
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        console.log('Datos recibidos:', data);
+                        drawBarStacked(data);
+                    },
+                    error: function(error) {
+                        console.error('Error al cargar datos:', error);
+                    }
+                });
+            }
 
             return {
                 init: function() {
                     _googleBarStacked();
+                },
+                update: function(areaId, lineaId, estacionId, maquinaId) {
+                    updateChart(areaId, lineaId, estacionId, maquinaId);
                 }
             }
         }();
@@ -232,6 +296,7 @@
 
             // Guardar todas las opciones originales
             var todasLineas = [];
+            var todasEstaciones = [];
             var todasMaquinas = [];
 
             var _componentSelect2 = function() {
@@ -251,11 +316,23 @@
                     }
                 });
 
+                $('#select-estacion option').each(function() {
+                    if ($(this).val() !== '') {
+                        todasEstaciones.push({
+                            value: $(this).val(),
+                            text: $(this).text(),
+                            linea: $(this).data('linea'),
+                            area: $(this).data('area')
+                        });
+                    }
+                });
+
                 $('#select-maquina option').each(function() {
                     if ($(this).val() !== '') {
                         todasMaquinas.push({
                             value: $(this).val(),
                             text: $(this).text(),
+                            estacion: $(this).data('estacion'),
                             linea: $(this).data('linea'),
                             area: $(this).data('area')
                         });
@@ -273,14 +350,17 @@
                     var areaId = $(this).val();
 
                     if (!areaId) {
-                        // Si no hay área seleccionada, deshabilitar líneas y máquinas
+                        // Si no hay área seleccionada, deshabilitar líneas, estaciones y máquinas
                         $('#select-linea').prop('disabled', true);
+                        $('#select-estacion').prop('disabled', true);
                         $('#select-maquina').prop('disabled', true);
 
                         $('#select-linea').empty().append('<option value="">Seleccione un área primero</option>');
+                        $('#select-estacion').empty().append('<option value="">Seleccione un área primero</option>');
                         $('#select-maquina').empty().append('<option value="">Seleccione un área primero</option>');
 
                         $('#select-linea').val('').trigger('change');
+                        $('#select-estacion').val('').trigger('change');
                         $('#select-maquina').val('').trigger('change');
                     } else {
                         // Habilitar select de líneas
@@ -300,8 +380,23 @@
                             );
                         });
 
-                        // Habilitar select de máquinas
-                        $('#select-maquina').prop('disabled', false);
+                        // Filtrar y reconstruir estaciones por área
+                        $('#select-estacion').empty().append('<option value="">Todas las estaciones</option>');
+
+                        todasEstaciones.filter(function(estacion) {
+                            return estacion.area == areaId;
+                        }).forEach(function(estacion) {
+                            $('#select-estacion').append(
+                                $('<option></option>')
+                                    .attr('value', estacion.value)
+                                    .attr('data-linea', estacion.linea)
+                                    .attr('data-area', estacion.area)
+                                    .text(estacion.text)
+                            );
+                        });
+
+                        // Habilitar select de estaciones
+                        $('#select-estacion').prop('disabled', false);
 
                         // Filtrar y reconstruir máquinas por área
                         $('#select-maquina').empty().append('<option value="">Todas las máquinas</option>');
@@ -312,20 +407,96 @@
                             $('#select-maquina').append(
                                 $('<option></option>')
                                     .attr('value', maquina.value)
+                                    .attr('data-estacion', maquina.estacion)
                                     .attr('data-linea', maquina.linea)
                                     .attr('data-area', maquina.area)
                                     .text(maquina.text)
                             );
                         });
 
+                        // Habilitar select de máquinas
+                        $('#select-maquina').prop('disabled', false);
+
                         // Reset selects dependientes
                         $('#select-linea').val('').trigger('change');
+                        $('#select-estacion').val('').trigger('change');
                         $('#select-maquina').val('').trigger('change');
                     }
                 });
 
                 $('#select-linea').on('change', function() {
                     var lineaId = $(this).val();
+                    var areaId = $('#select-area').val();
+
+                    // Filtrar y reconstruir estaciones
+                    $('#select-estacion').empty().append('<option value="">Todas las estaciones</option>');
+
+                    var estacionesFiltradas = todasEstaciones;
+
+                    // Filtrar por área si está seleccionada
+                    if (areaId) {
+                        estacionesFiltradas = estacionesFiltradas.filter(function(estacion) {
+                            return estacion.area == areaId;
+                        });
+                    }
+
+                    // Filtrar por línea si está seleccionada
+                    if (lineaId) {
+                        estacionesFiltradas = estacionesFiltradas.filter(function(estacion) {
+                            return estacion.linea == lineaId;
+                        });
+                    }
+
+                    // Agregar opciones filtradas de estaciones
+                    estacionesFiltradas.forEach(function(estacion) {
+                        $('#select-estacion').append(
+                            $('<option></option>')
+                                .attr('value', estacion.value)
+                                .attr('data-linea', estacion.linea)
+                                .attr('data-area', estacion.area)
+                                .text(estacion.text)
+                        );
+                    });
+
+                    // Filtrar y reconstruir máquinas
+                    $('#select-maquina').empty().append('<option value="">Todas las máquinas</option>');
+
+                    var maquinasFiltradas = todasMaquinas;
+
+                    // Filtrar por área si está seleccionada
+                    if (areaId) {
+                        maquinasFiltradas = maquinasFiltradas.filter(function(maquina) {
+                            return maquina.area == areaId;
+                        });
+                    }
+
+                    // Filtrar por línea si está seleccionada
+                    if (lineaId) {
+                        maquinasFiltradas = maquinasFiltradas.filter(function(maquina) {
+                            return maquina.linea == lineaId;
+                        });
+                    }
+
+                    // Agregar opciones filtradas de máquinas
+                    maquinasFiltradas.forEach(function(maquina) {
+                        $('#select-maquina').append(
+                            $('<option></option>')
+                                .attr('value', maquina.value)
+                                .attr('data-estacion', maquina.estacion)
+                                .attr('data-linea', maquina.linea)
+                                .attr('data-area', maquina.area)
+                                .text(maquina.text)
+                        );
+                    });
+
+                    // Reset selects de estaciones y máquinas
+                    $('#select-estacion').val('').trigger('change');
+                    $('#select-maquina').val('').trigger('change');
+                });
+
+                $('#select-estacion').on('change', function() {
+                    var estacionId = $(this).val();
+                    var lineaId = $('#select-linea').val();
                     var areaId = $('#select-area').val();
 
                     // Filtrar y reconstruir máquinas
@@ -347,11 +518,19 @@
                         });
                     }
 
+                    // Filtrar por estación si está seleccionada
+                    if (estacionId) {
+                        maquinasFiltradas = maquinasFiltradas.filter(function(maquina) {
+                            return maquina.estacion == estacionId;
+                        });
+                    }
+
                     // Agregar opciones filtradas
                     maquinasFiltradas.forEach(function(maquina) {
                         $('#select-maquina').append(
                             $('<option></option>')
                                 .attr('value', maquina.value)
+                                .attr('data-estacion', maquina.estacion)
                                 .attr('data-linea', maquina.linea)
                                 .attr('data-area', maquina.area)
                                 .text(maquina.text)
@@ -364,13 +543,22 @@
 
                 // Evento cuando cambia cualquier filtro - actualizar gráfica
                 $('.select').on('change', function() {
+                    var areaId = $('#select-area').val();
+                    var lineaId = $('#select-linea').val();
+                    var estacionId = $('#select-estacion').val();
+                    var maquinaId = $('#select-maquina').val();
+
                     console.log('Filtro cambiado:', {
-                        area: $('#select-area').val(),
-                        linea: $('#select-linea').val(),
-                        maquina: $('#select-maquina').val()
+                        area: areaId,
+                        linea: lineaId,
+                        estacion: estacionId,
+                        maquina: maquinaId
                     });
-                    // Aquí puedes llamar a una función para recargar la gráfica con los filtros
-                    // updateChart();
+
+                    // Si hay área seleccionada, actualizar la gráfica
+                    if (areaId) {
+                        GoogleBarStacked.update(areaId, lineaId || null, estacionId || null, maquinaId || null);
+                    }
                 });
             };
 
