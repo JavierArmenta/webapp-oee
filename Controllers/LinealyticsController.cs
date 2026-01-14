@@ -26,6 +26,11 @@ namespace WebApp.Controllers
             return View();
         }
 
+        public IActionResult Dashboard()
+        {
+            return View();
+        }
+
         // ========== TURNOS ==========
 
         public async Task<IActionResult> Turnos()
