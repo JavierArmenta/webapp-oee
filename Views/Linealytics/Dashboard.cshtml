@@ -72,22 +72,22 @@
     <!-- /select with search -->
 
 
-    <!-- ECharts Stacked bar chart -->
+    <!-- ECharts Timeline chart -->
     <div class="card mt-3">
         <div class="card-header">
             <h5 class="mb-0">
-                <i class="bi bi-bar-chart-horizontal me-2"></i>Paros por Máquina y Departamento (Últimos 7 días)
+                <i class="bi bi-clock-history me-2"></i>Timeline de Paros por Máquina (Últimos 7 días)
             </h5>
         </div>
 
         <div class="card-body">
-            <p class="mb-3">Gráfica de barras horizontales apiladas que muestra la duración total de paros (en minutos) por máquina durante los últimos 7 días. Cada barra representa una máquina y los segmentos de color representan los diferentes departamentos operadores responsables de los paros.</p>
+            <p class="mb-3">Timeline que muestra cada paro registrado con su fecha y hora de inicio y fin. Cada segmento representa un paro individual, donde el eje Y muestra las máquinas y el eje X muestra el tiempo. Los colores indican los departamentos operadores responsables.</p>
             <div class="chart-container">
                 <div class="chart has-fixed-height" id="bars_stacked"></div>
             </div>
         </div>
     </div>
-    <!-- /stacked bar chart -->
+    <!-- /timeline chart -->
 
 </div>
 
@@ -450,83 +450,102 @@
                     series = [{
                         name: 'Sin datos',
                         type: 'bar',
-                        stack: 'Total',
                         barWidth: 36,
                         itemStyle: {
                             color: '#ccc',
-                            barBorderRadius: [0, 4, 4, 0]
+                            barBorderRadius: [4, 4, 4, 4]
                         },
-                        data: [[0, 0, 0]]
+                        data: []
                     }];
+                    xAxisMin = new Date().getTime();
+                    xAxisMax = new Date().getTime() + 3600000;
                 } else {
-                    console.log('Datos recibidos:', datosParos);
-                    console.log('Maquinas:', datosParos.maquinas);
-                    console.log('Departamentos:', datosParos.departamentos);
-                    console.log('Datos paros:', datosParos.datos);
-
-                    // Construir leyenda con departamentos (minúsculas por JSON camelCase)
+                    // Construir leyenda con departamentos
                     legendData = datosParos.departamentos.map(function(d) {
                         return d.departamento;
                     });
-                    console.log('Legend data:', legendData);
 
-                    // Usar las máquinas como eje Y (minúsculas por JSON camelCase)
+                    // Usar las máquinas como eje Y
                     yAxisData = datosParos.maquinas.map(function(m) {
                         return m.nombre;
                     });
-                    console.log('Y-axis data (maquinas):', yAxisData);
 
-                    // Configurar rango de fechas para el eje X
+                    // Configurar rango de fechas para el eje X (timeline)
                     xAxisMin = new Date(datosParos.fechaMin).getTime();
                     xAxisMax = new Date(datosParos.fechaMax).getTime();
 
-                    // Construir series para cada departamento
-                    series = datosParos.departamentos.map(function(dept, deptIndex) {
-                        // Para cada máquina, obtener todos los paros de este departamento
+                    // Construir series para cada departamento - ahora cada paro es un segmento individual
+                    series = datosParos.departamentos.map(function(dept) {
                         var data = [];
 
-                        datosParos.maquinas.forEach(function(maquina, maqIndex) {
-                            console.log('Procesando maquina:', maquina.nombre, 'ID:', maquina.id, 'para departamento:', dept.departamento);
-
-                            // Filtrar paros de esta máquina y departamento
-                            var parosMaquina = datosParos.datos.filter(function(d) {
-                                return d.maquinaId === maquina.id && d.departamento === dept.departamento;
-                            });
-                            console.log('Paros encontrados:', parosMaquina.length, parosMaquina);
-
-                            // Acumular duración total por máquina y departamento
-                            var totalMinutos = 0;
-                            parosMaquina.forEach(function(paro) {
-                                totalMinutos += paro.duracionMinutos;
-                            });
-                            console.log('Total minutos para', maquina.nombre, '-', dept.departamento, ':', totalMinutos);
-
-                            // Agregar dato para todas las máquinas (incluir 0 para mantener estructura)
-                            data.push(totalMinutos);
+                        // Filtrar todos los paros de este departamento
+                        var parosDept = datosParos.datos.filter(function(d) {
+                            return d.departamento === dept.departamento;
                         });
 
-                        console.log('Data array para departamento', dept.departamento, ':', data);
+                        // Para cada paro, crear un segmento en el timeline
+                        parosDept.forEach(function(paro) {
+                            // Encontrar el índice de la máquina en el eje Y
+                            var maqIndex = datosParos.maquinas.findIndex(function(m) {
+                                return m.id === paro.maquinaId;
+                            });
 
-                        // Determinar si es el último departamento para aplicar bordes redondeados
-                        var isLast = deptIndex === datosParos.departamentos.length - 1;
+                            if (maqIndex !== -1) {
+                                // Las fechas vienen en UTC desde el servidor (con 'Z')
+                                // JavaScript las convierte automáticamente a hora local
+                                var fechaInicio = new Date(paro.fechaInicio).getTime();
+                                var fechaFin = paro.fechaFin ? new Date(paro.fechaFin).getTime() : fechaInicio;
+
+                                // Datos: [índice Y, fecha inicio, fecha fin]
+                                data.push({
+                                    name: paro.maquina,
+                                    value: [
+                                        maqIndex,
+                                        fechaInicio,
+                                        fechaFin
+                                    ],
+                                    itemStyle: {
+                                        color: dept.color || '#666666',
+                                        borderRadius: 4
+                                    },
+                                    duracionMinutos: paro.duracionMinutos,
+                                    departamento: dept.departamento,
+                                    maquina: paro.maquina
+                                });
+                            }
+                        });
 
                         return {
                             name: dept.departamento,
-                            type: 'bar',
-                            stack: 'Total',
-                            barWidth: 36,
-                            itemStyle: {
-                                color: dept.color || '#666666',
-                                barBorderRadius: isLast ? [0, 4, 4, 0] : [0, 0, 0, 0]
+                            type: 'custom',
+                            renderItem: function(params, api) {
+                                var categoryIndex = api.value(0);
+                                var start = api.coord([api.value(1), categoryIndex]);
+                                var end = api.coord([api.value(2), categoryIndex]);
+                                var height = api.size([0, 1])[1] * 0.6;
+
+                                var rectShape = echarts.graphic.clipRectByRect({
+                                    x: start[0],
+                                    y: start[1] - height / 2,
+                                    width: end[0] - start[0],
+                                    height: height
+                                }, {
+                                    x: params.coordSys.x,
+                                    y: params.coordSys.y,
+                                    width: params.coordSys.width,
+                                    height: params.coordSys.height
+                                });
+
+                                return rectShape && {
+                                    type: 'rect',
+                                    transition: ['shape'],
+                                    shape: rectShape,
+                                    style: api.style()
+                                };
                             },
-                            label: {
-                                show: true,
-                                position: 'insideRight',
-                                fontSize: 12,
-                                fontWeight: 500,
-                                formatter: function(params) {
-                                    return params.value > 0 ? params.value + ' min' : '';
-                                }
+                            encode: {
+                                x: [1, 2],
+                                y: 0
                             },
                             data: data
                         };
@@ -569,7 +588,7 @@
 
                     // Add tooltip
                     tooltip: {
-                        trigger: 'axis',
+                        trigger: 'item',
                         className: 'shadow-sm rounded',
                         backgroundColor: 'var(--white)',
                         borderColor: 'var(--gray-400)',
@@ -577,37 +596,55 @@
                         textStyle: {
                             color: '#000'
                         },
-                        axisPointer: {
-                            type: 'shadow',
-                            shadowStyle: {
-                                color: 'rgba(var(--body-color-rgb), 0.025)'
-                            }
-                        },
                         formatter: function(params) {
-                            if (!params || params.length === 0) return '';
+                            if (!params || !params.value) return '';
 
-                            var maquinaNombre = yAxisData[params[0].value[0]] || 'Desconocido';
-                            var result = '<strong>' + maquinaNombre + '</strong><br/>';
-                            var total = 0;
+                            var maquina = params.data.maquina;
+                            var departamento = params.data.departamento;
+                            var duracion = params.data.duracionMinutos;
+                            var fechaInicio = new Date(params.value[1]);
+                            var fechaFin = new Date(params.value[2]);
 
-                            params.forEach(function(item) {
-                                if (item.value && item.value[1] > 0) {
-                                    result += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + item.color + ';"></span>';
-                                    result += item.seriesName + ': ' + item.value[1] + ' min<br/>';
-                                    total += item.value[1];
-                                }
-                            });
-                            result += '<strong>Total: ' + total + ' min</strong>';
+                            var result = '<strong>' + maquina + '</strong><br/>';
+                            result += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + params.color + ';"></span>';
+                            result += departamento + '<br/>';
+                            result += '<strong>Inicio:</strong> ' + fechaInicio.toLocaleString('es-MX', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            }) + '<br/>';
+                            result += '<strong>Fin:</strong> ' + fechaFin.toLocaleString('es-MX', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            }) + '<br/>';
+                            result += '<strong>Duración:</strong> ' + duracion + ' min';
+
                             return result;
                         }
                     },
 
-                    // Horizontal axis
+                    // Horizontal axis (Timeline)
                     xAxis: [{
-                        type: 'value',
+                        type: 'time',
+                        min: xAxisMin,
+                        max: xAxisMax,
                         axisLabel: {
                             color: 'rgba(var(--body-color-rgb), .65)',
-                            formatter: '{value} min'
+                            formatter: function(value) {
+                                var date = new Date(value);
+                                var day = ('0' + date.getDate()).slice(-2);
+                                var month = ('0' + (date.getMonth() + 1)).slice(-2);
+                                var hours = ('0' + date.getHours()).slice(-2);
+                                var minutes = ('0' + date.getMinutes()).slice(-2);
+                                return day + '/' + month + '\n' + hours + ':' + minutes;
+                            }
                         },
                         axisLine: {
                             show: true,
