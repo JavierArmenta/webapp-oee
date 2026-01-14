@@ -161,7 +161,7 @@
                 var bar_stacked_element = document.getElementById('google-bar-stacked');
 
                 var data;
-                if (!datosParos || !datosParos.Lineas || datosParos.Lineas.length === 0) {
+                if (!datosParos || !datosParos.lineas || datosParos.lineas.length === 0) {
                     // Datos de ejemplo si no hay datos
                     data = google.visualization.arrayToDataTable([
                         ['Fecha', 'Sin datos'],
@@ -169,19 +169,19 @@
                     ]);
                 } else {
                     // Construir encabezado con las líneas
-                    var header = ['Fecha'].concat(datosParos.Lineas);
+                    var header = ['Fecha'].concat(datosParos.lineas);
 
                     // Construir filas de datos
                     var rows = [];
-                    datosParos.Fechas.forEach(function(fecha) {
+                    datosParos.fechas.forEach(function(fecha) {
                         var row = [fecha];
 
                         // Para cada línea, buscar el total de minutos en esa fecha
-                        datosParos.Lineas.forEach(function(linea) {
-                            var dato = datosParos.Datos.find(function(d) {
-                                return d.Fecha === fecha && d.Linea === linea;
+                        datosParos.lineas.forEach(function(linea) {
+                            var dato = datosParos.datos.find(function(d) {
+                                return d.fecha === fecha && d.linea === linea;
                             });
-                            row.push(dato ? dato.TotalMinutos : 0);
+                            row.push(dato ? dato.totalMinutos : 0);
                         });
 
                         rows.push(row);

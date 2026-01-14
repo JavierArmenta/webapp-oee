@@ -527,7 +527,7 @@ namespace WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditBoton(int id, [Bind("Id,Nombre,DepartamentoOperadorId,Descripcion,Activo,FechaCreacion,FechaUltimaActivacion")] Boton boton)
+        public async Task<IActionResult> EditBoton(int id, [Bind("Id,Codigo,Nombre,DepartamentoOperadorId,Descripcion,Activo")] Boton boton)
         {
             if (id != boton.Id)
                 return NotFound();
@@ -539,13 +539,14 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    // Obtener la entidad existente de la base de datos
+                    // Obtener la entidad existente para preservar las fechas
                     var botonExistente = await _context.Botones.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
                     if (botonExistente == null)
                         return NotFound();
 
-                    // Preservar el código automático
-                    boton.Codigo = botonExistente.Codigo;
+                    // Preservar las fechas originales
+                    boton.FechaCreacion = botonExistente.FechaCreacion;
+                    boton.FechaUltimaActivacion = botonExistente.FechaUltimaActivacion;
 
                     // Actualizar la entidad
                     _context.Update(boton);

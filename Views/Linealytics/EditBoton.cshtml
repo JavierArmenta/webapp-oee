@@ -13,15 +13,15 @@
         </div>
         <div class="card-body">
             <form asp-controller="Linealytics" asp-action="EditBoton" method="post">
+                @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
                 <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="FechaCreacion" />
-                <input type="hidden" asp-for="FechaUltimaActivacion" />
+                <input type="hidden" asp-for="Codigo" />
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="Codigo" class="form-label">Código del Botón</label>
-                        <input asp-for="Codigo" class="form-control" readonly style="background-color: #e9ecef; cursor: not-allowed;" />
+                        <input value="@Model.Codigo" class="form-control" readonly style="background-color: #e9ecef; cursor: not-allowed;" />
                         <small class="text-muted">El código no se puede modificar</small>
                     </div>
 
