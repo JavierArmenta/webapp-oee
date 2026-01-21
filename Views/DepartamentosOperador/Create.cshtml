@@ -4,6 +4,10 @@
     ViewData["Title"] = "Crear Departamento de Operador";
 }
 
+@section Styles {
+    <link href="~/assets/js/vendor/pickers/color/spectrum.css" rel="stylesheet" type="text/css">
+}
+
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -28,6 +32,13 @@
                             <span asp-validation-for="Descripcion" class="text-danger"></span>
                         </div>
 
+                        <div class="mb-3">
+                            <label asp-for="Color" class="form-label"></label>
+                            <input asp-for="Color" type="text" class="form-control colorpicker-show-palette" data-preferred-format="hex" value="#666666" />
+                            <span asp-validation-for="Color" class="text-danger"></span>
+                            <small class="form-text text-muted">Selecciona un color para identificar visualmente este departamento en las gráficas</small>
+                        </div>
+
                         <div class="mb-3 form-check">
                             <input asp-for="Activo" class="form-check-input" checked />
                             <label asp-for="Activo" class="form-check-label"></label>
@@ -50,4 +61,24 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script src="~/assets/js/vendor/pickers/color/spectrum.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Color picker con paleta predefinida
+            $('.colorpicker-show-palette').spectrum({
+                showPalette: true,
+                showInput: true,
+                preferredFormat: 'hex',
+                palette: [
+                    ['#42A5F5', '#ef5350', '#66bb6a', '#ff7043', '#26a69a'],
+                    ['#AB47BC', '#FFA726', '#EC407A', '#5C6BC0', '#FFCA28'],
+                    ['#78909C', '#8D6E63', '#E57373', '#81C784', '#64B5F6']
+                ],
+                showButtons: false,
+                allowEmpty: false
+            });
+        });
+    </script>
 }

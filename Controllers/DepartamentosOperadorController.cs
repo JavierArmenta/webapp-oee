@@ -106,7 +106,7 @@ namespace WebApp.Controllers
         // POST: DepartamentosOperador/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Activo")] DepartamentoOperador departamento)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Color,Activo")] DepartamentoOperador departamento)
         {
             if (id != departamento.Id)
             {
@@ -132,6 +132,7 @@ namespace WebApp.Controllers
 
                     departamentoExistente.Nombre = departamento.Nombre;
                     departamentoExistente.Descripcion = departamento.Descripcion;
+                    departamentoExistente.Color = departamento.Color;
                     departamentoExistente.Activo = departamento.Activo;
 
                     await _context.SaveChangesAsync();
