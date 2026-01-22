@@ -66,7 +66,7 @@ namespace WebApp.Controllers
         // POST: DepartamentosOperador/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Nombre,Descripcion,Activo")] DepartamentoOperador departamento)
+        public async Task<IActionResult> Create([Bind("Nombre,Descripcion,Color,Activo")] DepartamentoOperador departamento)
         {
             if (ModelState.IsValid)
             {

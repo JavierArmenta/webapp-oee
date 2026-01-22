@@ -20,6 +20,9 @@ namespace WebApp.Models.Linealytics
         public int? BotonId { get; set; }
 
         [Required]
+        public int BotoneraId { get; set; }
+
+        [Required]
         public DateTime FechaHoraInicio { get; set; } = DateTime.UtcNow;
 
         public DateTime? FechaHoraFin { get; set; }
@@ -42,6 +45,9 @@ namespace WebApp.Models.Linealytics
 
         [ForeignKey("BotonId")]
         public virtual Boton? Boton { get; set; }
+
+        [ForeignKey("BotoneraId")]
+        public virtual Botonera Botonera { get; set; } = null!;
 
         // Colección de comentarios
         public virtual ICollection<ComentarioParoBotonera> Comentarios { get; set; } = new List<ComentarioParoBotonera>();

@@ -13,7 +13,8 @@
         </div>
         <div class="card-body">
             <form asp-controller="Linealytics" asp-action="CreateBotonera" method="post">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="alert alert-danger" style="display: @(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">

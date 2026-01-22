@@ -60,14 +60,15 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
+    <script src="~/assets/js/jquery/jquery.min.js"></script>
     <script src="~/assets/js/vendor/pickers/color/spectrum.js"></script>
 
     <script>
         $(document).ready(function() {
             // Color picker con paleta predefinida
             $('.colorpicker-show-palette').spectrum({
+                color: '#666666',
                 showPalette: true,
                 showInput: true,
                 preferredFormat: 'hex',
@@ -77,7 +78,10 @@
                     ['#78909C', '#8D6E63', '#E57373', '#81C784', '#64B5F6']
                 ],
                 showButtons: false,
-                allowEmpty: false
+                allowEmpty: false,
+                change: function(color) {
+                    $(this).val(color.toHexString());
+                }
             });
         });
     </script>

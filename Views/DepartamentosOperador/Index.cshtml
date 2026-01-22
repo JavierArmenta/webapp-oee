@@ -38,6 +38,7 @@
                         <thead class="table-light">
                         <tr>
                             <th>Nombre</th>
+                            <th class="text-center">Color</th>
                             <th>Descripción</th>
                             <th class="text-center">Estado</th>
                             <th class="text-center">Fecha de Creación</th>
@@ -50,6 +51,9 @@
                             <tr class="@(!item.Activo ? "table-secondary" : "")">
                                 <td>
                                     <strong>@item.Nombre</strong>
+                                </td>
+                                <td class="text-center">
+                                    <span style="display:inline-block; width:24px; height:24px; border-radius:4px; background-color:@(item.Color ?? "#666666"); border:1px solid #ccc;"></span>
                                 </td>
                                 <td class="text-muted">@(item.Descripcion ?? "-")</td>
                                 <td class="text-center">
@@ -136,8 +140,13 @@
                 columnDefs: [
                     {
                         orderable: false,
-                        targets: [ 4 ],
+                        targets: [ 5 ],
                         width: '280px'
+                    },
+                    {
+                        orderable: false,
+                        targets: [ 1 ],
+                        width: '60px'
                     }
                 ],
                 dom: '<"datatable-header"fl><"datatable-scroll"t><"datatable-footer"ip>',

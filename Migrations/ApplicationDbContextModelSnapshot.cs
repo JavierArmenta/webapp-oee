@@ -1065,6 +1065,9 @@ namespace WebApp.Migrations
                     b.Property<int?>("BotonId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("BotoneraId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("DepartamentoId")
                         .HasColumnType("integer");
 
@@ -1095,6 +1098,8 @@ namespace WebApp.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BotonId");
+
+                    b.HasIndex("BotoneraId");
 
                     b.HasIndex("DepartamentoId");
 
@@ -1755,6 +1760,12 @@ namespace WebApp.Migrations
                         .WithMany()
                         .HasForeignKey("BotonId");
 
+                    b.HasOne("WebApp.Models.Linealytics.Botonera", "Botonera")
+                        .WithMany()
+                        .HasForeignKey("BotoneraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("WebApp.Models.DepartamentoOperador", "DepartamentoOperador")
                         .WithMany()
                         .HasForeignKey("DepartamentoId")
@@ -1772,6 +1783,8 @@ namespace WebApp.Migrations
                         .HasForeignKey("OperadorId");
 
                     b.Navigation("Boton");
+
+                    b.Navigation("Botonera");
 
                     b.Navigation("DepartamentoOperador");
 
