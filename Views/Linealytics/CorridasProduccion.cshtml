@@ -1,0 +1,168 @@
+@model IEnumerable<WebApp.Models.Linealytics.CorridaProduccion>
+
+@{
+    ViewData["Title"] = "Corridas de Producción";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-play-circle me-2"></i>Corridas de Producción
+                </h1>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Filtrar por Contador</label>
+                    <select name="contadorId" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Todos los contadores --</option>
+                        @foreach (SelectListItem item in ViewBag.Contadores)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                @if (ViewBag.ContadorIdSeleccionado != null)
+                {
+                    <div class="col-auto">
+                        <a asp-action="CorridasProduccion" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Limpiar filtro
+                        </a>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <p class="mt-3 text-muted">No hay corridas de producción registradas</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Contador</th>
+                                <th>Producto</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha Fin</th>
+                                <th>Duración</th>
+                                <th class="text-end">Producción</th>
+                                <th class="text-center">Resets</th>
+                                <th class="text-center">Lecturas</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var duracion = item.FechaFin.HasValue
+                                    ? (item.FechaFin.Value - item.FechaInicio)
+                                    : (DateTime.UtcNow - item.FechaInicio);
+                                <tr>
+                                    <td><code>@item.Id</code></td>
+                                    <td>
+                                        <small class="text-muted">@item.ContadorDispositivo?.Maquina?.Nombre</small><br />
+                                        <strong>@item.ContadorDispositivo?.Nombre</strong>
+                                    </td>
+                                    <td>@(item.Producto?.Nombre ?? "<sin producto>")</td>
+                                    <td>@item.FechaInicio.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @if (item.FechaFin.HasValue)
+                                        {
+                                            @item.FechaFin.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (duracion.TotalHours >= 1)
+                                        {
+                                            @($"{(int)duracion.TotalHours}h {duracion.Minutes}m")
+                                        }
+                                        else
+                                        {
+                                            @($"{duracion.Minutes}m")
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">@item.ProduccionTotal.ToString("N0")</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.NumeroResets > 0)
+                                        {
+                                            <span class="badge bg-warning text-dark">@item.NumeroResets</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">0</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">@item.NumeroLecturas</td>
+                                    <td>
+                                        @if (item.Estado == "Activa")
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>Activa
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Cerrada</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-action="DetalleCorrida" asp-route-id="@item.Id"
+                                           class="btn btn-sm btn-outline-info" title="Ver Detalle">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (item.Estado == "Activa")
+                                        {
+                                            <form asp-action="CerrarCorrida" asp-route-id="@item.Id"
+                                                  method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        title="Cerrar Corrida"
+                                                        onclick="return confirm('¿Cerrar esta corrida?')">
+                                                    <i class="bi bi-stop-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

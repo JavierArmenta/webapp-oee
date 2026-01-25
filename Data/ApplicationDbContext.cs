@@ -40,8 +40,6 @@ namespace WebApp.Data
         public DbSet<RegistroParo> RegistrosParos { get; set; }
         public DbSet<RegistroProduccionHora> RegistrosProduccionHora { get; set; }
         public DbSet<HistorialCambioParo> HistorialCambiosParos { get; set; }
-        public DbSet<Dispositivo> Dispositivos { get; set; }
-        public DbSet<LecturaContador> LecturasContador { get; set; }
 
         // DbSet para Nuevo Sistema Linealytics
         public DbSet<Botonera> Botoneras { get; set; }
@@ -49,6 +47,13 @@ namespace WebApp.Data
         public DbSet<RegistroFalla> RegistrosFallas { get; set; }
         public DbSet<RegistroContador> RegistrosContadores { get; set; }
         public DbSet<ComentarioParoBotonera> ComentariosParoBotonera { get; set; }
+
+        // DbSet para Sistema de Contadores con Corridas
+        public DbSet<ContadorDispositivo> ContadoresDispositivo { get; set; }
+        public DbSet<CorridaProduccion> CorridasProduccion { get; set; }
+        public DbSet<LecturaContadorNuevo> LecturasContadorNuevo { get; set; }
+        public DbSet<ResumenProduccionHora> ResumenesProduccionHora { get; set; }
+        public DbSet<ResumenProduccionDia> ResumenesProduccionDia { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -629,6 +634,128 @@ namespace WebApp.Data
 
                 entity.HasIndex(e => e.UserId)
                     .HasDatabaseName("IX_ComentariosParoBotonera_UserId");
+            });
+
+            // Configuración de ContadorDispositivo
+            builder.Entity<ContadorDispositivo>(entity =>
+            {
+                entity.ToTable("ContadoresDispositivo", "linealytics");
+
+                entity.Property(e => e.Nombre)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.TipoContador)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.Maquina)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaquinaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.MaquinaId, e.Nombre })
+                    .IsUnique()
+                    .HasDatabaseName("IX_ContadoresDispositivo_MaquinaId_Nombre");
+            });
+
+            // Configuración de CorridaProduccion
+            builder.Entity<CorridaProduccion>(entity =>
+            {
+                entity.ToTable("CorridasProduccion", "linealytics");
+
+                entity.Property(e => e.Estado)
+                    .HasMaxLength(20)
+                    .IsRequired();
+
+                entity.HasOne(e => e.ContadorDispositivo)
+                    .WithMany(c => c.Corridas)
+                    .HasForeignKey(e => e.ContadorDispositivoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Producto)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ContadorDispositivoId, e.Estado })
+                    .HasDatabaseName("IX_CorridasProduccion_ContadorId_Estado");
+
+                entity.HasIndex(e => new { e.ContadorDispositivoId, e.FechaInicio })
+                    .HasDatabaseName("IX_CorridasProduccion_ContadorId_FechaInicio");
+            });
+
+            // Configuración de LecturaContadorNuevo
+            builder.Entity<LecturaContadorNuevo>(entity =>
+            {
+                entity.ToTable("LecturasContadorNuevo", "linealytics");
+
+                entity.HasOne(e => e.Corrida)
+                    .WithMany(c => c.Lecturas)
+                    .HasForeignKey(e => e.CorridaId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.ContadorDispositivo)
+                    .WithMany()
+                    .HasForeignKey(e => e.ContadorDispositivoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Producto)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ContadorDispositivoId, e.FechaHoraLectura })
+                    .HasDatabaseName("IX_LecturasContadorNuevo_ContadorId_Fecha");
+
+                entity.HasIndex(e => new { e.CorridaId, e.FechaHoraLectura })
+                    .HasDatabaseName("IX_LecturasContadorNuevo_CorridaId_Fecha");
+            });
+
+            // Configuración de ResumenProduccionHora
+            builder.Entity<ResumenProduccionHora>(entity =>
+            {
+                entity.ToTable("ResumenesProduccionHora", "linealytics");
+
+                entity.HasOne(e => e.ContadorDispositivo)
+                    .WithMany()
+                    .HasForeignKey(e => e.ContadorDispositivoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Producto)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ContadorDispositivoId, e.Fecha, e.Hora })
+                    .IsUnique()
+                    .HasDatabaseName("IX_ResumenesProduccionHora_ContadorId_Fecha_Hora");
+            });
+
+            // Configuración de ResumenProduccionDia
+            builder.Entity<ResumenProduccionDia>(entity =>
+            {
+                entity.ToTable("ResumenesProduccionDia", "linealytics");
+
+                entity.HasOne(e => e.ContadorDispositivo)
+                    .WithMany()
+                    .HasForeignKey(e => e.ContadorDispositivoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Producto)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ContadorDispositivoId, e.Fecha })
+                    .IsUnique()
+                    .HasDatabaseName("IX_ResumenesProduccionDia_ContadorId_Fecha");
             });
         }
     }

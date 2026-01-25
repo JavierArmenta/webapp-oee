@@ -15,6 +15,20 @@
     </div>
 
     <div class="row mt-3">
+        <!-- Dashboard OEE -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100 border-primary">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4 text-primary"></i>
+                    <h5 class="card-title mt-3">Dashboard OEE</h5>
+                    <p class="card-text text-muted">Tablero de eficiencia en tiempo real</p>
+                    <a asp-action="Dashboard" class="btn btn-primary">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Turnos -->
         <div class="col-md-3 mb-3">
             <div class="card shadow-sm h-100">
@@ -111,6 +125,36 @@
                     <p class="card-text text-muted">Ver y documentar paros cerrados</p>
                     <a asp-action="ParosSinComentar" class="btn btn-warning">
                         <i class="bi bi-arrow-right-circle me-1"></i>Gestionar Comentarios
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <!-- Contadores Dispositivo -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-123 display-4 text-info"></i>
+                    <h5 class="card-title mt-3">Contadores</h5>
+                    <p class="card-text text-muted">Contadores de producción por máquina</p>
+                    <a asp-action="ContadoresDispositivo" class="btn btn-info">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Corridas de Producción -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-play-circle display-4 text-success"></i>
+                    <h5 class="card-title mt-3">Corridas de Producción</h5>
+                    <p class="card-text text-muted">Historial de corridas por contador</p>
+                    <a asp-action="CorridasProduccion" class="btn btn-success">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Ver Corridas
                     </a>
                 </div>
             </div>

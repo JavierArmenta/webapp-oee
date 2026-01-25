@@ -1007,6 +1007,167 @@ namespace WebApp.Controllers
             return RedirectToAction(nameof(Botoneras));
         }
 
+        // ========== CONTADORES DISPOSITIVO ==========
+
+        public async Task<IActionResult> ContadoresDispositivo()
+        {
+            var contadores = await _context.ContadoresDispositivo
+                .Include(c => c.Maquina)
+                .OrderBy(c => c.Maquina.Nombre)
+                .ThenBy(c => c.Nombre)
+                .ToListAsync();
+
+            return View(contadores);
+        }
+
+        public async Task<IActionResult> EditContadorDispositivo(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var contador = await _context.ContadoresDispositivo.FindAsync(id);
+            if (contador == null) return NotFound();
+
+            ViewBag.Maquinas = new SelectList(
+                await _context.Maquinas.Where(m => m.Activo).OrderBy(m => m.Nombre).ToListAsync(),
+                "Id", "Nombre", contador.MaquinaId);
+            return View(contador);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditContadorDispositivo(int id, [Bind("Id,Nombre,Descripcion,MaquinaId,TipoContador,Activo,FechaCreacion")] ContadorDispositivo contador)
+        {
+            if (id != contador.Id) return NotFound();
+
+            // Validar que la máquina existe y está activa
+            var maquinaExiste = await _context.Maquinas
+                .AnyAsync(m => m.Id == contador.MaquinaId && m.Activo);
+
+            if (!maquinaExiste)
+            {
+                ModelState.AddModelError("MaquinaId", "Debe seleccionar una máquina válida.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(contador);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Contador actualizado exitosamente.";
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.ContadoresDispositivo.Any(c => c.Id == id))
+                        return NotFound();
+                    throw;
+                }
+                return RedirectToAction(nameof(ContadoresDispositivo));
+            }
+
+            ViewBag.Maquinas = new SelectList(
+                await _context.Maquinas.Where(m => m.Activo).OrderBy(m => m.Nombre).ToListAsync(),
+                "Id", "Nombre", contador.MaquinaId);
+            return View(contador);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeactivateContadorDispositivo(int id)
+        {
+            var contador = await _context.ContadoresDispositivo.FindAsync(id);
+            if (contador != null)
+            {
+                contador.Activo = false;
+                _context.Update(contador);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Contador desactivado exitosamente.";
+            }
+            return RedirectToAction(nameof(ContadoresDispositivo));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateContadorDispositivo(int id)
+        {
+            var contador = await _context.ContadoresDispositivo.FindAsync(id);
+            if (contador != null)
+            {
+                contador.Activo = true;
+                _context.Update(contador);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Contador activado exitosamente.";
+            }
+            return RedirectToAction(nameof(ContadoresDispositivo));
+        }
+
+        // ========== CORRIDAS DE PRODUCCIÓN ==========
+
+        public async Task<IActionResult> CorridasProduccion(int? contadorId)
+        {
+            var query = _context.CorridasProduccion
+                .Include(c => c.ContadorDispositivo)
+                    .ThenInclude(cd => cd.Maquina)
+                .Include(c => c.Producto)
+                .AsQueryable();
+
+            if (contadorId.HasValue)
+            {
+                query = query.Where(c => c.ContadorDispositivoId == contadorId.Value);
+            }
+
+            var corridas = await query
+                .OrderByDescending(c => c.FechaInicio)
+                .Take(100)
+                .ToListAsync();
+
+            ViewBag.Contadores = new SelectList(
+                await _context.ContadoresDispositivo
+                    .Include(c => c.Maquina)
+                    .Where(c => c.Activo)
+                    .OrderBy(c => c.Maquina.Nombre)
+                    .ThenBy(c => c.Nombre)
+                    .Select(c => new { c.Id, Nombre = c.Maquina.Nombre + " - " + c.Nombre })
+                    .ToListAsync(),
+                "Id", "Nombre", contadorId);
+
+            ViewBag.ContadorIdSeleccionado = contadorId;
+
+            return View(corridas);
+        }
+
+        public async Task<IActionResult> DetalleCorrida(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var corrida = await _context.CorridasProduccion
+                .Include(c => c.ContadorDispositivo)
+                    .ThenInclude(cd => cd.Maquina)
+                .Include(c => c.Producto)
+                .Include(c => c.Lecturas.OrderBy(l => l.FechaHoraLectura))
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (corrida == null) return NotFound();
+
+            return View(corrida);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CerrarCorrida(int id)
+        {
+            var corrida = await _context.CorridasProduccion.FindAsync(id);
+            if (corrida != null && corrida.Estado == "Activa")
+            {
+                corrida.Estado = "Cerrada";
+                corrida.FechaFin = DateTime.UtcNow;
+                _context.Update(corrida);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Corrida cerrada exitosamente.";
+            }
+            return RedirectToAction(nameof(CorridasProduccion), new { contadorId = corrida?.ContadorDispositivoId });
+        }
+
         // ========== MÉTODOS TEMPORALES DE CONFIGURACIÓN ==========
 
         [HttpGet]

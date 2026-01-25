@@ -1,0 +1,133 @@
+@model IEnumerable<WebApp.Models.Linealytics.ContadorDispositivo>
+
+@{
+    ViewData["Title"] = "Contadores de Producción";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-123 me-2"></i>Contadores de Producción
+                </h1>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <p class="mt-3 text-muted">No hay contadores registrados</p>
+                    <small class="text-muted">Los contadores se crean desde el API</small>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Máquina</th>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Fecha Creación</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="@(!item.Activo ? "table-secondary" : "")">
+                                    <td>
+                                        <i class="bi bi-gear me-1"></i>
+                                        @item.Maquina?.Nombre
+                                    </td>
+                                    <td><strong>@item.Nombre</strong></td>
+                                    <td>
+                                        @switch (item.TipoContador)
+                                        {
+                                            case "Produccion":
+                                                <span class="badge bg-success">Producción</span>
+                                                break;
+                                            case "Ciclos":
+                                                <span class="badge bg-info">Ciclos</span>
+                                                break;
+                                            case "Defectos":
+                                                <span class="badge bg-danger">Defectos</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@item.TipoContador</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>@(item.Descripcion ?? "-")</td>
+                                    <td>
+                                        @if (item.Activo)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        }
+                                    </td>
+                                    <td>@item.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end">
+                                        <a asp-action="CorridasProduccion" asp-route-contadorId="@item.Id"
+                                           class="btn btn-sm btn-outline-success" title="Ver Corridas">
+                                            <i class="bi bi-play-circle"></i>
+                                        </a>
+                                        <a asp-action="EditContadorDispositivo" asp-route-id="@item.Id"
+                                           class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @if (item.Activo)
+                                        {
+                                            <form asp-action="DeactivateContadorDispositivo" asp-route-id="@item.Id"
+                                                  method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        title="Desactivar"
+                                                        onclick="return confirm('¿Desactivar este contador?')">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="ActivateContadorDispositivo" asp-route-id="@item.Id"
+                                                  method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-success"
+                                                        title="Activar">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
