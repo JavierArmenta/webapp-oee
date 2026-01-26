@@ -150,18 +150,6 @@
                                            class="btn btn-sm btn-outline-info" title="Ver Detalle">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        @if (item.Estado == "Activa")
-                                        {
-                                            <form asp-action="CerrarCorrida" asp-route-id="@item.Id"
-                                                  method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        title="Cerrar Corrida"
-                                                        onclick="return confirm('¿Cerrar esta corrida?')">
-                                                    <i class="bi bi-stop-circle"></i>
-                                                </button>
-                                            </form>
-                                        }
                                     </td>
                                 </tr>
                             }
