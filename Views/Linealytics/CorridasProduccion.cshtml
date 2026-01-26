@@ -22,16 +22,16 @@
         <div class="card-body">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label">Filtrar por Contador</label>
-                    <select name="contadorId" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Todos los contadores --</option>
-                        @foreach (SelectListItem item in ViewBag.Contadores)
+                    <label class="form-label">Filtrar por Máquina</label>
+                    <select name="maquinaId" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Todas las máquinas --</option>
+                        @foreach (SelectListItem item in ViewBag.Maquinas)
                         {
                             <option value="@item.Value" selected="@item.Selected">@item.Text</option>
                         }
                     </select>
                 </div>
-                @if (ViewBag.ContadorIdSeleccionado != null)
+                @if (ViewBag.MaquinaIdSeleccionado != null)
                 {
                     <div class="col-auto">
                         <a asp-action="CorridasProduccion" class="btn btn-outline-secondary">
@@ -67,12 +67,13 @@
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
-                                <th>Contador</th>
+                                <th>Máquina</th>
                                 <th>Producto</th>
                                 <th>Fecha Inicio</th>
                                 <th>Fecha Fin</th>
                                 <th>Duración</th>
-                                <th class="text-end">Producción</th>
+                                <th class="text-end">OK</th>
+                                <th class="text-end">NOK</th>
                                 <th class="text-center">Resets</th>
                                 <th class="text-center">Lecturas</th>
                                 <th>Estado</th>
@@ -87,10 +88,7 @@
                                     : (DateTime.UtcNow - item.FechaInicio);
                                 <tr>
                                     <td><code>@item.Id</code></td>
-                                    <td>
-                                        <small class="text-muted">@item.ContadorDispositivo?.Maquina?.Nombre</small><br />
-                                        <strong>@item.ContadorDispositivo?.Nombre</strong>
-                                    </td>
+                                    <td><strong>@item.Maquina?.Nombre</strong></td>
                                     <td>@(item.Producto?.Nombre ?? "<sin producto>")</td>
                                     <td>@item.FechaInicio.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>
@@ -114,12 +112,20 @@
                                         }
                                     </td>
                                     <td class="text-end">
-                                        <strong class="text-success">@item.ProduccionTotal.ToString("N0")</strong>
+                                        <strong class="text-success">@item.ProduccionOK.ToString("N0")</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-danger">@item.ProduccionNOK.ToString("N0")</strong>
                                     </td>
                                     <td class="text-center">
-                                        @if (item.NumeroResets > 0)
+                                        @{
+                                            var totalResets = item.NumeroResetsOK + item.NumeroResetsNOK;
+                                        }
+                                        @if (totalResets > 0)
                                         {
-                                            <span class="badge bg-warning text-dark">@item.NumeroResets</span>
+                                            <span class="badge bg-warning text-dark" title="OK: @item.NumeroResetsOK, NOK: @item.NumeroResetsNOK">
+                                                @totalResets
+                                            </span>
                                         }
                                         else
                                         {
