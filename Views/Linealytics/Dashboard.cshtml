@@ -364,10 +364,8 @@
                         maquina: maquinaId
                     });
 
-                    // Si hay área seleccionada, actualizar la gráfica
-                    if (areaId) {
-                        EchartsBarsStackedLight.update(areaId, lineaId || null, estacionId || null, maquinaId || null);
-                    }
+                    // Actualizar la gráfica con los filtros seleccionados
+                    EchartsBarsStackedLight.update(areaId || null, lineaId || null, estacionId || null, maquinaId || null);
                 });
             };
 
@@ -406,8 +404,8 @@
                     var bars_stacked = echarts.init(bars_stacked_element, null, { renderer: 'svg' });
                     chartInstance = bars_stacked;
 
-                    // Draw chart with empty data
-                    drawBarsStacked(null);
+                    // Cargar todas las máquinas al iniciar
+                    updateChart(null, null, null, null);
 
                     // Resize handlers
                     var triggerChartResize = function() {
@@ -446,7 +444,7 @@
                 if (!datosParos || !datosParos.maquinas || datosParos.maquinas.length === 0) {
                     // Datos de ejemplo si no hay datos
                     legendData = ['Sin datos'];
-                    yAxisData = ['Selecciona un área'];
+                    yAxisData = ['Sin paros registrados'];
                     series = [{
                         name: 'Sin datos',
                         type: 'bar',
