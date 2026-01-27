@@ -14,8 +14,7 @@ namespace WebApp.Models.Linealytics
 
         public int? MetricasMaquinaId { get; set; }
 
-        [Required]
-        public int CausaParoId { get; set; }
+        public int? CausaParoId { get; set; }
 
         [Required]
         public DateTime FechaHoraInicio { get; set; }
@@ -53,9 +52,6 @@ namespace WebApp.Models.Linealytics
 
         [ForeignKey("MetricasMaquinaId")]
         public virtual MetricasMaquina? MetricasMaquina { get; set; }
-
-        [ForeignKey("CausaParoId")]
-        public virtual CausaParo CausaParo { get; set; } = null!;
 
         [ForeignKey("OperadorResponsableId")]
         public virtual Operador? OperadorResponsable { get; set; }

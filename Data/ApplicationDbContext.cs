@@ -33,8 +33,6 @@ namespace WebApp.Data
         // DbSet para Linealytics
         public DbSet<Turno> Turnos { get; set; }
         public DbSet<Producto> Productos { get; set; }
-        public DbSet<CategoriaParo> CategoriasParo { get; set; }
-        public DbSet<CausaParo> CausasParo { get; set; }
         public DbSet<MetricasMaquina> MetricasMaquina { get; set; }
         public DbSet<SesionProduccion> SesionesProduccion { get; set; }
         public DbSet<RegistroParo> RegistrosParos { get; set; }
@@ -271,37 +269,6 @@ namespace WebApp.Data
                     .HasDefaultValueSql("NOW()");
             });
 
-            // Configuración para CategoriasParo
-            builder.Entity<CategoriaParo>(entity =>
-            {
-                entity.ToTable("CategoriasParo", "linealytics");
-
-                entity.HasIndex(e => e.Nombre)
-                    .IsUnique()
-                    .HasDatabaseName("IX_CategoriasParo_Nombre");
-
-                entity.Property(e => e.FechaCreacion)
-                    .HasDefaultValueSql("NOW()");
-            });
-
-            // Configuración para CausasParo
-            builder.Entity<CausaParo>(entity =>
-            {
-                entity.ToTable("CausasParo", "linealytics");
-
-                entity.HasIndex(e => new { e.CategoriaParoId, e.Nombre })
-                    .IsUnique()
-                    .HasDatabaseName("IX_CausasParo_CategoriaParoId_Nombre");
-
-                entity.Property(e => e.FechaCreacion)
-                    .HasDefaultValueSql("NOW()");
-
-                entity.HasOne(e => e.CategoriaParo)
-                    .WithMany(c => c.CausasParo)
-                    .HasForeignKey(e => e.CategoriaParoId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
             // Configuración para MetricasMaquina
             builder.Entity<MetricasMaquina>(entity =>
             {
@@ -379,11 +346,6 @@ namespace WebApp.Data
                     .WithMany(m => m.RegistrosParos)
                     .HasForeignKey(e => e.MetricasMaquinaId)
                     .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasOne(e => e.CausaParo)
-                    .WithMany(c => c.RegistrosParos)
-                    .HasForeignKey(e => e.CausaParoId)
-                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.OperadorResponsable)
                     .WithMany()
@@ -528,11 +490,6 @@ namespace WebApp.Data
                 entity.HasOne(e => e.Maquina)
                     .WithMany()
                     .HasForeignKey(e => e.MaquinaId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(e => e.CausaParo)
-                    .WithMany()
-                    .HasForeignKey(e => e.FallaId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.Modelo)

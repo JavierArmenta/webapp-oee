@@ -9,8 +9,7 @@ namespace WebApp.Models.Linealytics
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        public int FallaId { get; set; }
+        public int? FallaId { get; set; }
 
         [Required]
         public int MaquinaId { get; set; }
@@ -24,9 +23,6 @@ namespace WebApp.Models.Linealytics
         public string? Descripcion { get; set; }
 
         // Relaciones
-        [ForeignKey("FallaId")]
-        public virtual CausaParo CausaParo { get; set; } = null!;
-
         [ForeignKey("MaquinaId")]
         public virtual Maquina Maquina { get; set; } = null!;
 

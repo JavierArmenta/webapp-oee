@@ -429,109 +429,6 @@ namespace WebApp.Controllers
             return RedirectToAction(nameof(Productos));
         }
 
-        // ========== CATEGORÍAS DE PARO ==========
-
-        public async Task<IActionResult> CategoriasParo()
-        {
-            var categorias = await _context.CategoriasParo
-                .Include(c => c.CausasParo)
-                .OrderBy(c => c.Nombre)
-                .ToListAsync();
-            return View(categorias);
-        }
-
-        public IActionResult CreateCategoriaParo()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCategoriaParo([Bind("Nombre,Descripcion,Color,EsPlaneado")] CategoriaParo categoria)
-        {
-            if (ModelState.IsValid)
-            {
-                categoria.Activo = true;
-                _context.Add(categoria);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Categoría de paro creada exitosamente.";
-                return RedirectToAction(nameof(CategoriasParo));
-            }
-            return View(categoria);
-        }
-
-        public async Task<IActionResult> EditCategoriaParo(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var categoria = await _context.CategoriasParo.FindAsync(id);
-            if (categoria == null) return NotFound();
-
-            return View(categoria);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCategoriaParo(int id, [Bind("Id,Nombre,Descripcion,Color,EsPlaneado,Activo")] CategoriaParo categoria)
-        {
-            if (id != categoria.Id) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(categoria);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Categoría de paro actualizada exitosamente.";
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CategoriaParoExists(categoria.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
-                return RedirectToAction(nameof(CategoriasParo));
-            }
-            return View(categoria);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeactivateCategoriaParo(int id)
-        {
-            var categoria = await _context.CategoriasParo.FindAsync(id);
-            if (categoria != null)
-            {
-                categoria.Activo = false;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Categoría de paro desactivada exitosamente.";
-            }
-            else
-            {
-                TempData["Error"] = "No se pudo encontrar la categoría de paro.";
-            }
-            return RedirectToAction(nameof(CategoriasParo));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ActivateCategoriaParo(int id)
-        {
-            var categoria = await _context.CategoriasParo.FindAsync(id);
-            if (categoria != null)
-            {
-                categoria.Activo = true;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Categoría de paro activada exitosamente.";
-            }
-            else
-            {
-                TempData["Error"] = "No se pudo encontrar la categoría de paro.";
-            }
-            return RedirectToAction(nameof(CategoriasParo));
-        }
-
         // ========== BOTONES ==========
 
         public async Task<IActionResult> Botones()
@@ -1126,11 +1023,6 @@ namespace WebApp.Controllers
         private bool ProductoExists(int id)
         {
             return _context.Productos.Any(e => e.Id == id);
-        }
-
-        private bool CategoriaParoExists(int id)
-        {
-            return _context.CategoriasParo.Any(e => e.Id == id);
         }
 
         private bool BotonExists(int id)
