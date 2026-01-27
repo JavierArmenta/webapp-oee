@@ -76,7 +76,7 @@
     <div class="card mt-3">
         <div class="card-header">
             <h5 class="mb-0">
-                <i class="bi bi-clock-history me-2"></i>Timeline de Paros por Máquina (Últimos 7 días)
+                <i class="bi bi-clock-history me-2"></i>Timeline de Paros por Máquina (Últimas 24 horas)
             </h5>
         </div>
 
@@ -583,6 +583,9 @@
                         return {
                             name: dept.departamento,
                             type: 'custom',
+                            itemStyle: {
+                                color: dept.color || '#666666'
+                            },
                             renderItem: function(params, api) {
                                 var categoryIndex = api.value(0);
                                 var start = api.coord([api.value(1), categoryIndex]);
@@ -620,6 +623,9 @@
                     series.unshift({
                         name: 'Producción',
                         type: 'custom',
+                        itemStyle: {
+                            color: '#66bb6a'
+                        },
                         renderItem: function(params, api) {
                             var categoryIndex = api.value(0);
                             var start = api.coord([api.value(1), categoryIndex]);

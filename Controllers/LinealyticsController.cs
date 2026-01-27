@@ -138,7 +138,7 @@ namespace WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDatosParosPorDepartamento(int? areaId, int? lineaId, int? estacionId, int? maquinaId)
         {
-            var fechaInicio = DateTime.UtcNow.AddDays(-7); // Últimos 7 días
+            var fechaInicio = DateTime.UtcNow.AddHours(-24); // Últimas 24 horas
 
             // Query base de paros de botonera
             var query = _context.RegistrosParoBotonera
