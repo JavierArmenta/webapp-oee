@@ -1,0 +1,243 @@
+@model IEnumerable<WebApp.Models.MenuItem>
+
+@{
+    ViewData["Title"] = "Administrar Menús";
+}
+
+<div class="container-fluid">
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="ph-list me-2"></i>Menús del Sistema
+                </h1>
+                <a asp-action="CreateMenu" class="btn btn-primary">
+                    <i class="ph-plus-circle me-1"></i>Nuevo Menú
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="ph-folder-open display-1 text-muted"></i>
+                    <p class="text-muted mt-3">No hay menús registrados.</p>
+                    <a asp-action="CreateMenu" class="btn btn-primary">
+                        <i class="ph-plus-circle me-1"></i>Crear primer menú
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle datatable-basic">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>URL</th>
+                                <th>Icono</th>
+                                <th>Padre</th>
+                                <th class="text-center">Orden</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-end" style="min-width: 320px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var menu in Model)
+                            {
+                                <tr class="@(!menu.Activo ? "table-secondary" : "")">
+                                    <td>
+                                        @if (menu.ParentId == null)
+                                        {
+                                            <strong>@menu.Nombre</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="ms-3">↳ @menu.Nombre</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(menu.Url))
+                                        {
+                                            <code class="small">@menu.Url</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(menu.Icono))
+                                        {
+                                            <i class="@menu.Icono me-1"></i>
+                                            <code class="small">@menu.Icono</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (menu.Parent != null)
+                                        {
+                                            <span class="badge bg-secondary">@menu.Parent.Nombre</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-primary">Raíz</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">@menu.Orden</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (menu.Activo)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-action="MenuPermissions" asp-route-id="@menu.Id" class="btn btn-sm btn-info">
+                                            <i class="ph-shield-check"></i> Permisos
+                                        </a>
+                                        <a asp-action="EditMenu" asp-route-id="@menu.Id" class="btn btn-sm btn-warning">
+                                            <i class="ph-pencil"></i> Editar
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger delete-menu-btn"
+                                                data-menu-id="@menu.Id" data-menu-name="@menu.Nombre"
+                                                @(menu.Children.Any() ? "disabled" : "")
+                                                title="@(menu.Children.Any() ? "No se puede eliminar porque tiene submenús" : "Eliminar")">
+                                            <i class="ph-trash"></i> Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Form oculto para eliminar -->
+<form id="deleteForm" method="post" asp-action="DeleteMenu" style="display:none;">
+    <input type="hidden" name="id" id="deleteMenuId" />
+</form>
+
+@section Scripts {
+    <script src="~/assets/js/jquery/jquery.min.js"></script>
+    <script src="~/assets/js/vendor/tables/datatables/datatables.min.js"></script>
+
+    <script src="~/assets/js/vendor/notifications/sweet_alert.min.js"></script>
+    <script src="~/assets/demo/pages/extra_sweetalert.js"></script>
+
+    <script>
+        const swalInit = swal.mixin({
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-danger'
+            }
+        });
+
+        const _componentDatatableBasic = function() {
+            if (!$().DataTable) {
+                console.warn('Warning - datatables.min.js is not loaded.');
+                return;
+            }
+
+            $.extend( $.fn.dataTable.defaults, {
+                autoWidth: false,
+                columnDefs: [
+                    {
+                        orderable: false,
+                        targets: [ 6 ],
+                        width: '320px'
+                    }
+                ],
+                dom: '<"datatable-header"fl><"datatable-scroll"t><"datatable-footer"ip>',
+                language: {
+                    search: '<span class="me-3">Filtrar:</span> <div class="form-control-feedback form-control-feedback-end flex-fill">_INPUT_<div class="form-control-feedback-icon"><i class="ph-magnifying-glass opacity-50"></i></div></div>',
+                    searchPlaceholder: 'Buscar...',
+                    lengthMenu: '<span class="me-3">Mostrar:</span> _MENU_',
+                    paginate: { 'first': 'Primero', 'last': 'Último', 'next': '→', 'previous': '←' }
+                }
+            });
+
+            $('.datatable-basic').DataTable();
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            _componentDatatableBasic();
+
+            document.querySelectorAll('.delete-menu-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    if (this.disabled) return;
+
+                    const menuId = this.getAttribute('data-menu-id');
+                    const menuName = this.getAttribute('data-menu-name');
+
+                    swalInit.fire({
+                        title: '¿Eliminar menú?',
+                        html: `¿Está seguro que desea eliminar el menú <strong>${menuName}</strong>?<br><small class="text-muted">Esta acción no se puede deshacer.</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar',
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: 'btn btn-danger',
+                            cancelButton: 'btn btn-secondary ms-2'
+                        }
+                    }).then(function(result) {
+                        if (result.value) {
+                            document.getElementById('deleteMenuId').value = menuId;
+                            document.getElementById('deleteForm').submit();
+                        }
+                    });
+                });
+            });
+
+            @if (TempData["Success"] != null)
+            {
+                <text>
+                swalInit.fire({
+                    title: '¡Éxito!',
+                    text: '@TempData["Success"]',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-success'
+                    }
+                });
+                </text>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <text>
+                swalInit.fire({
+                    title: 'Error',
+                    text: '@TempData["Error"]',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-danger'
+                    }
+                });
+                </text>
+            }
+        });
+    </script>
+}

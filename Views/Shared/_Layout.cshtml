@@ -1,6 +1,8 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
+@using WebApp.Services
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject IMenuService MenuService
 
 <!DOCTYPE html>
 <html lang="en">
@@ -71,84 +73,56 @@
 			<!-- Main navigation -->
 			<div class="sidebar-section">
 
-
 				<ul class="nav nav-sidebar" data-nav-type="accordion">
 
-
-					@if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+					@if (SignInManager.IsSignedIn(User))
 					{
-						<li class="nav-item-header">
-							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Forms</div>
-							<i class="ph-dots-three sidebar-resize-show"></i>
-						</li>
+						var currentUser = await UserManager.GetUserAsync(User);
+						if (currentUser != null)
+						{
+							var userMenus = await MenuService.GetMenusForUserAsync(currentUser.Id);
 
-						<li class="nav-item nav-item-submenu">
-							<a href="#" class="nav-link">
-								<i class="ph-layout"></i>
-								<span>Admon Operadores</span>
-							</a>
-							<ul class="nav-group-sub collapse">
-								<li class="nav-item">
-									<a href="~/Operadores" class="nav-link">Operadores</a>
+							@if (userMenus.Any())
+							{
+								<li class="nav-item-header">
+									<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Menú</div>
+									<i class="ph-dots-three sidebar-resize-show"></i>
 								</li>
-								<li class="nav-item">
-									<a href="~/RolesOperador" class="nav-link">Roles</a>
-								</li>
-							</ul>
-						</li>
 
-						<li class="nav-item nav-item-submenu">
-							<a href="#" class="nav-link">
-								<i class="ph-layout"></i>
-								<span>Planta</span>
-							</a>
-							<ul class="nav-group-sub collapse">
-								<li class="nav-item">
-									<a href="~/Planta/Areas" class="nav-link">Areas</a>
-								</li>
-								<li class="nav-item">
-									<a href="~/Planta/Lineas" class="nav-link">Lineas</a>
-								</li>
-								<li class="nav-item">
-									<a href="~/Planta/Estaciones" class="nav-link">Estaciones</a>
-								</li>
-								<li class="nav-item">
-									<a href="~/Planta/Maquinas" class="nav-link">Maquinas</a>
-								</li>
-							</ul>
-						</li>
-
-
-						<li class="nav-item nav-item-submenu">
-							<a href="#" class="nav-link">
-								<i class="ph-layout"></i>
-								<span>Usuarios Web</span>
-							</a>
-							<ul class="nav-group-sub collapse">
-								<li class="nav-item">
-									<a href="~/Identity/Account/Register" class="nav-link">Registrar usuario</a>
-								</li>
-								<li class="nav-item">
-									<a href="~/Admin" class="nav-link">Modificar usuario</a>
-								</li>
-								<li class="nav-item">
-									<a href="~/Admin/Roles" class="nav-link">Administrar Roles</a>
-								</li>
-							</ul>
-						</li>
+								@foreach (var menu in userMenus)
+								{
+									@if (menu.Children.Any())
+									{
+										<!-- Menú con submenús -->
+										<li class="nav-item nav-item-submenu">
+											<a href="#" class="nav-link">
+												<i class="@(menu.Icono ?? "ph-folder")"></i>
+												<span>@menu.Nombre</span>
+											</a>
+											<ul class="nav-group-sub collapse">
+												@foreach (var child in menu.Children)
+												{
+													<li class="nav-item">
+														<a href="@Url.Content(child.Url ?? "#")" class="nav-link">@child.Nombre</a>
+													</li>
+												}
+											</ul>
+										</li>
+									}
+									else if (!string.IsNullOrEmpty(menu.Url))
+									{
+										<!-- Menú sin submenús (enlace directo) -->
+										<li class="nav-item">
+											<a href="@Url.Content(menu.Url)" class="nav-link">
+												<i class="@(menu.Icono ?? "ph-link")"></i>
+												<span>@menu.Nombre</span>
+											</a>
+										</li>
+									}
+								}
+							}
+						}
 					}
-
-					<li class="nav-item nav-item-submenu">
-						<a href="#" class="nav-link">
-							<i class="ph-layout"></i>
-							<span>Linealytics</span>
-						</a>
-						<ul class="nav-group-sub collapse">
-							<li class="nav-item">
-								<a href="~/Linealytics" class="nav-link">Modificar usuario</a>
-							</li>
-						</ul>
-					</li>
 
 				</ul>
 			</div>

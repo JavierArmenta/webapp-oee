@@ -50,6 +50,10 @@ namespace WebApp.Data
         public DbSet<CorridaProduccion> CorridasProduccion { get; set; }
         public DbSet<LecturaContador> LecturasContador { get; set; }
 
+        // DbSet para Sistema de Menús Dinámicos
+        public DbSet<MenuItem> MenuItems { get; set; }
+        public DbSet<MenuRolePermission> MenuRolePermissions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -608,6 +612,61 @@ namespace WebApp.Data
 
                 entity.HasIndex(e => new { e.CorridaId, e.FechaHoraLectura })
                     .HasDatabaseName("IX_LecturasContador_CorridaId_Fecha");
+            });
+
+            // ========== SISTEMA DE MENÚS DINÁMICOS ==========
+
+            // Configuración para MenuItem
+            builder.Entity<MenuItem>(entity =>
+            {
+                entity.ToTable("MenuItems", "authentication");
+
+                entity.Property(e => e.Nombre)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(e => e.Url)
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.Icono)
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.Parent)
+                    .WithMany(e => e.Children)
+                    .HasForeignKey(e => e.ParentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.ParentId)
+                    .HasDatabaseName("IX_MenuItems_ParentId");
+
+                entity.HasIndex(e => e.Orden)
+                    .HasDatabaseName("IX_MenuItems_Orden");
+            });
+
+            // Configuración para MenuRolePermission
+            builder.Entity<MenuRolePermission>(entity =>
+            {
+                entity.ToTable("MenuRolePermissions", "authentication");
+
+                entity.Property(e => e.FechaAsignacion)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.MenuItem)
+                    .WithMany(m => m.MenuRolePermissions)
+                    .HasForeignKey(e => e.MenuItemId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Role)
+                    .WithMany()
+                    .HasForeignKey(e => e.RoleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.MenuItemId, e.RoleId })
+                    .IsUnique()
+                    .HasDatabaseName("IX_MenuRolePermissions_MenuItemId_RoleId");
             });
         }
     }

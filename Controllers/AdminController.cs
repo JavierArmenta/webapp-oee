@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using WebApp.Models;
+using WebApp.Services;
 
 namespace WebApp.Controllers
 {
@@ -11,12 +13,18 @@ namespace WebApp.Controllers
         private UserManager<ApplicationUser> userManager;
         private IPasswordHasher<ApplicationUser> passwordHasher;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IMenuService _menuService;
 
-        public AdminController(UserManager<ApplicationUser> usrMgr, IPasswordHasher<ApplicationUser> passwordHash, RoleManager<IdentityRole> roleManager)
+        public AdminController(
+            UserManager<ApplicationUser> usrMgr,
+            IPasswordHasher<ApplicationUser> passwordHash,
+            RoleManager<IdentityRole> roleManager,
+            IMenuService menuService)
         {
             userManager = usrMgr;
             passwordHasher = passwordHash;
             _roleManager = roleManager;
+            _menuService = menuService;
         }
 
         public IActionResult Index(bool showInactive = false)
@@ -341,6 +349,231 @@ namespace WebApp.Controllers
             }
 
             return RedirectToAction(nameof(Roles));
+        }
+
+        // ==================== CRUD de Menús ====================
+
+        /// <summary>
+        /// Lista todos los menús del sistema
+        /// </summary>
+        public async Task<IActionResult> Menus()
+        {
+            var menus = await _menuService.GetAllMenusAsync();
+            return View(menus);
+        }
+
+        /// <summary>
+        /// Muestra formulario para crear un nuevo menú
+        /// </summary>
+        public async Task<IActionResult> CreateMenu()
+        {
+            ViewBag.ParentMenus = new SelectList(
+                await _menuService.GetParentMenusAsync(),
+                "Id",
+                "Nombre"
+            );
+            return View(new MenuItemViewModel());
+        }
+
+        /// <summary>
+        /// Crea un nuevo menú
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CreateMenu(MenuItemViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.ParentMenus = new SelectList(
+                    await _menuService.GetParentMenusAsync(),
+                    "Id",
+                    "Nombre"
+                );
+                return View(model);
+            }
+
+            var menu = new MenuItem
+            {
+                Nombre = model.Nombre,
+                Url = model.Url,
+                Icono = model.Icono,
+                ParentId = model.ParentId,
+                Orden = model.Orden,
+                Activo = model.Activo
+            };
+
+            if (await _menuService.CreateMenuAsync(menu))
+            {
+                TempData["Success"] = $"Menú '{menu.Nombre}' creado exitosamente";
+                return RedirectToAction(nameof(Menus));
+            }
+
+            TempData["Error"] = "Error al crear el menú";
+            ViewBag.ParentMenus = new SelectList(
+                await _menuService.GetParentMenusAsync(),
+                "Id",
+                "Nombre"
+            );
+            return View(model);
+        }
+
+        /// <summary>
+        /// Muestra formulario para editar un menú
+        /// </summary>
+        public async Task<IActionResult> EditMenu(int id)
+        {
+            var menu = await _menuService.GetMenuByIdAsync(id);
+            if (menu == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.ParentMenus = new SelectList(
+                (await _menuService.GetParentMenusAsync()).Where(m => m.Id != id),
+                "Id",
+                "Nombre",
+                menu.ParentId
+            );
+
+            var model = new MenuItemViewModel
+            {
+                Id = menu.Id,
+                Nombre = menu.Nombre,
+                Url = menu.Url,
+                Icono = menu.Icono,
+                ParentId = menu.ParentId,
+                Orden = menu.Orden,
+                Activo = menu.Activo
+            };
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Actualiza un menú
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> EditMenu(MenuItemViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.ParentMenus = new SelectList(
+                    (await _menuService.GetParentMenusAsync()).Where(m => m.Id != model.Id),
+                    "Id",
+                    "Nombre",
+                    model.ParentId
+                );
+                return View(model);
+            }
+
+            var menu = await _menuService.GetMenuByIdAsync(model.Id);
+            if (menu == null)
+            {
+                return NotFound();
+            }
+
+            menu.Nombre = model.Nombre;
+            menu.Url = model.Url;
+            menu.Icono = model.Icono;
+            menu.ParentId = model.ParentId;
+            menu.Orden = model.Orden;
+            menu.Activo = model.Activo;
+
+            if (await _menuService.UpdateMenuAsync(menu))
+            {
+                TempData["Success"] = "Menú actualizado exitosamente";
+                return RedirectToAction(nameof(Menus));
+            }
+
+            TempData["Error"] = "Error al actualizar el menú";
+            ViewBag.ParentMenus = new SelectList(
+                (await _menuService.GetParentMenusAsync()).Where(m => m.Id != model.Id),
+                "Id",
+                "Nombre",
+                model.ParentId
+            );
+            return View(model);
+        }
+
+        /// <summary>
+        /// Elimina un menú
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> DeleteMenu(int id)
+        {
+            var menu = await _menuService.GetMenuByIdAsync(id);
+            if (menu == null)
+            {
+                return NotFound();
+            }
+
+            if (menu.Children.Any())
+            {
+                TempData["Error"] = $"No se puede eliminar el menú '{menu.Nombre}' porque tiene submenús";
+                return RedirectToAction(nameof(Menus));
+            }
+
+            if (await _menuService.DeleteMenuAsync(id))
+            {
+                TempData["Success"] = $"Menú '{menu.Nombre}' eliminado exitosamente";
+            }
+            else
+            {
+                TempData["Error"] = "Error al eliminar el menú";
+            }
+
+            return RedirectToAction(nameof(Menus));
+        }
+
+        /// <summary>
+        /// Muestra formulario para gestionar permisos de un menú
+        /// </summary>
+        public async Task<IActionResult> MenuPermissions(int id)
+        {
+            var menu = await _menuService.GetMenuByIdAsync(id);
+            if (menu == null)
+            {
+                return NotFound();
+            }
+
+            var permissions = await _menuService.GetPermissionsForMenuAsync(id);
+            var allRoles = _roleManager.Roles.ToList();
+
+            var model = new ManageMenuPermissionsViewModel
+            {
+                MenuItemId = menu.Id,
+                MenuItemName = menu.Nombre,
+                Permissions = allRoles.Select(r => new MenuPermissionViewModel
+                {
+                    RoleId = r.Id,
+                    RoleName = r.Name!,
+                    Selected = permissions.Any(p => p.RoleId == r.Id)
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Actualiza los permisos de un menú
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> MenuPermissions(ManageMenuPermissionsViewModel model)
+        {
+            var selectedRoleIds = model.Permissions
+                .Where(p => p.Selected)
+                .Select(p => p.RoleId)
+                .ToList();
+
+            if (await _menuService.UpdatePermissionsAsync(model.MenuItemId, selectedRoleIds))
+            {
+                TempData["Success"] = "Permisos actualizados exitosamente";
+            }
+            else
+            {
+                TempData["Error"] = "Error al actualizar los permisos";
+            }
+
+            return RedirectToAction(nameof(Menus));
         }
     }
 }

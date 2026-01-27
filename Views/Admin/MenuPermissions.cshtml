@@ -1,0 +1,60 @@
+@model WebApp.Models.ManageMenuPermissionsViewModel
+
+@{
+    ViewData["Title"] = "Permisos de Menú";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Permisos del Menú</h2>
+                    <p class="text-muted mb-0">Configurar qué roles pueden ver: <strong>@Model.MenuItemName</strong></p>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="MenuPermissions">
+                        <input type="hidden" asp-for="MenuItemId" />
+                        <input type="hidden" asp-for="MenuItemName" />
+
+                        <div class="alert alert-info">
+                            <i class="ph-info me-2"></i>
+                            Seleccione los roles que tendrán acceso a este menú. Si es un menú padre, los submenús heredarán la visibilidad solo si también tienen permisos asignados.
+                        </div>
+
+                        <div class="border rounded p-3 mb-4">
+                            @for (int i = 0; i < Model.Permissions.Count; i++)
+                            {
+                                <div class="form-check mb-2">
+                                    <input type="hidden" asp-for="Permissions[i].RoleId" />
+                                    <input type="hidden" asp-for="Permissions[i].RoleName" />
+                                    <input asp-for="Permissions[i].Selected" class="form-check-input" />
+                                    <label class="form-check-label" asp-for="Permissions[i].Selected">
+                                        <span class="badge bg-primary me-2">@Model.Permissions[i].RoleName</span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!Model.Permissions.Any())
+                        {
+                            <div class="alert alert-warning">
+                                <i class="ph-warning me-2"></i>
+                                No hay roles disponibles. Primero debe crear roles en el sistema.
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Menus" class="btn btn-secondary">
+                                <i class="ph-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary" @(!Model.Permissions.Any() ? "disabled" : "")>
+                                <i class="ph-floppy-disk"></i> Guardar Permisos
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

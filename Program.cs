@@ -23,8 +23,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddControllersWithViews();
 // Registrar servicio LDAP
 builder.Services.AddScoped<ILdapService, LdapService>();
-// ✅ MOVER ESTA LÍNEA AQUÍ (ANTES de builder.Build())
+// Registrar servicio de Operadores
 builder.Services.AddScoped<IOperadorService, OperadorService>();
+// Registrar servicio de Menús dinámicos
+builder.Services.AddScoped<IMenuService, MenuService>();
 
 builder.Services
     .AddDefaultIdentity<ApplicationUser>(options => {
@@ -41,7 +43,7 @@ builder.Services
 // ❌ DESPUÉS DE ESTA LÍNEA NO SE PUEDEN AGREGAR MÁS SERVICIOS
 var app = builder.Build();
 
-// Seed roles/usuarios
+// Seed roles/usuarios/menús
 using (var scope = app.Services.CreateScope())
 {
     var serviceProvider = scope.ServiceProvider;
@@ -49,8 +51,9 @@ using (var scope = app.Services.CreateScope())
     {
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        Console.WriteLine("Ejecutando Seed..."); 
-        Seed.SeedDB(userManager, roleManager); 
+        var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        Console.WriteLine("Ejecutando Seed...");
+        Seed.SeedDB(userManager, roleManager, dbContext);
         Console.WriteLine("Seed ejecutado correctamente.");
     }
     catch (Exception ex)
