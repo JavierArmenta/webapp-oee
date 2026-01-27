@@ -1,0 +1,190 @@
+@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
+
+@{
+    ViewData["Title"] = "Administrar Roles";
+}
+
+<div class="container-fluid">
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="ph-shield me-2"></i>Roles del Sistema
+                </h1>
+                <a asp-action="CreateRole" class="btn btn-primary">
+                    <i class="ph-plus-circle me-1"></i>Nuevo Rol
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="ph-folder-open display-1 text-muted"></i>
+                    <p class="text-muted mt-3">No hay roles registrados.</p>
+                    <a asp-action="CreateRole" class="btn btn-primary">
+                        <i class="ph-plus-circle me-1"></i>Crear primer rol
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle datatable-basic">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre del Rol</th>
+                                <th>ID</th>
+                                <th class="text-end" style="min-width: 280px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var role in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary">@role.Name</span>
+                                    </td>
+                                    <td>
+                                        <code class="text-muted small">@role.Id</code>
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-action="EditRole" asp-route-id="@role.Id" class="btn btn-sm btn-warning">
+                                            <i class="ph-pencil"></i> Editar
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger delete-role-btn"
+                                                data-role-id="@role.Id" data-role-name="@role.Name">
+                                            <i class="ph-trash"></i> Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Form oculto para eliminar -->
+<form id="deleteForm" method="post" asp-action="DeleteRole" style="display:none;">
+    <input type="hidden" name="id" id="deleteRoleId" />
+</form>
+
+@section Scripts {
+    <script src="~/assets/js/jquery/jquery.min.js"></script>
+    <script src="~/assets/js/vendor/tables/datatables/datatables.min.js"></script>
+
+    <script src="~/assets/js/vendor/notifications/sweet_alert.min.js"></script>
+    <script src="~/assets/demo/pages/extra_sweetalert.js"></script>
+
+    <script>
+        // Inicializar SweetAlert
+        const swalInit = swal.mixin({
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-danger'
+            }
+        });
+
+        // Inicializar DataTables
+        const _componentDatatableBasic = function() {
+            if (!$().DataTable) {
+                console.warn('Warning - datatables.min.js is not loaded.');
+                return;
+            }
+
+            $.extend( $.fn.dataTable.defaults, {
+                autoWidth: false,
+                columnDefs: [
+                    {
+                        orderable: false,
+                        targets: [ 2 ],
+                        width: '280px'
+                    }
+                ],
+                dom: '<"datatable-header"fl><"datatable-scroll"t><"datatable-footer"ip>',
+                language: {
+                    search: '<span class="me-3">Filter:</span> <div class="form-control-feedback form-control-feedback-end flex-fill">_INPUT_<div class="form-control-feedback-icon"><i class="ph-magnifying-glass opacity-50"></i></div></div>',
+                    searchPlaceholder: 'Type to filter...',
+                    lengthMenu: '<span class="me-3">Show:</span> _MENU_',
+                    paginate: { 'first': 'First', 'last': 'Last', 'next': document.dir == "rtl" ? '&larr;' : '&rarr;', 'previous': document.dir == "rtl" ? '&rarr;' : '&larr;' }
+                }
+            });
+
+            $('.datatable-basic').DataTable();
+        };
+
+        // Inicializar al cargar el documento
+        document.addEventListener('DOMContentLoaded', function() {
+            _componentDatatableBasic();
+
+            // Confirmación para eliminar rol
+            document.querySelectorAll('.delete-role-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const roleId = this.getAttribute('data-role-id');
+                    const roleName = this.getAttribute('data-role-name');
+
+                    swalInit.fire({
+                        title: '¿Eliminar rol?',
+                        html: `¿Está seguro que desea eliminar el rol <strong>${roleName}</strong>?<br><small class="text-muted">Esta acción no se puede deshacer.</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar',
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: 'btn btn-danger',
+                            cancelButton: 'btn btn-secondary ms-2'
+                        }
+                    }).then(function(result) {
+                        if (result.value) {
+                            document.getElementById('deleteRoleId').value = roleId;
+                            document.getElementById('deleteForm').submit();
+                        }
+                    });
+                });
+            });
+
+            // Mostrar notificaciones de éxito
+            @if (TempData["Success"] != null)
+            {
+                <text>
+                swalInit.fire({
+                    title: '¡Éxito!',
+                    text: '@TempData["Success"]',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-success'
+                    }
+                });
+                </text>
+            }
+
+            // Mostrar notificaciones de error
+            @if (TempData["Error"] != null)
+            {
+                <text>
+                swalInit.fire({
+                    title: 'Error',
+                    text: '@TempData["Error"]',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-danger'
+                    }
+                });
+                </text>
+            }
+        });
+    </script>
+}
