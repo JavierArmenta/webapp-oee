@@ -208,17 +208,17 @@ namespace WebApp.Controllers
 
             if (registro == null) return NotFound();
 
-            // Cargar técnicos para asignar
+            // Cargar operadores para asignar como técnicos
             ViewBag.Tecnicos = new SelectList(
-                await _context.Users.OrderBy(u => u.Email).ToListAsync(),
-                "Id", "Email", registro.TecnicoAsignadoId);
+                await _context.Operadores.Where(o => o.Activo).OrderBy(o => o.Nombre).ThenBy(o => o.Apellido).ToListAsync(),
+                "Id", "NombreCompleto", registro.TecnicoAsignadoId);
 
             return View(registro);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AsignarTecnico(int id, string tecnicoId)
+        public async Task<IActionResult> AsignarTecnico(int id, int tecnicoId)
         {
             var registro = await _context.RegistrosFallas.FindAsync(id);
 

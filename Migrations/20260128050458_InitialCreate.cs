@@ -88,22 +88,26 @@ namespace WebApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CategoriasParo",
+                name: "CatalogoFallas",
                 schema: "linealytics",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Descripcion = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    Color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    EsPlaneado = table.Column<bool>(type: "boolean", nullable: false),
+                    Codigo = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Nombre = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Descripcion = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    Severidad = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    Categoria = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    TiempoEstimadoSolucionMinutos = table.Column<int>(type: "integer", nullable: true),
+                    Color = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: true),
                     Activo = table.Column<bool>(type: "boolean", nullable: false),
-                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
+                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                    FechaModificacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CategoriasParo", x => x.Id);
+                    table.PrimaryKey("PK_CatalogoFallas", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -122,6 +126,33 @@ namespace WebApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DepartamentosOperador", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MenuItems",
+                schema: "authentication",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Url = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Icono = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    ParentId = table.Column<int>(type: "integer", nullable: true),
+                    Orden = table.Column<int>(type: "integer", nullable: false),
+                    Activo = table.Column<bool>(type: "boolean", nullable: false),
+                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MenuItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MenuItems_MenuItems_ParentId",
+                        column: x => x.ParentId,
+                        principalSchema: "authentication",
+                        principalTable: "MenuItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -344,33 +375,6 @@ namespace WebApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CausasParo",
-                schema: "linealytics",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CategoriaParoId = table.Column<int>(type: "integer", nullable: false),
-                    Nombre = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Descripcion = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    CodigoInterno = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    RequiereMantenimiento = table.Column<bool>(type: "boolean", nullable: false),
-                    Activo = table.Column<bool>(type: "boolean", nullable: false),
-                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CausasParo", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CausasParo_CategoriasParo_CategoriaParoId",
-                        column: x => x.CategoriaParoId,
-                        principalSchema: "linealytics",
-                        principalTable: "CategoriasParo",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Botones",
                 schema: "planta",
                 columns: table => new
@@ -395,6 +399,36 @@ namespace WebApp.Migrations
                         principalTable: "DepartamentosOperador",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MenuRolePermissions",
+                schema: "authentication",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    MenuItemId = table.Column<int>(type: "integer", nullable: false),
+                    RoleId = table.Column<string>(type: "text", nullable: false),
+                    FechaAsignacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MenuRolePermissions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MenuRolePermissions_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalSchema: "authentication",
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MenuRolePermissions_MenuItems_MenuItemId",
+                        column: x => x.MenuItemId,
+                        principalSchema: "authentication",
+                        principalTable: "MenuItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -505,6 +539,49 @@ namespace WebApp.Migrations
                         column: x => x.MaquinaId,
                         principalSchema: "planta",
                         principalTable: "Maquinas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CorridasProduccion",
+                schema: "linealytics",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    MaquinaId = table.Column<int>(type: "integer", nullable: false),
+                    ProductoId = table.Column<int>(type: "integer", nullable: false),
+                    FechaInicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FechaFin = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ContadorOKInicial = table.Column<long>(type: "bigint", nullable: false),
+                    ContadorOKFinal = table.Column<long>(type: "bigint", nullable: false),
+                    UltimoContadorOK = table.Column<long>(type: "bigint", nullable: false),
+                    ProduccionOK = table.Column<long>(type: "bigint", nullable: false),
+                    NumeroResetsOK = table.Column<int>(type: "integer", nullable: false),
+                    ContadorNOKInicial = table.Column<long>(type: "bigint", nullable: false),
+                    ContadorNOKFinal = table.Column<long>(type: "bigint", nullable: false),
+                    UltimoContadorNOK = table.Column<long>(type: "bigint", nullable: false),
+                    ProduccionNOK = table.Column<long>(type: "bigint", nullable: false),
+                    NumeroResetsNOK = table.Column<int>(type: "integer", nullable: false),
+                    NumeroLecturas = table.Column<int>(type: "integer", nullable: false),
+                    Estado = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CorridasProduccion", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CorridasProduccion_Maquinas_MaquinaId",
+                        column: x => x.MaquinaId,
+                        principalSchema: "planta",
+                        principalTable: "Maquinas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CorridasProduccion_Productos_ProductoId",
+                        column: x => x.ProductoId,
+                        principalSchema: "linealytics",
+                        principalTable: "Productos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -629,20 +706,25 @@ namespace WebApp.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FallaId = table.Column<int>(type: "integer", nullable: false),
+                    CatalogoFallaId = table.Column<int>(type: "integer", nullable: false),
                     MaquinaId = table.Column<int>(type: "integer", nullable: false),
-                    FechaHoraLectura = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
-                    ModeloId = table.Column<int>(type: "integer", nullable: true),
-                    Descripcion = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                    FechaHoraDeteccion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                    Estado = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "Pendiente"),
+                    TecnicoAsignadoId = table.Column<int>(type: "integer", nullable: true),
+                    FechaHoraAtencion = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    FechaHoraResolucion = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DuracionMinutos = table.Column<int>(type: "integer", nullable: true),
+                    AccionesTomadas = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RegistrosFallas", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RegistrosFallas_CausasParo_FallaId",
-                        column: x => x.FallaId,
+                        name: "FK_RegistrosFallas_CatalogoFallas_CatalogoFallaId",
+                        column: x => x.CatalogoFallaId,
                         principalSchema: "linealytics",
-                        principalTable: "CausasParo",
+                        principalTable: "CatalogoFallas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -653,10 +735,10 @@ namespace WebApp.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_RegistrosFallas_Modelos_ModeloId",
-                        column: x => x.ModeloId,
-                        principalSchema: "planta",
-                        principalTable: "Modelos",
+                        name: "FK_RegistrosFallas_Operadores_TecnicoAsignadoId",
+                        column: x => x.TecnicoAsignadoId,
+                        principalSchema: "operadores",
+                        principalTable: "Operadores",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                 });
@@ -775,26 +857,31 @@ namespace WebApp.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CorridaId = table.Column<int>(type: "integer", nullable: false),
                     MaquinaId = table.Column<int>(type: "integer", nullable: false),
-                    DispositivoId = table.Column<int>(type: "integer", nullable: false),
-                    ProductoId = table.Column<int>(type: "integer", nullable: true),
-                    MetricasMaquinaId = table.Column<int>(type: "integer", nullable: true),
-                    Contador = table.Column<int>(type: "integer", nullable: false),
-                    ContadorAnterior = table.Column<int>(type: "integer", nullable: true),
-                    UnidadesProducidas = table.Column<int>(type: "integer", nullable: true),
-                    FechaLectura = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
-                    Observaciones = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                    ProductoId = table.Column<int>(type: "integer", nullable: false),
+                    ContadorOK = table.Column<long>(type: "bigint", nullable: false),
+                    ContadorOKAnterior = table.Column<long>(type: "bigint", nullable: true),
+                    DiferenciaOK = table.Column<long>(type: "bigint", nullable: false),
+                    ProduccionOK = table.Column<long>(type: "bigint", nullable: false),
+                    EsResetOK = table.Column<bool>(type: "boolean", nullable: false),
+                    ContadorNOK = table.Column<long>(type: "bigint", nullable: false),
+                    ContadorNOKAnterior = table.Column<long>(type: "bigint", nullable: true),
+                    DiferenciaNOK = table.Column<long>(type: "bigint", nullable: false),
+                    ProduccionNOK = table.Column<long>(type: "bigint", nullable: false),
+                    EsResetNOK = table.Column<bool>(type: "boolean", nullable: false),
+                    FechaHoraLectura = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_LecturasContador", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_LecturasContador_Dispositivos_DispositivoId",
-                        column: x => x.DispositivoId,
+                        name: "FK_LecturasContador_CorridasProduccion_CorridaId",
+                        column: x => x.CorridaId,
                         principalSchema: "linealytics",
-                        principalTable: "Dispositivos",
+                        principalTable: "CorridasProduccion",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_LecturasContador_Maquinas_MaquinaId",
                         column: x => x.MaquinaId,
@@ -802,13 +889,6 @@ namespace WebApp.Migrations
                         principalTable: "Maquinas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_LecturasContador_MetricasMaquina_MetricasMaquinaId",
-                        column: x => x.MetricasMaquinaId,
-                        principalSchema: "linealytics",
-                        principalTable: "MetricasMaquina",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_LecturasContador_Productos_ProductoId",
                         column: x => x.ProductoId,
@@ -827,7 +907,7 @@ namespace WebApp.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     MaquinaId = table.Column<int>(type: "integer", nullable: false),
                     MetricasMaquinaId = table.Column<int>(type: "integer", nullable: true),
-                    CausaParoId = table.Column<int>(type: "integer", nullable: false),
+                    CausaParoId = table.Column<int>(type: "integer", nullable: true),
                     FechaHoraInicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     FechaHoraFin = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DuracionMinutos = table.Column<int>(type: "integer", nullable: true),
@@ -846,13 +926,6 @@ namespace WebApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RegistrosParos", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_RegistrosParos_CausasParo_CausaParoId",
-                        column: x => x.CausaParoId,
-                        principalSchema: "linealytics",
-                        principalTable: "CausasParo",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_RegistrosParos_Maquinas_MaquinaId",
                         column: x => x.MaquinaId,
@@ -1077,17 +1150,10 @@ namespace WebApp.Migrations
                 column: "DepartamentoOperadorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CategoriasParo_Nombre",
+                name: "IX_CatalogoFallas_Codigo",
                 schema: "linealytics",
-                table: "CategoriasParo",
-                column: "Nombre",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CausasParo_CategoriaParoId_Nombre",
-                schema: "linealytics",
-                table: "CausasParo",
-                columns: new[] { "CategoriaParoId", "Nombre" },
+                table: "CatalogoFallas",
+                column: "Codigo",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1101,6 +1167,24 @@ namespace WebApp.Migrations
                 schema: "linealytics",
                 table: "ComentariosParoBotonera",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CorridasProduccion_MaquinaId_Estado",
+                schema: "linealytics",
+                table: "CorridasProduccion",
+                columns: new[] { "MaquinaId", "Estado" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CorridasProduccion_MaquinaId_FechaInicio",
+                schema: "linealytics",
+                table: "CorridasProduccion",
+                columns: new[] { "MaquinaId", "FechaInicio" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CorridasProduccion_ProductoId",
+                schema: "linealytics",
+                table: "CorridasProduccion",
+                column: "ProductoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DepartamentosOperador_Nombre",
@@ -1136,22 +1220,16 @@ namespace WebApp.Migrations
                 column: "RegistroParoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LecturasContador_DispositivoId",
+                name: "IX_LecturasContador_CorridaId_Fecha",
                 schema: "linealytics",
                 table: "LecturasContador",
-                column: "DispositivoId");
+                columns: new[] { "CorridaId", "FechaHoraLectura" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_LecturasContador_MaquinaId_FechaLectura",
+                name: "IX_LecturasContador_MaquinaId_Fecha",
                 schema: "linealytics",
                 table: "LecturasContador",
-                columns: new[] { "MaquinaId", "FechaLectura" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LecturasContador_MetricasMaquinaId",
-                schema: "linealytics",
-                table: "LecturasContador",
-                column: "MetricasMaquinaId");
+                columns: new[] { "MaquinaId", "FechaHoraLectura" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_LecturasContador_ProductoId",
@@ -1191,6 +1269,31 @@ namespace WebApp.Migrations
                 table: "Maquinas",
                 column: "NumeroSerie",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MenuItems_Orden",
+                schema: "authentication",
+                table: "MenuItems",
+                column: "Orden");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MenuItems_ParentId",
+                schema: "authentication",
+                table: "MenuItems",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MenuRolePermissions_MenuItemId_RoleId",
+                schema: "authentication",
+                table: "MenuRolePermissions",
+                columns: new[] { "MenuItemId", "RoleId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MenuRolePermissions_RoleId",
+                schema: "authentication",
+                table: "MenuRolePermissions",
+                column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MetricasMaquina_MaquinaId_FechaInicio",
@@ -1257,22 +1360,28 @@ namespace WebApp.Migrations
                 column: "ModeloId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegistrosFallas_FallaId",
+                name: "IX_RegistrosFallas_CatalogoFallaId",
                 schema: "linealytics",
                 table: "RegistrosFallas",
-                column: "FallaId");
+                column: "CatalogoFallaId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegistrosFallas_MaquinaId_FechaHoraLectura",
+                name: "IX_RegistrosFallas_Estado",
                 schema: "linealytics",
                 table: "RegistrosFallas",
-                columns: new[] { "MaquinaId", "FechaHoraLectura" });
+                column: "Estado");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegistrosFallas_ModeloId",
+                name: "IX_RegistrosFallas_MaquinaId_FechaHoraDeteccion",
                 schema: "linealytics",
                 table: "RegistrosFallas",
-                column: "ModeloId");
+                columns: new[] { "MaquinaId", "FechaHoraDeteccion" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrosFallas_TecnicoAsignadoId",
+                schema: "linealytics",
+                table: "RegistrosFallas",
+                column: "TecnicoAsignadoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RegistrosParoBotonera_BotoneraId",
@@ -1309,12 +1418,6 @@ namespace WebApp.Migrations
                 schema: "linealytics",
                 table: "RegistrosParoBotonera",
                 column: "OperadorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RegistrosParos_CausaParoId",
-                schema: "linealytics",
-                table: "RegistrosParos",
-                column: "CausaParoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RegistrosParos_Estado",
@@ -1425,12 +1528,20 @@ namespace WebApp.Migrations
                 schema: "linealytics");
 
             migrationBuilder.DropTable(
+                name: "Dispositivos",
+                schema: "linealytics");
+
+            migrationBuilder.DropTable(
                 name: "HistorialCambiosParos",
                 schema: "linealytics");
 
             migrationBuilder.DropTable(
                 name: "LecturasContador",
                 schema: "linealytics");
+
+            migrationBuilder.DropTable(
+                name: "MenuRolePermissions",
+                schema: "authentication");
 
             migrationBuilder.DropTable(
                 name: "OperadorDepartamentos",
@@ -1449,10 +1560,6 @@ namespace WebApp.Migrations
                 schema: "linealytics");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles",
-                schema: "authentication");
-
-            migrationBuilder.DropTable(
                 name: "AspNetUsers",
                 schema: "authentication");
 
@@ -1465,12 +1572,24 @@ namespace WebApp.Migrations
                 schema: "linealytics");
 
             migrationBuilder.DropTable(
-                name: "Dispositivos",
+                name: "CorridasProduccion",
                 schema: "linealytics");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoles",
+                schema: "authentication");
+
+            migrationBuilder.DropTable(
+                name: "MenuItems",
+                schema: "authentication");
 
             migrationBuilder.DropTable(
                 name: "Modelos",
                 schema: "planta");
+
+            migrationBuilder.DropTable(
+                name: "CatalogoFallas",
+                schema: "linealytics");
 
             migrationBuilder.DropTable(
                 name: "Botoneras",
@@ -1479,10 +1598,6 @@ namespace WebApp.Migrations
             migrationBuilder.DropTable(
                 name: "Botones",
                 schema: "planta");
-
-            migrationBuilder.DropTable(
-                name: "CausasParo",
-                schema: "linealytics");
 
             migrationBuilder.DropTable(
                 name: "MetricasMaquina",
@@ -1499,10 +1614,6 @@ namespace WebApp.Migrations
             migrationBuilder.DropTable(
                 name: "DepartamentosOperador",
                 schema: "operadores");
-
-            migrationBuilder.DropTable(
-                name: "CategoriasParo",
-                schema: "linealytics");
 
             migrationBuilder.DropTable(
                 name: "Maquinas",

@@ -12,8 +12,8 @@ using WebApp.Data;
 namespace WebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260126142756_SimplificarContadores")]
-    partial class SimplificarContadores
+    [Migration("20260128050458_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -500,7 +500,7 @@ namespace WebApp.Migrations
                     b.ToTable("Botoneras", "linealytics");
                 });
 
-            modelBuilder.Entity("WebApp.Models.Linealytics.CategoriaParo", b =>
+            modelBuilder.Entity("WebApp.Models.Linealytics.CatalogoFalla", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -511,78 +511,50 @@ namespace WebApp.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Color")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("EsPlaneado")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Nombre")
-                        .IsUnique()
-                        .HasDatabaseName("IX_CategoriasParo_Nombre");
-
-                    b.ToTable("CategoriasParo", "linealytics");
-                });
-
-            modelBuilder.Entity("WebApp.Models.Linealytics.CausaParo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("CategoriaParoId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CodigoInterno")
+                    b.Property<string>("Categoria")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
                     b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime>("FechaCreacion")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<bool>("RequiereMantenimiento")
-                        .HasColumnType("boolean");
+                    b.Property<string>("Severidad")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("TiempoEstimadoSolucionMinutos")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoriaParoId", "Nombre")
+                    b.HasIndex("Codigo")
                         .IsUnique()
-                        .HasDatabaseName("IX_CausasParo_CategoriaParoId_Nombre");
+                        .HasDatabaseName("IX_CatalogoFallas_Codigo");
 
-                    b.ToTable("CausasParo", "linealytics");
+                    b.ToTable("CatalogoFallas", "linealytics");
                 });
 
             modelBuilder.Entity("WebApp.Models.Linealytics.ComentarioParoBotonera", b =>
@@ -1021,33 +993,55 @@ namespace WebApp.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                    b.Property<string>("AccionesTomadas")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
-                    b.Property<int>("FallaId")
+                    b.Property<int>("CatalogoFallaId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("FechaHoraLectura")
+                    b.Property<int?>("DuracionMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Pendiente");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaHoraAtencion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaHoraDeteccion")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
 
+                    b.Property<DateTime?>("FechaHoraResolucion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("MaquinaId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ModeloId")
+                    b.Property<int?>("TecnicoAsignadoId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FallaId")
-                        .HasDatabaseName("IX_RegistrosFallas_FallaId");
+                    b.HasIndex("CatalogoFallaId")
+                        .HasDatabaseName("IX_RegistrosFallas_CatalogoFallaId");
 
-                    b.HasIndex("ModeloId");
+                    b.HasIndex("Estado")
+                        .HasDatabaseName("IX_RegistrosFallas_Estado");
 
-                    b.HasIndex("MaquinaId", "FechaHoraLectura")
-                        .HasDatabaseName("IX_RegistrosFallas_MaquinaId_FechaHoraLectura");
+                    b.HasIndex("TecnicoAsignadoId");
+
+                    b.HasIndex("MaquinaId", "FechaHoraDeteccion")
+                        .HasDatabaseName("IX_RegistrosFallas_MaquinaId_FechaHoraDeteccion");
 
                     b.ToTable("RegistrosFallas", "linealytics");
                 });
@@ -1060,7 +1054,7 @@ namespace WebApp.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CausaParoId")
+                    b.Property<int?>("CausaParoId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Descripcion")
@@ -1118,8 +1112,6 @@ namespace WebApp.Migrations
                         .HasColumnType("character varying(1000)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CausaParoId");
 
                     b.HasIndex("Estado")
                         .HasDatabaseName("IX_RegistrosParos_Estado");
@@ -1430,6 +1422,83 @@ namespace WebApp.Migrations
                     b.ToTable("Maquinas", "planta");
                 });
 
+            modelBuilder.Entity("WebApp.Models.MenuItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Icono")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Url")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Orden")
+                        .HasDatabaseName("IX_MenuItems_Orden");
+
+                    b.HasIndex("ParentId")
+                        .HasDatabaseName("IX_MenuItems_ParentId");
+
+                    b.ToTable("MenuItems", "authentication");
+                });
+
+            modelBuilder.Entity("WebApp.Models.MenuRolePermission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("FechaAsignacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("MenuItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("MenuItemId", "RoleId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_MenuRolePermissions_MenuItemId_RoleId");
+
+                    b.ToTable("MenuRolePermissions", "authentication");
+                });
+
             modelBuilder.Entity("WebApp.Models.Modelo", b =>
                 {
                     b.Property<int>("Id")
@@ -1639,17 +1708,6 @@ namespace WebApp.Migrations
                     b.Navigation("Maquina");
                 });
 
-            modelBuilder.Entity("WebApp.Models.Linealytics.CausaParo", b =>
-                {
-                    b.HasOne("WebApp.Models.Linealytics.CategoriaParo", "CategoriaParo")
-                        .WithMany("CausasParo")
-                        .HasForeignKey("CategoriaParoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CategoriaParo");
-                });
-
             modelBuilder.Entity("WebApp.Models.Linealytics.ComentarioParoBotonera", b =>
                 {
                     b.HasOne("WebApp.Models.Linealytics.RegistroParoBotonera", "RegistroParoBotonera")
@@ -1783,9 +1841,9 @@ namespace WebApp.Migrations
 
             modelBuilder.Entity("WebApp.Models.Linealytics.RegistroFalla", b =>
                 {
-                    b.HasOne("WebApp.Models.Linealytics.CausaParo", "CausaParo")
-                        .WithMany()
-                        .HasForeignKey("FallaId")
+                    b.HasOne("WebApp.Models.Linealytics.CatalogoFalla", "CatalogoFalla")
+                        .WithMany("RegistrosFallas")
+                        .HasForeignKey("CatalogoFallaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1795,26 +1853,20 @@ namespace WebApp.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("WebApp.Models.Modelo", "Modelo")
+                    b.HasOne("WebApp.Models.Operador", "TecnicoAsignado")
                         .WithMany()
-                        .HasForeignKey("ModeloId")
+                        .HasForeignKey("TecnicoAsignadoId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("CausaParo");
+                    b.Navigation("CatalogoFalla");
 
                     b.Navigation("Maquina");
 
-                    b.Navigation("Modelo");
+                    b.Navigation("TecnicoAsignado");
                 });
 
             modelBuilder.Entity("WebApp.Models.Linealytics.RegistroParo", b =>
                 {
-                    b.HasOne("WebApp.Models.Linealytics.CausaParo", "CausaParo")
-                        .WithMany("RegistrosParos")
-                        .HasForeignKey("CausaParoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("WebApp.Models.Maquina", "Maquina")
                         .WithMany()
                         .HasForeignKey("MaquinaId")
@@ -1839,8 +1891,6 @@ namespace WebApp.Migrations
                     b.HasOne("WebApp.Models.Linealytics.SesionProduccion", null)
                         .WithMany("RegistrosParos")
                         .HasForeignKey("SesionProduccionId");
-
-                    b.Navigation("CausaParo");
 
                     b.Navigation("Maquina");
 
@@ -1953,6 +2003,35 @@ namespace WebApp.Migrations
                     b.Navigation("Estacion");
                 });
 
+            modelBuilder.Entity("WebApp.Models.MenuItem", b =>
+                {
+                    b.HasOne("WebApp.Models.MenuItem", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("WebApp.Models.MenuRolePermission", b =>
+                {
+                    b.HasOne("WebApp.Models.MenuItem", "MenuItem")
+                        .WithMany("MenuRolePermissions")
+                        .HasForeignKey("MenuItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MenuItem");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("WebApp.Models.OperadorDepartamento", b =>
                 {
                     b.HasOne("WebApp.Models.DepartamentoOperador", "DepartamentoOperador")
@@ -1992,14 +2071,9 @@ namespace WebApp.Migrations
                     b.Navigation("Estaciones");
                 });
 
-            modelBuilder.Entity("WebApp.Models.Linealytics.CategoriaParo", b =>
+            modelBuilder.Entity("WebApp.Models.Linealytics.CatalogoFalla", b =>
                 {
-                    b.Navigation("CausasParo");
-                });
-
-            modelBuilder.Entity("WebApp.Models.Linealytics.CausaParo", b =>
-                {
-                    b.Navigation("RegistrosParos");
+                    b.Navigation("RegistrosFallas");
                 });
 
             modelBuilder.Entity("WebApp.Models.Linealytics.CorridaProduccion", b =>
@@ -2039,6 +2113,13 @@ namespace WebApp.Migrations
             modelBuilder.Entity("WebApp.Models.Linealytics.Turno", b =>
                 {
                     b.Navigation("SesionesProduccion");
+                });
+
+            modelBuilder.Entity("WebApp.Models.MenuItem", b =>
+                {
+                    b.Navigation("Children");
+
+                    b.Navigation("MenuRolePermissions");
                 });
 
             modelBuilder.Entity("WebApp.Models.Operador", b =>

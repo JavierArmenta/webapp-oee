@@ -32,7 +32,7 @@ namespace WebApp.Models.Linealytics
         public string Estado { get; set; } = "Pendiente"; // Pendiente, EnAtencion, Resuelta
 
         [Display(Name = "Técnico Asignado")]
-        public string? TecnicoAsignadoId { get; set; }
+        public int? TecnicoAsignadoId { get; set; }
 
         [Display(Name = "Fecha/Hora Atención")]
         public DateTime? FechaHoraAtencion { get; set; }
@@ -58,6 +58,6 @@ namespace WebApp.Models.Linealytics
         public virtual Maquina Maquina { get; set; } = null!;
 
         [ForeignKey("TecnicoAsignadoId")]
-        public virtual ApplicationUser? TecnicoAsignado { get; set; }
+        public virtual Operador? TecnicoAsignado { get; set; }
     }
 }

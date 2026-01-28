@@ -1024,8 +1024,8 @@ namespace WebApp.Migrations
                     b.Property<int>("MaquinaId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("TecnicoAsignadoId")
-                        .HasColumnType("text");
+                    b.Property<int?>("TecnicoAsignadoId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -1850,7 +1850,7 @@ namespace WebApp.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("WebApp.Models.ApplicationUser", "TecnicoAsignado")
+                    b.HasOne("WebApp.Models.Operador", "TecnicoAsignado")
                         .WithMany()
                         .HasForeignKey("TecnicoAsignadoId")
                         .OnDelete(DeleteBehavior.SetNull);
