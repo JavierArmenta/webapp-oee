@@ -1,0 +1,397 @@
+@{
+    ViewData["Title"] = "Contadores - Linealytics";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-speedometer me-2"></i>Contadores de Produccion (Ultimas 24 hrs)
+            </h1>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5 class="mb-0">Filtros</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-3">
+                    <label class="form-label">Area</label>
+                    <select class="form-control select" id="select-area">
+                        <option value="">Todas las areas</option>
+                        @foreach (var area in (List<WebApp.Models.Area>)ViewBag.Areas)
+                        {
+                            <option value="@area.Id">@area.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-3">
+                    <label class="form-label">Linea</label>
+                    <select class="form-control select" id="select-linea" disabled>
+                        <option value="">Seleccione un area primero</option>
+                        @foreach (var linea in (List<WebApp.Models.Linea>)ViewBag.Lineas)
+                        {
+                            <option value="@linea.Id" data-area="@linea.AreaId">@linea.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-3">
+                    <label class="form-label">Estacion</label>
+                    <select class="form-control select" id="select-estacion" disabled>
+                        <option value="">Seleccione una linea primero</option>
+                        @foreach (var estacion in (List<WebApp.Models.Estacion>)ViewBag.Estaciones)
+                        {
+                            <option value="@estacion.Id" data-linea="@estacion.LineaId" data-area="@estacion.Linea.AreaId">
+                                @estacion.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary w-100" id="btn-actualizar">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de graficas -->
+    <div class="row mt-3" id="charts-container">
+        <!-- Las graficas se generan dinamicamente -->
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Cargando datos de contadores...</p>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/assets/js/jquery/jquery.min.js"></script>
+    <script src="~/assets/js/vendor/visualization/d3/d3.min.js"></script>
+    <script src="~/assets/js/vendor/visualization/c3/c3.min.js"></script>
+    <script src="~/assets/js/vendor/forms/selects/select2.min.js"></script>
+
+    <script>
+        // Contadores Charts Module
+        var ContadoresCharts = function() {
+
+            var charts = {};
+            var todasLineas = [];
+            var todasEstaciones = [];
+
+            // Inicializar Select2 y filtros
+            var _initFilters = function() {
+                if (!$().select2) {
+                    console.warn('Warning - select2.min.js is not loaded.');
+                    return;
+                }
+
+                // Guardar opciones originales
+                $('#select-linea option').each(function() {
+                    if ($(this).val() !== '') {
+                        todasLineas.push({
+                            value: $(this).val(),
+                            text: $(this).text(),
+                            area: $(this).data('area')
+                        });
+                    }
+                });
+
+                $('#select-estacion option').each(function() {
+                    if ($(this).val() !== '') {
+                        todasEstaciones.push({
+                            value: $(this).val(),
+                            text: $(this).text(),
+                            linea: $(this).data('linea'),
+                            area: $(this).data('area')
+                        });
+                    }
+                });
+
+                // Initialize Select2
+                $('.select').select2({
+                    placeholder: 'Seleccionar...',
+                    allowClear: true
+                });
+
+                // Filtro Area
+                $('#select-area').on('change', function() {
+                    var areaId = $(this).val();
+
+                    if (!areaId) {
+                        $('#select-linea').prop('disabled', true);
+                        $('#select-estacion').prop('disabled', true);
+                        $('#select-linea').empty().append('<option value="">Seleccione un area primero</option>');
+                        $('#select-estacion').empty().append('<option value="">Seleccione un area primero</option>');
+                        $('#select-linea').val('').trigger('change.select2');
+                        $('#select-estacion').val('').trigger('change.select2');
+                    } else {
+                        $('#select-linea').prop('disabled', false);
+                        $('#select-linea').empty().append('<option value="">Todas las lineas</option>');
+
+                        todasLineas.filter(function(linea) {
+                            return linea.area == areaId;
+                        }).forEach(function(linea) {
+                            $('#select-linea').append(
+                                $('<option></option>')
+                                    .attr('value', linea.value)
+                                    .attr('data-area', linea.area)
+                                    .text(linea.text)
+                            );
+                        });
+
+                        $('#select-estacion').empty().append('<option value="">Todas las estaciones</option>');
+                        todasEstaciones.filter(function(estacion) {
+                            return estacion.area == areaId;
+                        }).forEach(function(estacion) {
+                            $('#select-estacion').append(
+                                $('<option></option>')
+                                    .attr('value', estacion.value)
+                                    .attr('data-linea', estacion.linea)
+                                    .attr('data-area', estacion.area)
+                                    .text(estacion.text)
+                            );
+                        });
+
+                        $('#select-estacion').prop('disabled', false);
+                        $('#select-linea').val('').trigger('change.select2');
+                        $('#select-estacion').val('').trigger('change.select2');
+                    }
+                });
+
+                // Filtro Linea
+                $('#select-linea').on('change', function() {
+                    var lineaId = $(this).val();
+                    var areaId = $('#select-area').val();
+
+                    $('#select-estacion').empty().append('<option value="">Todas las estaciones</option>');
+
+                    var estacionesFiltradas = todasEstaciones;
+
+                    if (areaId) {
+                        estacionesFiltradas = estacionesFiltradas.filter(function(estacion) {
+                            return estacion.area == areaId;
+                        });
+                    }
+
+                    if (lineaId) {
+                        estacionesFiltradas = estacionesFiltradas.filter(function(estacion) {
+                            return estacion.linea == lineaId;
+                        });
+                    }
+
+                    estacionesFiltradas.forEach(function(estacion) {
+                        $('#select-estacion').append(
+                            $('<option></option>')
+                                .attr('value', estacion.value)
+                                .attr('data-linea', estacion.linea)
+                                .attr('data-area', estacion.area)
+                                .text(estacion.text)
+                        );
+                    });
+
+                    $('#select-estacion').val('').trigger('change.select2');
+                });
+
+                // Boton actualizar
+                $('#btn-actualizar').on('click', function() {
+                    loadCharts();
+                });
+            };
+
+            // Cargar datos y generar graficas
+            var loadCharts = function() {
+                var areaId = $('#select-area').val();
+                var lineaId = $('#select-linea').val();
+                var estacionId = $('#select-estacion').val();
+
+                var url = '/Linealytics/GetDatosContadores?';
+                var params = [];
+
+                if (areaId) params.push('areaId=' + areaId);
+                if (lineaId) params.push('lineaId=' + lineaId);
+                if (estacionId) params.push('estacionId=' + estacionId);
+
+                url += params.join('&');
+
+                // Mostrar loading
+                $('#charts-container').html(`
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando datos de contadores...</p>
+                    </div>
+                `);
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        renderCharts(data);
+                    },
+                    error: function(error) {
+                        console.error('Error al cargar datos:', error);
+                        $('#charts-container').html(`
+                            <div class="col-12 text-center py-5">
+                                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                                <p class="mt-2 text-muted">Error al cargar los datos. Por favor, intente nuevamente.</p>
+                            </div>
+                        `);
+                    }
+                });
+            };
+
+            // Renderizar graficas
+            var renderCharts = function(data) {
+                var container = $('#charts-container');
+                container.empty();
+
+                // Destruir graficas anteriores
+                Object.keys(charts).forEach(function(key) {
+                    if (charts[key]) {
+                        charts[key].destroy();
+                    }
+                });
+                charts = {};
+
+                if (!data.maquinas || data.maquinas.length === 0) {
+                    container.html(`
+                        <div class="col-12 text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="mt-2 text-muted">No hay datos de produccion en las ultimas 24 horas para los filtros seleccionados.</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                // Crear una tarjeta por cada maquina
+                data.maquinas.forEach(function(maquina, index) {
+                    var chartId = 'chart-maquina-' + maquina.id;
+                    var total = maquina.totalOK + maquina.totalNOK;
+                    var porcentajeOK = total > 0 ? ((maquina.totalOK / total) * 100).toFixed(1) : 0;
+                    var porcentajeNOK = total > 0 ? ((maquina.totalNOK / total) * 100).toFixed(1) : 0;
+
+                    var cardHtml = `
+                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-gear me-1"></i>${maquina.nombre}
+                                    </h6>
+                                    <small class="text-muted">${maquina.estacion} - ${maquina.linea}</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container text-center">
+                                        <div class="d-inline-block" id="${chartId}"></div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="d-flex align-items-center">
+                                                <span class="badge bg-success me-2">&nbsp;</span>OK
+                                            </span>
+                                            <span class="fw-bold">${maquina.totalOK.toLocaleString()} (${porcentajeOK}%)</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="d-flex align-items-center">
+                                                <span class="badge bg-danger me-2">&nbsp;</span>NOK
+                                            </span>
+                                            <span class="fw-bold">${maquina.totalNOK.toLocaleString()} (${porcentajeNOK}%)</span>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold">Total</span>
+                                            <span class="fw-bold text-primary">${total.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    container.append(cardHtml);
+
+                    // Generar grafica C3 despues de agregar el elemento al DOM
+                    setTimeout(function() {
+                        var chartElement = document.getElementById(chartId);
+                        if (chartElement) {
+                            charts[chartId] = c3.generate({
+                                bindto: '#' + chartId,
+                                size: {
+                                    width: 200,
+                                    height: 200
+                                },
+                                color: {
+                                    pattern: ['#66bb6a', '#ef5350']
+                                },
+                                data: {
+                                    columns: [
+                                        ['OK', maquina.totalOK],
+                                        ['NOK', maquina.totalNOK]
+                                    ],
+                                    type: 'pie'
+                                },
+                                pie: {
+                                    label: {
+                                        format: function(value, ratio, id) {
+                                            return (ratio * 100).toFixed(1) + '%';
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    format: {
+                                        value: function(value, ratio, id) {
+                                            return value.toLocaleString() + ' (' + (ratio * 100).toFixed(1) + '%)';
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    show: false
+                                }
+                            });
+                        }
+                    }, 50 * index);
+                });
+
+                // Resize en cambio de sidebar
+                var sidebarToggle = document.querySelectorAll('.sidebar-control');
+                if (sidebarToggle) {
+                    sidebarToggle.forEach(function(toggler) {
+                        toggler.addEventListener('click', function() {
+                            setTimeout(function() {
+                                Object.keys(charts).forEach(function(key) {
+                                    if (charts[key]) {
+                                        charts[key].resize();
+                                    }
+                                });
+                            }, 300);
+                        });
+                    });
+                }
+            };
+
+            return {
+                init: function() {
+                    _initFilters();
+                    loadCharts();
+                }
+            }
+        }();
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            ContadoresCharts.init();
+        });
+    </script>
+}

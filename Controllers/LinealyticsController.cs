@@ -135,19 +135,108 @@ namespace WebApp.Controllers
             return Json(resultado);
         }
 
+        // ========== CONTADORES DE PRODUCCION ==========
+
+        public async Task<IActionResult> Contadores()
+        {
+            // Cargar datos de planta para los filtros
+            ViewBag.Areas = await _context.Areas
+                .Where(a => a.Activo)
+                .OrderBy(a => a.Nombre)
+                .ToListAsync();
+
+            ViewBag.Lineas = await _context.Lineas
+                .Include(l => l.Area)
+                .Where(l => l.Activo)
+                .OrderBy(l => l.Area.Nombre)
+                .ThenBy(l => l.Nombre)
+                .ToListAsync();
+
+            ViewBag.Estaciones = await _context.Estaciones
+                .Include(e => e.Linea)
+                    .ThenInclude(l => l.Area)
+                .Where(e => e.Activo)
+                .OrderBy(e => e.Linea.Area.Nombre)
+                .ThenBy(e => e.Linea.Nombre)
+                .ThenBy(e => e.Nombre)
+                .ToListAsync();
+
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDatosContadores(int? areaId, int? lineaId, int? estacionId)
+        {
+            var fechaInicio = DateTime.UtcNow.AddHours(-24); // Ultimas 24 horas
+
+            // Query base de lecturas de contadores
+            var query = _context.LecturasContador
+                .Include(l => l.Maquina)
+                    .ThenInclude(m => m!.Estacion)
+                        .ThenInclude(e => e!.Linea)
+                .Where(l => l.FechaHoraLectura >= fechaInicio);
+
+            // Aplicar filtros
+            if (areaId.HasValue)
+            {
+                query = query.Where(l => l.Maquina!.Estacion!.Linea!.AreaId == areaId.Value);
+            }
+
+            if (lineaId.HasValue)
+            {
+                query = query.Where(l => l.Maquina!.Estacion!.LineaId == lineaId.Value);
+            }
+
+            if (estacionId.HasValue)
+            {
+                query = query.Where(l => l.Maquina!.EstacionId == estacionId.Value);
+            }
+
+            // Agrupar por maquina y sumar produccion
+            var datosPorMaquina = await query
+                .GroupBy(l => new
+                {
+                    MaquinaId = l.MaquinaId,
+                    MaquinaNombre = l.Maquina!.Nombre,
+                    EstacionNombre = l.Maquina!.Estacion!.Nombre,
+                    LineaNombre = l.Maquina!.Estacion!.Linea!.Nombre
+                })
+                .Select(g => new
+                {
+                    Id = g.Key.MaquinaId,
+                    Nombre = g.Key.MaquinaNombre,
+                    Estacion = g.Key.EstacionNombre,
+                    Linea = g.Key.LineaNombre,
+                    TotalOK = g.Sum(l => l.ProduccionOK),
+                    TotalNOK = g.Sum(l => l.ProduccionNOK)
+                })
+                .OrderBy(m => m.Linea)
+                .ThenBy(m => m.Estacion)
+                .ThenBy(m => m.Nombre)
+                .ToListAsync();
+
+            var resultado = new
+            {
+                Maquinas = datosPorMaquina
+            };
+
+            return Json(resultado);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetDatosParosPorDepartamento(int? areaId, int? lineaId, int? estacionId, int? maquinaId)
         {
             var fechaInicio = DateTime.UtcNow.AddHours(-24); // Últimas 24 horas
+            var ahora = DateTime.UtcNow;
 
-            // Query base de paros de botonera
+            // Query base de paros de botonera - incluir paros cerrados Y abiertos
             var query = _context.RegistrosParoBotonera
                 .Include(p => p.Maquina)
                     .ThenInclude(m => m.Estacion)
                         .ThenInclude(e => e.Linea)
                             .ThenInclude(l => l.Area)
                 .Include(p => p.DepartamentoOperador)
-                .Where(p => p.FechaHoraInicio >= fechaInicio && p.DuracionMinutos.HasValue);
+                .Where(p => p.FechaHoraInicio >= fechaInicio);
 
             // Aplicar filtros
             if (areaId.HasValue)
@@ -175,6 +264,7 @@ namespace WebApp.Controllers
                 .ToListAsync();
 
             // Preparar datos para la gráfica: cada paro individual con su información
+            // Para paros abiertos (sin FechaHoraFin), usar la fecha actual
             var datosParos = paros
                 .Where(p => p.DepartamentoOperador != null)
                 .Select(p => new
@@ -184,8 +274,9 @@ namespace WebApp.Controllers
                     Departamento = p.DepartamentoOperador!.Nombre,
                     Color = p.DepartamentoOperador.Color ?? "#666666",
                     FechaInicio = p.FechaHoraInicio,
-                    FechaFin = p.FechaHoraFin,
-                    DuracionMinutos = p.DuracionMinutos ?? 0
+                    FechaFin = p.FechaHoraFin ?? ahora, // Si está abierto, usar fecha actual
+                    DuracionMinutos = p.DuracionMinutos ?? (int)Math.Round((ahora - p.FechaHoraInicio).TotalMinutes),
+                    EstaAbierto = p.Estado == "Abierto" // Indicador de paro en curso
                 })
                 .ToList();
 
@@ -209,8 +300,8 @@ namespace WebApp.Controllers
                 .ToList();
 
             // Calcular fecha mínima y máxima para el rango
-            var fechaMin = paros.Any() ? paros.Min(p => p.FechaHoraInicio) : DateTime.UtcNow;
-            var fechaMax = paros.Any() ? paros.Max(p => p.FechaHoraFin ?? p.FechaHoraInicio) : DateTime.UtcNow;
+            var fechaMin = paros.Any() ? paros.Min(p => p.FechaHoraInicio) : ahora;
+            var fechaMax = ahora; // Siempre usar la fecha actual como máximo para mostrar paros abiertos
 
             // Construir estructura para la gráfica
             var resultado = new

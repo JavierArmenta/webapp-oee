@@ -481,7 +481,8 @@
                             .map(function(p) {
                                 return {
                                     inicio: new Date(p.fechaInicio).getTime(),
-                                    fin: p.fechaFin ? new Date(p.fechaFin).getTime() : new Date(p.fechaInicio).getTime()
+                                    fin: new Date(p.fechaFin).getTime(),
+                                    estaAbierto: p.estaAbierto
                                 };
                             })
                             .sort(function(a, b) { return a.inicio - b.inicio; });
@@ -523,8 +524,9 @@
                             }
 
                             // Producción desde el último paro hasta el final
+                            // SOLO si el último paro NO está abierto
                             var ultimoParo = parosMaquina[parosMaquina.length - 1];
-                            if (ultimoParo.fin < xAxisMax) {
+                            if (!ultimoParo.estaAbierto && ultimoParo.fin < xAxisMax) {
                                 dataProduccion.push({
                                     name: maquina.nombre,
                                     value: [maqIndex, ultimoParo.fin, xAxisMax],
@@ -559,7 +561,7 @@
                                 // Las fechas vienen en UTC desde el servidor (con 'Z')
                                 // JavaScript las convierte automáticamente a hora local
                                 var fechaInicio = new Date(paro.fechaInicio).getTime();
-                                var fechaFin = paro.fechaFin ? new Date(paro.fechaFin).getTime() : fechaInicio;
+                                var fechaFin = new Date(paro.fechaFin).getTime();
 
                                 // Datos: [índice Y, fecha inicio, fecha fin]
                                 data.push({
@@ -571,11 +573,16 @@
                                     ],
                                     itemStyle: {
                                         color: dept.color || '#666666',
-                                        borderRadius: 4
+                                        borderRadius: 4,
+                                        // Agregar borde punteado para paros abiertos
+                                        borderColor: paro.estaAbierto ? '#fff' : 'transparent',
+                                        borderWidth: paro.estaAbierto ? 2 : 0,
+                                        borderType: paro.estaAbierto ? 'dashed' : 'solid'
                                     },
                                     duracionMinutos: paro.duracionMinutos,
                                     departamento: dept.departamento,
-                                    maquina: paro.maquina
+                                    maquina: paro.maquina,
+                                    estaAbierto: paro.estaAbierto // Indicador de paro en curso
                                 });
                             }
                         });
@@ -591,6 +598,7 @@
                                 var start = api.coord([api.value(1), categoryIndex]);
                                 var end = api.coord([api.value(2), categoryIndex]);
                                 var height = api.size([0, 1])[1] * 0.6;
+                                var dataItem = params.data || {};
 
                                 var rectShape = echarts.graphic.clipRectByRect({
                                     x: start[0],
@@ -604,7 +612,35 @@
                                     height: params.coordSys.height
                                 });
 
-                                return rectShape && {
+                                if (!rectShape) return null;
+
+                                // Si el paro está abierto, agregar efecto visual
+                                if (dataItem.estaAbierto) {
+                                    return {
+                                        type: 'group',
+                                        children: [
+                                            {
+                                                type: 'rect',
+                                                transition: ['shape'],
+                                                shape: rectShape,
+                                                style: api.style()
+                                            },
+                                            // Borde punteado blanco para indicar "en curso"
+                                            {
+                                                type: 'rect',
+                                                shape: rectShape,
+                                                style: {
+                                                    fill: 'transparent',
+                                                    stroke: '#fff',
+                                                    lineWidth: 2,
+                                                    lineDash: [4, 4]
+                                                }
+                                            }
+                                        ]
+                                    };
+                                }
+
+                                return {
                                     type: 'rect',
                                     transition: ['shape'],
                                     shape: rectShape,
@@ -711,6 +747,7 @@
                             var fechaFin = new Date(params.value[2]);
                             var duracionMs = params.value[2] - params.value[1];
                             var duracionMin = Math.round(duracionMs / 60000);
+                            var estaAbierto = params.data.estaAbierto;
 
                             var result = '<strong>' + maquina + '</strong><br/>';
                             result += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + params.color + ';"></span>';
@@ -721,7 +758,12 @@
                             } else {
                                 // Si es paro (tiene departamento)
                                 var departamento = params.data.departamento;
-                                result += departamento + '<br/>';
+                                result += departamento;
+                                // Indicador de paro en curso
+                                if (estaAbierto) {
+                                    result += ' <span style="color:#ff5722;font-weight:bold;">(EN CURSO)</span>';
+                                }
+                                result += '<br/>';
                             }
 
                             result += '<strong>Inicio:</strong> ' + fechaInicio.toLocaleString('es-MX', {
@@ -732,15 +774,25 @@
                                 minute: '2-digit',
                                 hour12: false
                             }) + '<br/>';
-                            result += '<strong>Fin:</strong> ' + fechaFin.toLocaleString('es-MX', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false
-                            }) + '<br/>';
+
+                            // Mostrar "En curso" si el paro está abierto, o la fecha fin si está cerrado
+                            if (estaAbierto) {
+                                result += '<strong>Fin:</strong> <span style="color:#ff5722;">En curso...</span><br/>';
+                            } else {
+                                result += '<strong>Fin:</strong> ' + fechaFin.toLocaleString('es-MX', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false
+                                }) + '<br/>';
+                            }
+
                             result += '<strong>Duración:</strong> ' + duracionMin + ' min';
+                            if (estaAbierto) {
+                                result += ' <span style="color:#ff5722;">(y contando)</span>';
+                            }
 
                             return result;
                         }

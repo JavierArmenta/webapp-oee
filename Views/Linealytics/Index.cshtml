@@ -14,156 +14,129 @@
         </div>
     </div>
 
-    <div class="row mt-3">
-        <!-- Dashboard OEE -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100 border-primary">
-                <div class="card-body text-center">
-                    <i class="bi bi-speedometer2 display-4 text-primary"></i>
-                    <h5 class="card-title mt-3">Dashboard OEE</h5>
-                    <p class="card-text text-muted">Tablero de eficiencia en tiempo real</p>
-                    <a asp-action="Dashboard" class="btn btn-primary">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
-                    </a>
-                </div>
-            </div>
+    <!-- Segmento Catálogos -->
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-folder me-2"></i>Catálogos</h5>
         </div>
-
-        <!-- Turnos -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-clock-history display-4 text-primary"></i>
-                    <h5 class="card-title mt-3">Turnos</h5>
-                    <p class="card-text text-muted">Gestión de turnos de trabajo</p>
-                    <a asp-action="Turnos" class="btn btn-primary">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Productos -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-box-seam display-4 text-success"></i>
-                    <h5 class="card-title mt-3">Productos</h5>
-                    <p class="card-text text-muted">Catálogo de productos</p>
-                    <a asp-action="Productos" class="btn btn-success">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="row mt-3">
-        <!-- Botones -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-toggle-on display-4 text-info"></i>
-                    <h5 class="card-title mt-3">Botones</h5>
-                    <p class="card-text text-muted">Gestión de botones por departamento</p>
-                    <a asp-action="Botones" class="btn btn-info">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Botoneras -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-hdd-network display-4 text-secondary"></i>
-                    <h5 class="card-title mt-3">Botoneras</h5>
-                    <p class="card-text text-muted">Dispositivos de control por máquina</p>
-                    <a asp-action="Botoneras" class="btn btn-secondary">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Paros de Línea -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-stop-circle display-4 text-danger"></i>
-                    <h5 class="card-title mt-3">Paros de Línea</h5>
-                    <p class="card-text text-muted">Registro de paros por botonera</p>
-                    <a asp-action="ParosLinea" class="btn btn-danger">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Ver Paros
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Comentarios de Paros -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-chat-left-text display-4 text-warning"></i>
-                    <h5 class="card-title mt-3">Comentarios de Paros</h5>
-                    <p class="card-text text-muted">Ver y documentar paros cerrados</p>
-                    <a asp-action="ParosSinComentar" class="btn btn-warning">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Gestionar Comentarios
-                    </a>
+        <div class="card-body">
+            <div class="row">
+                <!-- Productos -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-box-seam display-4 text-success"></i>
+                            <h5 class="card-title mt-3">Productos</h5>
+                            <p class="card-text text-muted">Catálogo de productos</p>
+                            <a asp-action="Productos" class="btn btn-success">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-3">
-        <!-- Contadores Dispositivo -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-123 display-4 text-info"></i>
-                    <h5 class="card-title mt-3">Contadores</h5>
-                    <p class="card-text text-muted">Contadores de producción por máquina</p>
-                    <a asp-action="ContadoresDispositivo" class="btn btn-info">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                    </a>
-                </div>
-            </div>
+    <!-- Segmento Paros -->
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-stop-circle me-2"></i>Paros</h5>
         </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Time Line Paros -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100 border-primary">
+                        <div class="card-body text-center">
+                            <i class="bi bi-speedometer2 display-4 text-primary"></i>
+                            <h5 class="card-title mt-3">Time Line Paros</h5>
+                            <p class="card-text text-muted">Tablero de eficiencia en tiempo real</p>
+                            <a asp-action="Dashboard" class="btn btn-primary">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Corridas de Producción -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-play-circle display-4 text-success"></i>
-                    <h5 class="card-title mt-3">Corridas de Producción</h5>
-                    <p class="card-text text-muted">Historial de corridas por contador</p>
-                    <a asp-action="CorridasProduccion" class="btn btn-success">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Ver Corridas
-                    </a>
+                <!-- Paros de Línea -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-stop-circle display-4 text-danger"></i>
+                            <h5 class="card-title mt-3">Paros de Línea</h5>
+                            <p class="card-text text-muted">Registro de paros por botonera</p>
+                            <a asp-action="ParosLinea" class="btn btn-danger">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Paros
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-toggle-on display-4 text-info"></i>
+                            <h5 class="card-title mt-3">Botones</h5>
+                            <p class="card-text text-muted">Gestión de botones por departamento</p>
+                            <a asp-action="Botones" class="btn btn-info">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botoneras -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-hdd-network display-4 text-secondary"></i>
+                            <h5 class="card-title mt-3">Botoneras</h5>
+                            <p class="card-text text-muted">Dispositivos de control por máquina</p>
+                            <a asp-action="Botoneras" class="btn btn-secondary">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comentarios de Paros -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-chat-left-text display-4 text-warning"></i>
+                            <h5 class="card-title mt-3">Comentarios de Paros</h5>
+                            <p class="card-text text-muted">Ver y documentar paros cerrados</p>
+                            <a asp-action="ParosSinComentar" class="btn btn-warning">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Gestionar Comentarios
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-3">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Acerca de Linealytics</h5>
-                </div>
-                <div class="card-body">
-                    <p>
-                        <strong>Linealytics</strong> es el módulo de análisis de producción y eficiencia que te permite:
-                    </p>
-                    <ul>
-                        <li><strong>Calcular OEE</strong> (Overall Equipment Effectiveness) en tiempo real</li>
-                        <li><strong>Registrar paros</strong> de máquinas con categorización detallada</li>
-                        <li><strong>Analizar causas raíz</strong> mediante diagramas de Pareto</li>
-                        <li><strong>Monitorear producción</strong> hora por hora por turno</li>
-                        <li><strong>Generar reportes</strong> de disponibilidad, rendimiento y calidad</li>
-                    </ul>
+    <!-- Segmento Contadores -->
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-123 me-2"></i>Contadores</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Corridas de Producción -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-play-circle display-4 text-success"></i>
+                            <h5 class="card-title mt-3">Corridas de Producción</h5>
+                            <p class="card-text text-muted">Historial de corridas por contador</p>
+                            <a asp-action="CorridasProduccion" class="btn btn-success">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Corridas
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
