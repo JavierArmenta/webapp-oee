@@ -365,13 +365,8 @@ namespace WebApp.Controllers
         /// <summary>
         /// Muestra formulario para crear un nuevo menú
         /// </summary>
-        public async Task<IActionResult> CreateMenu()
+        public IActionResult CreateMenu()
         {
-            ViewBag.ParentMenus = new SelectList(
-                await _menuService.GetParentMenusAsync(),
-                "Id",
-                "Nombre"
-            );
             return View(new MenuItemViewModel());
         }
 
@@ -383,21 +378,13 @@ namespace WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.ParentMenus = new SelectList(
-                    await _menuService.GetParentMenusAsync(),
-                    "Id",
-                    "Nombre"
-                );
                 return View(model);
             }
 
             var menu = new MenuItem
             {
                 Nombre = model.Nombre,
-                Url = model.Url,
                 Icono = model.Icono,
-                ParentId = model.ParentId,
-                Orden = model.Orden,
                 Activo = model.Activo
             };
 
@@ -408,11 +395,6 @@ namespace WebApp.Controllers
             }
 
             TempData["Error"] = "Error al crear el menú";
-            ViewBag.ParentMenus = new SelectList(
-                await _menuService.GetParentMenusAsync(),
-                "Id",
-                "Nombre"
-            );
             return View(model);
         }
 
@@ -427,21 +409,11 @@ namespace WebApp.Controllers
                 return NotFound();
             }
 
-            ViewBag.ParentMenus = new SelectList(
-                (await _menuService.GetParentMenusAsync()).Where(m => m.Id != id),
-                "Id",
-                "Nombre",
-                menu.ParentId
-            );
-
             var model = new MenuItemViewModel
             {
                 Id = menu.Id,
                 Nombre = menu.Nombre,
-                Url = menu.Url,
                 Icono = menu.Icono,
-                ParentId = menu.ParentId,
-                Orden = menu.Orden,
                 Activo = menu.Activo
             };
 
@@ -456,12 +428,6 @@ namespace WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.ParentMenus = new SelectList(
-                    (await _menuService.GetParentMenusAsync()).Where(m => m.Id != model.Id),
-                    "Id",
-                    "Nombre",
-                    model.ParentId
-                );
                 return View(model);
             }
 
@@ -472,10 +438,7 @@ namespace WebApp.Controllers
             }
 
             menu.Nombre = model.Nombre;
-            menu.Url = model.Url;
             menu.Icono = model.Icono;
-            menu.ParentId = model.ParentId;
-            menu.Orden = model.Orden;
             menu.Activo = model.Activo;
 
             if (await _menuService.UpdateMenuAsync(menu))
@@ -485,12 +448,6 @@ namespace WebApp.Controllers
             }
 
             TempData["Error"] = "Error al actualizar el menú";
-            ViewBag.ParentMenus = new SelectList(
-                (await _menuService.GetParentMenusAsync()).Where(m => m.Id != model.Id),
-                "Id",
-                "Nombre",
-                model.ParentId
-            );
             return View(model);
         }
 

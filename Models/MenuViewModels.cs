@@ -11,19 +11,9 @@ namespace WebApp.Models
         [StringLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
-        [Display(Name = "URL")]
-        [StringLength(200)]
-        public string? Url { get; set; }
-
         [Display(Name = "Icono (clase CSS)")]
         [StringLength(50)]
         public string? Icono { get; set; }
-
-        [Display(Name = "Menú Padre")]
-        public int? ParentId { get; set; }
-
-        [Display(Name = "Orden")]
-        public int Orden { get; set; } = 0;
 
         [Display(Name = "Activo")]
         public bool Activo { get; set; } = true;

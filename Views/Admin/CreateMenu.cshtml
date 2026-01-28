@@ -22,13 +22,6 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Url" class="form-label"></label>
-                            <input asp-for="Url" class="form-control" placeholder="Ej: ~/Admin, ~/Planta/Areas (dejar vacío si es menú padre)" />
-                            <span asp-validation-for="Url" class="text-danger"></span>
-                            <div class="form-text">Usar formato ~/Controller/Action. Dejar vacío para menús padre con submenús.</div>
-                        </div>
-
-                        <div class="mb-3">
                             <label asp-for="Icono" class="form-label"></label>
                             <input asp-for="Icono" class="form-control" placeholder="Ej: ph-users, ph-gear, ph-layout" />
                             <span asp-validation-for="Icono" class="text-danger"></span>
@@ -36,30 +29,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="ParentId" class="form-label"></label>
-                            <select asp-for="ParentId" class="form-select" asp-items="ViewBag.ParentMenus">
-                                <option value="">-- Sin padre (menú raíz) --</option>
-                            </select>
-                            <span asp-validation-for="ParentId" class="text-danger"></span>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Orden" class="form-label"></label>
-                                    <input asp-for="Orden" type="number" class="form-control" min="0" />
-                                    <span asp-validation-for="Orden" class="text-danger"></span>
-                                    <div class="form-text">Menor número = aparece primero</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">&nbsp;</label>
-                                    <div class="form-check mt-2">
-                                        <input asp-for="Activo" class="form-check-input" />
-                                        <label asp-for="Activo" class="form-check-label"></label>
-                                    </div>
-                                </div>
+                            <div class="form-check">
+                                <input asp-for="Activo" class="form-check-input" />
+                                <label asp-for="Activo" class="form-check-label"></label>
                             </div>
                         </div>
 
