@@ -1,0 +1,103 @@
+@model WebApp.Models.Linealytics.CatalogoFalla
+
+@{
+    ViewData["Title"] = "Editar Falla";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4"><i class="bi bi-pencil"></i> Editar Falla</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="EditCatalogoFalla" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Codigo" class="form-label"></label>
+                            <input asp-for="Codigo" class="form-control" />
+                            <span asp-validation-for="Codigo" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Nombre" class="form-label"></label>
+                            <input asp-for="Nombre" class="form-control" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descripcion" class="form-label"></label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Severidad" class="form-label"></label>
+                                <select asp-for="Severidad" class="form-select">
+                                    <option value="">-- Seleccione --</option>
+                                    <option value="Baja">Baja</option>
+                                    <option value="Media">Media</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Crítica">Crítica</option>
+                                </select>
+                                <span asp-validation-for="Severidad" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Categoria" class="form-label"></label>
+                                <select asp-for="Categoria" class="form-select">
+                                    <option value="">-- Seleccione --</option>
+                                    <option value="Mecánica">Mecánica</option>
+                                    <option value="Eléctrica">Eléctrica</option>
+                                    <option value="Neumática">Neumática</option>
+                                    <option value="Hidráulica">Hidráulica</option>
+                                    <option value="Software">Software</option>
+                                    <option value="Otra">Otra</option>
+                                </select>
+                                <span asp-validation-for="Categoria" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TiempoEstimadoSolucionMinutos" class="form-label"></label>
+                                <input asp-for="TiempoEstimadoSolucionMinutos" type="number" class="form-control" min="0" />
+                                <span asp-validation-for="TiempoEstimadoSolucionMinutos" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Color" class="form-label"></label>
+                                <input asp-for="Color" type="color" class="form-control form-control-color" />
+                                <small class="form-text text-muted">Color para gráficas</small>
+                                <span asp-validation-for="Color" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="Activo" class="form-check-input" type="checkbox" />
+                                <label asp-for="Activo" class="form-check-label"></label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="CatalogoFallas" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

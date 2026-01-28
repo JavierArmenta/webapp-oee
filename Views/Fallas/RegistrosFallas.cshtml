@@ -1,0 +1,183 @@
+@model IEnumerable<WebApp.Models.Linealytics.RegistroFalla>
+
+@{
+    ViewData["Title"] = "Registros de Fallas";
+    var maquinaId = ViewBag.MaquinaIdSeleccionado;
+    var estado = ViewBag.EstadoSeleccionado;
+    var catalogoFallaId = ViewBag.CatalogoFallaIdSeleccionado;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-list-check"></i> Registros de Fallas</h2>
+        <a asp-action="DashboardFallas" class="btn btn-info">
+            <i class="bi bi-graph-up"></i> Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" asp-action="RegistrosFallas" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Máquina</label>
+                    <select name="maquinaId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        @foreach (var item in (SelectList)ViewBag.Maquinas)
+                        {
+                            <option value="@item.Value" selected="@(item.Selected)">@item.Text</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="Pendiente" selected="@(estado == "Pendiente")">Pendiente</option>
+                        <option value="EnAtencion" selected="@(estado == "EnAtencion")">En Atención</option>
+                        <option value="Resuelta" selected="@(estado == "Resuelta")">Resuelta</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Tipo de Falla</label>
+                    <select name="catalogoFallaId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        @foreach (var item in (SelectList)ViewBag.CatalogosFallas)
+                        {
+                            <option value="@item.Value" selected="@(item.Selected)">@item.Text</option>
+                        }
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Máquina</th>
+                            <th>Línea</th>
+                            <th>Tipo de Falla</th>
+                            <th>Severidad</th>
+                            <th>Estado</th>
+                            <th>Técnico</th>
+                            <th>Duración</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @item.FechaHoraDeteccion.ToString("dd/MM/yyyy")<br/>
+                                    <small class="text-muted">@item.FechaHoraDeteccion.ToString("HH:mm")</small>
+                                </td>
+                                <td><strong>@item.Maquina.Nombre</strong></td>
+                                <td>@item.Maquina.Estacion?.Linea?.Nombre</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.CatalogoFalla.Color))
+                                    {
+                                        <span class="badge" style="background-color: @item.CatalogoFalla.Color">
+                                            @item.CatalogoFalla.Nombre
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@item.CatalogoFalla.Nombre</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.CatalogoFalla.Severidad == "Crítica")
+                                    {
+                                        <span class="badge bg-danger">@item.CatalogoFalla.Severidad</span>
+                                    }
+                                    else if (item.CatalogoFalla.Severidad == "Alta")
+                                    {
+                                        <span class="badge bg-warning text-dark">@item.CatalogoFalla.Severidad</span>
+                                    }
+                                    else if (item.CatalogoFalla.Severidad == "Media")
+                                    {
+                                        <span class="badge bg-info">@item.CatalogoFalla.Severidad</span>
+                                    }
+                                    else if (item.CatalogoFalla.Severidad == "Baja")
+                                    {
+                                        <span class="badge bg-success">@item.CatalogoFalla.Severidad</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Estado == "Pendiente")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    }
+                                    else if (item.Estado == "EnAtencion")
+                                    {
+                                        <span class="badge bg-info">En Atención</span>
+                                    }
+                                    else if (item.Estado == "Resuelta")
+                                    {
+                                        <span class="badge bg-success">Resuelta</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.TecnicoAsignado != null)
+                                    {
+                                        <small>@item.TecnicoAsignado.Email</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin asignar</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (item.DuracionMinutos.HasValue)
+                                    {
+                                        <span class="badge bg-secondary">@item.DuracionMinutos min</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="DetalleFalla" asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-primary" title="Ver Detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> No se encontraron registros de fallas con los filtros seleccionados.
+                </div>
+            }
+        </div>
+    </div>
+</div>

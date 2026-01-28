@@ -1,0 +1,243 @@
+@model WebApp.Models.Linealytics.RegistroFalla
+
+@{
+    ViewData["Title"] = "Detalle de Falla";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-text"></i> Detalle de Falla #@Model.Id</h2>
+        <a asp-action="RegistrosFallas" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información de la Falla</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Tipo de Falla:</strong><br/>
+                            @if (!string.IsNullOrEmpty(Model.CatalogoFalla.Color))
+                            {
+                                <span class="badge" style="background-color: @Model.CatalogoFalla.Color; font-size: 1rem;">
+                                    @Model.CatalogoFalla.Codigo - @Model.CatalogoFalla.Nombre
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary" style="font-size: 1rem;">
+                                    @Model.CatalogoFalla.Codigo - @Model.CatalogoFalla.Nombre
+                                </span>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Severidad:</strong><br/>
+                            @if (Model.CatalogoFalla.Severidad == "Crítica")
+                            {
+                                <span class="badge bg-danger" style="font-size: 1rem;">@Model.CatalogoFalla.Severidad</span>
+                            }
+                            else if (Model.CatalogoFalla.Severidad == "Alta")
+                            {
+                                <span class="badge bg-warning text-dark" style="font-size: 1rem;">@Model.CatalogoFalla.Severidad</span>
+                            }
+                            else if (Model.CatalogoFalla.Severidad == "Media")
+                            {
+                                <span class="badge bg-info" style="font-size: 1rem;">@Model.CatalogoFalla.Severidad</span>
+                            }
+                            else if (Model.CatalogoFalla.Severidad == "Baja")
+                            {
+                                <span class="badge bg-success" style="font-size: 1rem;">@Model.CatalogoFalla.Severidad</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <strong>Descripción del Tipo de Falla:</strong><br/>
+                            <p class="text-muted">@(Model.CatalogoFalla.Descripcion ?? "Sin descripción")</p>
+                        </div>
+                    </div>
+
+                    <hr/>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Máquina:</strong><br/>
+                            @Model.Maquina.Nombre
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Línea:</strong><br/>
+                            @Model.Maquina.Estacion?.Linea?.Nombre
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Área:</strong><br/>
+                            @Model.Maquina.Estacion?.Linea?.Area?.Nombre
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Estación:</strong><br/>
+                            @Model.Maquina.Estacion?.Nombre
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Categoría:</strong><br/>
+                            @(Model.CatalogoFalla.Categoria ?? "-")
+                        </div>
+                    </div>
+
+                    <hr/>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Fecha/Hora Detección:</strong><br/>
+                            @Model.FechaHoraDeteccion.ToString("dd/MM/yyyy HH:mm:ss")
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Fecha/Hora Atención:</strong><br/>
+                            @(Model.FechaHoraAtencion?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Pendiente")
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Fecha/Hora Resolución:</strong><br/>
+                            @(Model.FechaHoraResolucion?.ToString("dd/MM/yyyy HH:mm:ss") ?? "No resuelta")
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Duración:</strong><br/>
+                            @if (Model.DuracionMinutos.HasValue)
+                            {
+                                <span class="badge bg-secondary" style="font-size: 1rem;">@Model.DuracionMinutos minutos</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.AccionesTomadas))
+                    {
+                        <hr/>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <strong>Acciones Tomadas:</strong><br/>
+                                <div class="alert alert-success">
+                                    @Model.AccionesTomadas
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Estado Actual</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.Estado == "Pendiente")
+                    {
+                        <h3><span class="badge bg-warning text-dark">Pendiente</span></h3>
+                    }
+                    else if (Model.Estado == "EnAtencion")
+                    {
+                        <h3><span class="badge bg-info">En Atención</span></h3>
+                    }
+                    else if (Model.Estado == "Resuelta")
+                    {
+                        <h3><span class="badge bg-success">Resuelta</span></h3>
+                    }
+                </div>
+            </div>
+
+            @if (Model.Estado != "Resuelta")
+            {
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">Asignar Técnico</h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="AsignarTecnico" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Técnico</label>
+                                <select name="tecnicoId" class="form-select" required>
+                                    <option value="">-- Seleccione --</option>
+                                    @foreach (var item in (SelectList)ViewBag.Tecnicos)
+                                    {
+                                        <option value="@item.Value" selected="@(item.Selected)">@item.Text</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-person-check"></i> Asignar
+                                </button>
+                            </div>
+                        </form>
+
+                        @if (Model.TecnicoAsignado != null)
+                        {
+                            <hr/>
+                            <p class="mb-0"><strong>Técnico actual:</strong><br/>@Model.TecnicoAsignado.Email</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Resolver Falla</h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="ResolverFalla" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Acciones Tomadas</label>
+                                <textarea name="accionesTomadas" class="form-control" rows="4"
+                                          placeholder="Describa las acciones realizadas para resolver la falla..." required></textarea>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Marcar como Resuelta
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

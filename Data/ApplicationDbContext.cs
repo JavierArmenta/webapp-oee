@@ -42,9 +42,12 @@ namespace WebApp.Data
         // DbSet para Nuevo Sistema Linealytics
         public DbSet<Botonera> Botoneras { get; set; }
         public DbSet<RegistroParoBotonera> RegistrosParoBotonera { get; set; }
+        public DbSet<ComentarioParoBotonera> ComentariosParoBotonera { get; set; }
+
+        // DbSet para Sistema de Fallas (Independiente de Paros)
+        public DbSet<CatalogoFalla> CatalogoFallas { get; set; }
         public DbSet<RegistroFalla> RegistrosFallas { get; set; }
         public DbSet<RegistroContador> RegistrosContadores { get; set; }
-        public DbSet<ComentarioParoBotonera> ComentariosParoBotonera { get; set; }
 
         // DbSet para Sistema de Contadores con Corridas
         public DbSet<CorridaProduccion> CorridasProduccion { get; set; }
@@ -477,28 +480,54 @@ namespace WebApp.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // ========== SISTEMA DE FALLAS (Independiente de Paros) ==========
+
+            // Configuración para CatalogoFallas
+            builder.Entity<CatalogoFalla>(entity =>
+            {
+                entity.ToTable("CatalogoFallas", "linealytics");
+
+                entity.HasIndex(e => e.Codigo)
+                    .IsUnique()
+                    .HasDatabaseName("IX_CatalogoFallas_Codigo");
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("NOW()");
+            });
+
             // Configuración para RegistrosFallas
             builder.Entity<RegistroFalla>(entity =>
             {
                 entity.ToTable("RegistrosFallas", "linealytics");
 
-                entity.HasIndex(e => new { e.MaquinaId, e.FechaHoraLectura })
-                    .HasDatabaseName("IX_RegistrosFallas_MaquinaId_FechaHoraLectura");
+                entity.HasIndex(e => new { e.MaquinaId, e.FechaHoraDeteccion })
+                    .HasDatabaseName("IX_RegistrosFallas_MaquinaId_FechaHoraDeteccion");
 
-                entity.HasIndex(e => e.FallaId)
-                    .HasDatabaseName("IX_RegistrosFallas_FallaId");
+                entity.HasIndex(e => e.CatalogoFallaId)
+                    .HasDatabaseName("IX_RegistrosFallas_CatalogoFallaId");
 
-                entity.Property(e => e.FechaHoraLectura)
+                entity.HasIndex(e => e.Estado)
+                    .HasDatabaseName("IX_RegistrosFallas_Estado");
+
+                entity.Property(e => e.FechaHoraDeteccion)
                     .HasDefaultValueSql("NOW()");
+
+                entity.Property(e => e.Estado)
+                    .HasDefaultValue("Pendiente");
+
+                entity.HasOne(e => e.CatalogoFalla)
+                    .WithMany(c => c.RegistrosFallas)
+                    .HasForeignKey(e => e.CatalogoFallaId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(e => e.Maquina)
                     .WithMany()
                     .HasForeignKey(e => e.MaquinaId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(e => e.Modelo)
+                entity.HasOne(e => e.TecnicoAsignado)
                     .WithMany()
-                    .HasForeignKey(e => e.ModeloId)
+                    .HasForeignKey(e => e.TecnicoAsignadoId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
 

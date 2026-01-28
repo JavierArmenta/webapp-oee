@@ -1,0 +1,191 @@
+@model IEnumerable<WebApp.Models.Linealytics.CatalogoFalla>
+
+@{
+    ViewData["Title"] = "Catálogo de Fallas";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-exclamation-triangle"></i> Catálogo de Fallas</h2>
+        <a asp-action="CreateCatalogoFalla" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva Falla
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Severidad</th>
+                            <th>Categoría</th>
+                            <th>Tiempo Est. (min)</th>
+                            <th>Estado</th>
+                            <th>Registros</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.Color))
+                                    {
+                                        <span class="badge" style="background-color: @item.Color">@item.Codigo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@item.Codigo</span>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@item.Nombre</strong>
+                                    @if (!string.IsNullOrEmpty(item.Descripcion))
+                                    {
+                                        <br />
+                                        <small class="text-muted">@item.Descripcion</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Severidad == "Crítica")
+                                    {
+                                        <span class="badge bg-danger">@item.Severidad</span>
+                                    }
+                                    else if (item.Severidad == "Alta")
+                                    {
+                                        <span class="badge bg-warning text-dark">@item.Severidad</span>
+                                    }
+                                    else if (item.Severidad == "Media")
+                                    {
+                                        <span class="badge bg-info">@item.Severidad</span>
+                                    }
+                                    else if (item.Severidad == "Baja")
+                                    {
+                                        <span class="badge bg-success">@item.Severidad</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@(item.Categoria ?? "-")</td>
+                                <td class="text-center">@(item.TiempoEstimadoSolucionMinutos?.ToString() ?? "-")</td>
+                                <td>
+                                    @if (item.Activo)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">@item.RegistrosFallas.Count</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="EditCatalogoFalla" asp-route-id="@item.Id"
+                                           class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @if (item.Activo)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-warning"
+                                                    onclick="confirmarDesactivar(@item.Id)" title="Desactivar">
+                                                <i class="bi bi-toggle-on"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                    onclick="confirmarActivar(@item.Id)" title="Activar">
+                                                <i class="bi bi-toggle-off"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmarDesactivar(id) {
+            if (confirm('¿Está seguro que desea desactivar este catálogo de falla?')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("DeactivateCatalogoFalla", "Fallas")';
+
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id';
+                input.value = id;
+                form.appendChild(input);
+
+                var token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (token) {
+                    var tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '__RequestVerificationToken';
+                    tokenInput.value = token.value;
+                    form.appendChild(tokenInput);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function confirmarActivar(id) {
+            if (confirm('¿Está seguro que desea activar este catálogo de falla?')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("ActivateCatalogoFalla", "Fallas")';
+
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id';
+                input.value = id;
+                form.appendChild(input);
+
+                var token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (token) {
+                    var tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '__RequestVerificationToken';
+                    tokenInput.value = token.value;
+                    form.appendChild(tokenInput);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+}

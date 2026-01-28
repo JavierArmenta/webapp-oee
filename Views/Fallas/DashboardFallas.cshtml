@@ -1,0 +1,316 @@
+@{
+    ViewData["Title"] = "Dashboard de Fallas";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-graph-up"></i> Dashboard de Fallas</h2>
+        <div>
+            <a asp-action="RegistrosFallas" class="btn btn-primary">
+                <i class="bi bi-list-check"></i> Ver Registros
+            </a>
+            <a asp-action="CatalogoFallas" class="btn btn-secondary">
+                <i class="bi bi-folder"></i> Catálogo
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Fallas Pendientes</h5>
+                    <h2 id="fallasAbiertas" class="mb-0">-</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">En Atención</h5>
+                    <h2 id="fallasEnAtencion" class="mb-0">-</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Resueltas</h5>
+                    <h2 id="fallasResueltas" class="mb-0">-</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">MTTR (min)</h5>
+                    <h2 id="mttr" class="mb-0">-</h2>
+                    <small>Mean Time To Repair</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input type="date" id="fechaInicio" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Fin</label>
+                    <input type="date" id="fechaFin" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Máquina</label>
+                    <select id="maquinaId" class="form-select">
+                        <option value="">Todas</option>
+                        @foreach (var maquina in ViewBag.Maquinas as IEnumerable<WebApp.Models.Maquina>)
+                        {
+                            <option value="@maquina.Id">@maquina.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="button" class="btn btn-primary w-100" onclick="cargarDatos()">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Top 10 Fallas Más Frecuentes</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartTop10Fallas" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Distribución por Severidad</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartSeveridad" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Fallas por Categoría</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartCategoria" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Top 10 Máquinas con Más Fallas</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartMaquinas" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Tendencia Diaria</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartTendencia" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        let chartTop10, chartSeveridad, chartCategoria, chartMaquinas, chartTendencia;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar fechas
+            const fechaFin = new Date();
+            const fechaInicio = new Date();
+            fechaInicio.setDate(fechaInicio.getDate() - 30);
+
+            document.getElementById('fechaInicio').valueAsDate = fechaInicio;
+            document.getElementById('fechaFin').valueAsDate = fechaFin;
+
+            cargarDatos();
+        });
+
+        function cargarDatos() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            const maquinaId = document.getElementById('maquinaId').value;
+
+            const url = `/Fallas/GetDatosFallas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&maquinaId=${maquinaId}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error del servidor:', data.mensaje, data.detalle);
+                        alert(`Error: ${data.mensaje}\n\nDetalles: ${data.detalle}\n\nAsegúrese de que la base de datos esté actualizada ejecutando: dotnet ef database update`);
+                        return;
+                    }
+                    actualizarResumen(data);
+                    actualizarGraficas(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(`Error al cargar los datos: ${error.message}\n\nPosibles causas:\n1. La migración no se ha aplicado (ejecute: dotnet ef database update)\n2. Error de conexión con la base de datos\n3. Las tablas CatalogoFallas o RegistrosFallas no existen`);
+                });
+        }
+
+        function actualizarResumen(data) {
+            document.getElementById('fallasAbiertas').textContent = data.fallasAbiertas;
+            document.getElementById('fallasEnAtencion').textContent = data.fallasEnAtencion;
+            document.getElementById('fallasResueltas').textContent = data.fallasResueltas;
+            document.getElementById('mttr').textContent = data.mttr;
+        }
+
+        function actualizarGraficas(data) {
+            // Validar que existan los datos
+            if (!data || !data.top10Fallas) {
+                console.warn('No hay datos para mostrar en las gráficas');
+                return;
+            }
+
+            // Top 10 Fallas
+            if (chartTop10) chartTop10.destroy();
+            chartTop10 = new Chart(document.getElementById('chartTop10Fallas'), {
+                type: 'bar',
+                data: {
+                    labels: data.top10Fallas.length > 0 ? data.top10Fallas.map(f => f.nombre) : ['Sin datos'],
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: data.top10Fallas.length > 0 ? data.top10Fallas.map(f => f.cantidad) : [0],
+                        backgroundColor: data.top10Fallas.length > 0 ? data.top10Fallas.map(f => f.color) : ['#cccccc']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Severidad
+            if (chartSeveridad) chartSeveridad.destroy();
+            const severidadColors = {
+                'Crítica': '#dc3545',
+                'Alta': '#ffc107',
+                'Media': '#0dcaf0',
+                'Baja': '#198754',
+                'Sin clasificar': '#6c757d'
+            };
+            chartSeveridad = new Chart(document.getElementById('chartSeveridad'), {
+                type: 'pie',
+                data: {
+                    labels: data.porSeveridad.map(s => s.severidad),
+                    datasets: [{
+                        data: data.porSeveridad.map(s => s.cantidad),
+                        backgroundColor: data.porSeveridad.map(s => severidadColors[s.severidad] || '#6c757d')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Categoría
+            if (chartCategoria) chartCategoria.destroy();
+            chartCategoria = new Chart(document.getElementById('chartCategoria'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.porCategoria.map(c => c.categoria),
+                    datasets: [{
+                        data: data.porCategoria.map(c => c.cantidad),
+                        backgroundColor: ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Máquinas
+            if (chartMaquinas) chartMaquinas.destroy();
+            chartMaquinas = new Chart(document.getElementById('chartMaquinas'), {
+                type: 'bar',
+                data: {
+                    labels: data.porMaquina.map(m => m.maquina),
+                    datasets: [{
+                        label: 'Cantidad de Fallas',
+                        data: data.porMaquina.map(m => m.cantidad),
+                        backgroundColor: '#0d6efd'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Tendencia
+            if (chartTendencia) chartTendencia.destroy();
+            chartTendencia = new Chart(document.getElementById('chartTendencia'), {
+                type: 'line',
+                data: {
+                    labels: data.tendenciaDiaria.map(t => t.fecha),
+                    datasets: [{
+                        label: 'Fallas por Día',
+                        data: data.tendenciaDiaria.map(t => t.cantidad),
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    </script>
+}

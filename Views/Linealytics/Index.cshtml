@@ -125,6 +125,20 @@
         </div>
         <div class="card-body">
             <div class="row">
+                <!-- Dashboard de Contadores -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100 border-info">
+                        <div class="card-body text-center">
+                            <i class="bi bi-speedometer display-4 text-info"></i>
+                            <h5 class="card-title mt-3">Dashboard Contadores</h5>
+                            <p class="card-text text-muted">Visualización de producción por contador</p>
+                            <a asp-action="Contadores" class="btn btn-info">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Corridas de Producción -->
                 <div class="col-md-3 mb-3">
                     <div class="card shadow-sm h-100">
@@ -134,6 +148,58 @@
                             <p class="card-text text-muted">Historial de corridas por contador</p>
                             <a asp-action="CorridasProduccion" class="btn btn-success">
                                 <i class="bi bi-arrow-right-circle me-1"></i>Ver Corridas
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segmento Fallas -->
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Fallas</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Dashboard de Fallas -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100 border-warning">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up display-4 text-warning"></i>
+                            <h5 class="card-title mt-3">Dashboard de Fallas</h5>
+                            <p class="card-text text-muted">Métricas y análisis de fallas</p>
+                            <a asp-controller="Fallas" asp-action="DashboardFallas" class="btn btn-warning">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catálogo de Fallas -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-folder display-4 text-danger"></i>
+                            <h5 class="card-title mt-3">Catálogo de Fallas</h5>
+                            <p class="card-text text-muted">Tipos de fallas por severidad</p>
+                            <a asp-controller="Fallas" asp-action="CatalogoFallas" class="btn btn-danger">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registros de Fallas -->
+                <div class="col-md-3 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-list-check display-4 text-secondary"></i>
+                            <h5 class="card-title mt-3">Registros de Fallas</h5>
+                            <p class="card-text text-muted">Historial y gestión de fallas</p>
+                            <a asp-controller="Fallas" asp-action="RegistrosFallas" class="btn btn-secondary">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Registros
                             </a>
                         </div>
                     </div>
