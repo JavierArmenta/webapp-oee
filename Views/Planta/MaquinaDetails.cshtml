@@ -14,9 +14,9 @@
 
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Información de la Máquina</h5>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="ph ph-gear me-2"></i>Información de la Máquina</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -85,13 +85,13 @@
                 </div>
                 <div class="card-footer">
                     <a asp-action="EditMaquina" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">
-                        <i class="bi bi-pencil me-1"></i>Editar
+                        <i class="ph ph-pencil-simple me-1"></i>Editar
                     </a>
                     <a asp-action="DeleteMaquina" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
                         <i class="bi bi-trash me-1"></i>Eliminar
                     </a>
                     <a asp-action="Maquinas" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left me-1"></i>Volver
+                        <i class="ph ph-arrow-left me-1"></i>Volver
                     </a>
                 </div>
             </div>

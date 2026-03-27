@@ -5,11 +5,9 @@
 }
 
 <div class="container-fluid">
-    <div class="card shadow-sm mt-3">
+    <div class="card">
         <div class="card-header">
-            <h4 class="mb-0">
-                <i class="bi bi-pencil me-2"></i>Editar Producto
-            </h4>
+            <h5 class="mb-0"><i class="ph ph-pencil-simple me-2"></i>Editar Producto</h5>
         </div>
         <div class="card-body">
             <form asp-action="EditProducto" method="post">
@@ -67,10 +65,10 @@
 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-1"></i>Guardar Cambios
+                        <i class="ph ph-floppy-disk me-1"></i>Guardar Cambios
                     </button>
                     <a asp-action="Productos" class="btn btn-secondary">
-                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                        <i class="ph ph-x-circle me-1"></i>Cancelar
                     </a>
                 </div>
             </form>

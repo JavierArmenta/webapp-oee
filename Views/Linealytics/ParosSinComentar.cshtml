@@ -7,30 +7,26 @@
 
 <div class="container-fluid">
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-chat-left-text me-2"></i>Comentarios de Paros Cerrados
-                </h1>
-                <div>
-                    <span class="badge bg-secondary fs-6 me-2">
-                        <i class="bi bi-chat-left me-1"></i>Sin comentar: @parosSinComentar
-                    </span>
-                    <span class="badge bg-success fs-6">
-                        <i class="bi bi-chat-left-text me-1"></i>Con comentarios: @parosConComentar
-                    </span>
-                </div>
-            </div>
+    <div class="page-header">
+        <h1 class="page-header-title">
+            <i class="ph ph-chat-text"></i>Comentarios de Paros Cerrados
+        </h1>
+        <div class="d-flex gap-2">
+            <span class="badge bg-secondary">
+                <i class="ph ph-chat me-1"></i>Sin comentar: @parosSinComentar
+            </span>
+            <span class="badge bg-success">
+                <i class="ph ph-chat-text me-1"></i>Con comentarios: @parosConComentar
+            </span>
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-body">
             @if (!Model.Any())
             {
                 <div class="text-center py-5">
-                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <i class="ph ph-tray display-1 text-muted"></i>
                     <p class="text-muted mt-3">No hay paros cerrados registrados.</p>
                 </div>
             }
@@ -158,13 +154,13 @@
                                                     Fecha = c.FechaCreacion.ToString("dd/MM/yyyy HH:mm:ss"),
                                                     FechaRelativa = c.FechaCreacion
                                                 }))'>
-                                            <i class="bi bi-chat-left-text me-1"></i>Ver (@paro.Comentarios.Count)
+                                            <i class="ph ph-chat-text me-1"></i>Ver (@paro.Comentarios.Count)
                                         </button>
                                     }
                                     else
                                     {
                                         <span class="badge bg-secondary">
-                                            <i class="bi bi-chat-left me-1"></i>Sin comentarios
+                                            <i class="ph ph-chat me-1"></i>Sin comentarios
                                         </span>
                                     }
                                 </td>
@@ -175,7 +171,7 @@
                                             data-paro-id="@paro.Id"
                                             data-maquina="@paro.Maquina?.Nombre"
                                             data-boton="@paro.Boton?.Nombre">
-                                        <i class="bi bi-chat-left-text me-1"></i>Agregar
+                                        <i class="ph ph-chat-text me-1"></i>Agregar
                                     </button>
                                 </td>
                             </tr>
@@ -196,14 +192,14 @@
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title" id="modalAgregarComentarioLabel">
-                        <i class="bi bi-chat-left-text me-2"></i>Agregar Comentario
+                        <i class="ph ph-chat-text me-2"></i>Agregar Comentario
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="paroId" id="paroIdInput" />
 
-                    <div class="alert alert-info" role="alert">
+                    <div class="alert-note">
                         <strong>Paro #<span id="paroIdDisplay"></span></strong> -
                         Máquina: <span id="maquinaDisplay"></span> -
                         Botón: <span id="botonDisplay"></span>
@@ -228,10 +224,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                        <i class="ph ph-x-circle me-1"></i>Cancelar
                     </button>
                     <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-save me-1"></i>Guardar Comentario
+                        <i class="ph ph-floppy-disk me-1"></i>Guardar Comentario
                     </button>
                 </div>
             </form>
@@ -245,7 +241,7 @@
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="modalVerComentariosLabel">
-                    <i class="bi bi-chat-left-text me-2"></i>Comentarios del Paro
+                    <i class="ph ph-chat-text me-2"></i>Comentarios del Paro
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -254,14 +250,14 @@
                 <div class="card mb-4 border-success">
                     <div class="card-header bg-light">
                         <h6 class="mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Detalles del Paro #<span id="verParoIdDisplay"></span>
+                            <i class="ph ph-info"></i>Detalles del Paro #<span id="verParoIdDisplay"></span>
                         </h6>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <p class="mb-2">
-                                    <strong><i class="bi bi-gear me-1 text-primary"></i>Máquina:</strong>
+                                    <strong><i class="ph ph-gear me-1 text-primary"></i>Máquina:</strong>
                                     <span id="verMaquinaDisplay"></span>
                                 </p>
                                 <p class="mb-2">
@@ -269,7 +265,7 @@
                                     <span id="verCodigoDisplay" class="badge bg-info"></span>
                                 </p>
                                 <p class="mb-2">
-                                    <strong><i class="bi bi-diagram-3 me-1 text-success"></i>Línea:</strong>
+                                    <strong><i class="ph ph-tree-structure me-1 text-success"></i>Línea:</strong>
                                     <span id="verLineaDisplay" class="badge bg-secondary"></span>
                                 </p>
                                 <p class="mb-0">
@@ -283,7 +279,7 @@
                                     <span id="verBotonDisplay"></span>
                                 </p>
                                 <p class="mb-2">
-                                    <strong><i class="bi bi-clock-history me-1 text-info"></i>Inicio:</strong>
+                                    <strong><i class="ph ph-clock-clockwise me-1 text-info"></i>Inicio:</strong>
                                     <span id="verInicioDisplay"></span>
                                 </p>
                                 <p class="mb-2">
@@ -309,7 +305,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-1"></i>Cerrar
+                    <i class="ph ph-x-circle me-1"></i>Cerrar
                 </button>
             </div>
         </div>
@@ -402,7 +398,7 @@
                                     <div class="row align-items-center">
                                         <div class="col-md-6">
                                             <div class="d-flex align-items-center">
-                                                <i class="bi bi-person-circle fs-4 me-2"></i>
+                                                <i class="ph ph-user-circle fs-4 me-2"></i>
                                                 <div>
                                                     <strong class="d-block">${comentario.NombreCompleto}</strong>
                                                     <small class="${index === 0 ? 'text-white-50' : 'text-muted'}">
@@ -416,7 +412,7 @@
                                                 <i class="bi bi-calendar-event me-1"></i>${comentario.Fecha}
                                             </div>
                                             <small class="${index === 0 ? 'text-white-50' : 'text-muted'}">
-                                                <i class="bi bi-hash me-1"></i>Comentario #${comentario.Id}
+                                                <i class="ph ph-hash me-1"></i>Comentario #${comentario.Id}
                                             </small>
                                         </div>
                                     </div>
@@ -450,7 +446,7 @@
                     $('#totalComentarios').text('0');
                     $('#listaComentarios').html(`
                         <div class="text-center py-4">
-                            <i class="bi bi-inbox display-4 text-muted"></i>
+                            <i class="ph ph-tray display-4 text-muted"></i>
                             <p class="text-muted mt-2">No hay comentarios para este paro.</p>
                         </div>
                     `);

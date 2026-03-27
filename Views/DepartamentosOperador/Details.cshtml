@@ -4,7 +4,7 @@
     ViewData["Title"] = "Detalles del Departamento";
 }
 
-<div class="container mt-4">
+<div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -59,11 +59,11 @@
 
                     <div class="d-flex justify-content-between mt-4">
                         <a asp-action="Index" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Volver
+                            <i class="ph ph-arrow-left"></i> Volver
                         </a>
                         <div>
                             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
-                                <i class="bi bi-pencil"></i> Editar
+                                <i class="ph ph-pencil-simple"></i> Editar
                             </a>
                         </div>
                     </div>

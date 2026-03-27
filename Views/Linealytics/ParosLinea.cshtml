@@ -8,31 +8,27 @@
 
 <div class="container-fluid">
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-stop-circle me-2"></i>Paros de Línea (Botonera)
-                </h1>
-                <div>
-                    <span class="badge bg-danger fs-6 me-2">
-                        <i class="bi bi-exclamation-triangle me-1"></i>Abiertos: @parosAbiertos.Count
-                    </span>
-                    <span class="badge bg-secondary fs-6">
-                        <i class="bi bi-check-circle me-1"></i>Cerrados: @parosCerrados.Count
-                    </span>
-                </div>
-            </div>
+    <div class="page-header">
+        <h1 class="page-header-title">
+            <i class="ph ph-stop-circle"></i>Paros de Línea
+        </h1>
+        <div class="d-flex gap-2">
+            <span class="badge bg-danger">
+                <i class="ph ph-warning me-1"></i>Abiertos: @parosAbiertos.Count
+            </span>
+            <span class="badge bg-secondary">
+                <i class="ph ph-check-circle me-1"></i>Cerrados: @parosCerrados.Count
+            </span>
         </div>
     </div>
 
     @* PAROS ABIERTOS *@
     @if (parosAbiertos.Any())
     {
-        <div class="card shadow-sm mt-3">
-            <div class="card-header bg-danger text-white">
+        <div class="card mt-3">
+            <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Paros Activos (Abiertos)
+                    <i class="ph ph-warning me-2"></i>Paros Activos (Abiertos)
                 </h5>
             </div>
             <div class="card-body">
@@ -99,7 +95,7 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-warning text-dark fs-6">
-                                        <i class="bi bi-clock-history me-1"></i>
+                                        <i class="ph ph-clock-clockwise me-1"></i>
                                         @if (tiempoTranscurrido.TotalHours >= 1)
                                         {
                                             <text>@((int)tiempoTranscurrido.TotalHours)h @tiempoTranscurrido.Minutes m</text>
@@ -126,13 +122,13 @@
     else
     {
         <div class="alert alert-success mt-3" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
+            <i class="ph ph-check-circle me-2"></i>
             <strong>No hay paros activos en este momento.</strong> Todas las líneas están operando normalmente.
         </div>
     }
 
     @* PAROS CERRADOS *@
-    <div class="card shadow-sm mt-3">
+    <div class="card mt-3">
         <div class="card-header">
             <h5 class="mb-0">
                 <i class="bi bi-archive me-2"></i>Historial de Paros (Cerrados)
@@ -142,7 +138,7 @@
             @if (!parosCerrados.Any())
             {
                 <div class="text-center py-5">
-                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <i class="ph ph-tray display-1 text-muted"></i>
                     <p class="text-muted mt-3">No hay paros cerrados registrados.</p>
                 </div>
             }
@@ -249,20 +245,20 @@
                                     @if (paro.Comentarios?.Any() == true)
                                     {
                                         <span class="badge bg-success">
-                                            <i class="bi bi-chat-left-text me-1"></i>
+                                            <i class="ph ph-chat-text me-1"></i>
                                             @paro.Comentarios.Count
                                         </span>
                                     }
                                     else
                                     {
                                         <span class="badge bg-secondary">
-                                            <i class="bi bi-chat-left me-1"></i>0
+                                            <i class="ph ph-chat me-1"></i>0
                                         </span>
                                     }
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-success">
-                                        <i class="bi bi-check-circle me-1"></i>CERRADO
+                                        <i class="ph ph-check-circle me-1"></i>CERRADO
                                     </span>
                                 </td>
                             </tr>
@@ -286,7 +282,7 @@
 
         <div class="row mt-3">
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Total Paros Cerrados</h6>
                         <h2 class="text-primary">@totalParos</h2>
@@ -294,7 +290,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Duración Total</h6>
                         <h2 class="text-danger">
@@ -313,7 +309,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Duración Promedio</h6>
                         <h2 class="text-warning">@((int)duracionPromedio) min</h2>
@@ -321,7 +317,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Paro Más Largo</h6>
                         @if (paroMasLargo != null)

@@ -1,99 +1,83 @@
 @using WebApp.Enums
 @model ApplicationUser
 
-<div class="col-sm-12">
-    <div class="card marginBottomLess">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-sm-12">
-                    <!-- Authentication card start -->
-                    <div class="signup-card card-block auth-body mr-auto ml-auto">
+<div class="container-fluid">
+    <div class="page-header">
+        <h1 class="page-header-title">
+            <i class="ph ph-user-gear"></i>Actualizar Usuario
+        </h1>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="ph ph-arrow-left me-1"></i>Volver
+        </a>
+    </div>
 
-                        <form asp-action="Update" method="post">
-                            <input type="hidden" asp-for="Id" />
-                            <input type="hidden" asp-for="IsLdapUser" />
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="ph ph-pencil-simple me-2"></i>Editar datos de usuario</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsLdapUser)
+                    {
+                        <div class="alert-note mb-3">
+                            <i class="ph ph-buildings"></i>
+                            <span><strong>Usuario de Active Directory</strong> — No se puede cambiar la contraseña aquí.</span>
+                        </div>
+                    }
+                    <form asp-action="Update" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="IsLdapUser" />
+                        <div asp-validation-summary="All" class="text-danger"></div>
 
-                            <div class="row m-b-20">
-                                <div class="col-md-12">
-                                    <h3 class="text-center txt-primary">Actualizar datos</h3>
-                                    
-                                    @if (Model.IsLdapUser)
-                                    {
-                                        <div class="alert alert-info text-center mt-3">
-                                            <i class="fas fa-building me-2"></i>
-                                            <strong>Usuario de Active Directory</strong>
-                                            <br />
-                                            <small>Este usuario se autentica mediante el dominio. No se puede cambiar la contraseña aquí.</small>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="alert alert-secondary text-center mt-3">
-                                            <i class="fas fa-user me-2"></i>
-                                            <strong>Usuario Local</strong>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                            <hr />
-                            <div asp-validation-summary="All" class="text-danger"></div>
-
-                            <div class="form-group">
-                                <label asp-for="UserName"></label>
-                                @if (Model.IsLdapUser)
-                                {
-                                    <input asp-for="UserName" class="form-control" readonly />
-                                    <small class="text-muted">El nombre de usuario de AD no se puede modificar</small>
-                                }
-                                else
-                                {
-                                    <input asp-for="UserName" class="form-control" />
-                                }
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="FirstName"></label>
+                        <div class="mb-3">
+                            <label asp-for="UserName" class="form-label"></label>
+                            @if (Model.IsLdapUser)
+                            {
+                                <input asp-for="UserName" class="form-control" readonly />
+                            }
+                            else
+                            {
+                                <input asp-for="UserName" class="form-control" />
+                            }
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label"></label>
                                 <input asp-for="FirstName" class="form-control" />
                             </div>
-                            <div class="form-group">
-                                <label asp-for="LastName"></label>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label"></label>
                                 <input asp-for="LastName" class="form-control" />
                             </div>
-                            <div class="form-group">
-                                <label asp-for="Email"></label>
-                                <input asp-for="Email" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                        </div>
+                        @if (!Model.IsLdapUser)
+                        {
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Nueva Contraseña</label>
+                                <input name="password" type="password" class="form-control" placeholder="Dejar vacío para mantener la actual" />
+                                <small class="text-muted">Solo complete si desea cambiar la contraseña</small>
                             </div>
-                            
-                            @if (!Model.IsLdapUser)
-                            {
-                                <div class="form-group">
-                                    <label for="password">Nueva Contraseña</label>
-                                    <input name="password" type="password" class="form-control" placeholder="Dejar vacío para mantener la actual" />
-                                    <small class="text-muted">Solo complete si desea cambiar la contraseña</small>
-                                </div>
-                            }
-                            
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-                            </div>
-
-                            <hr />
-
-                        </form>
-                        <!-- end of form -->
-                    </div>
-                    <!-- Authentication card end -->
+                        }
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ph ph-floppy-disk me-1"></i>Guardar
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="ph ph-x me-1"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
                 </div>
-                <!-- end of col-sm-12 -->
             </div>
-            <!-- end of row -->
-
         </div>
     </div>
 </div>
 
 @section Scripts
 {
-
 }

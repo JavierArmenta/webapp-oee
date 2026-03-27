@@ -8,12 +8,12 @@
     <link href="~/assets/js/vendor/pickers/color/spectrum.css" rel="stylesheet" type="text/css">
 }
 
-<div class="container mt-4">
+<div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h2>Crear Nuevo Departamento de Operador</h2>
+                    <h5 class="mb-0"><i class="ph ph-plus-circle me-2"></i>Crear Nuevo Departamento</h5>
                 </div>
                 <div class="card-body">
                     <form asp-action="Create" method="post">
@@ -46,10 +46,10 @@
 
                         <div class="d-flex justify-content-between mt-4">
                             <a asp-action="Index" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Cancelar
+                                <i class="ph ph-arrow-left"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Guardar
+                                <i class="ph ph-floppy-disk"></i> Guardar
                             </button>
                         </div>
                     </form>

@@ -140,7 +140,7 @@ body {
 }
 
 .content {
-  padding: var(--spacer) 1.25rem;
+  padding: 0.5rem 1rem;
   -ms-flex-positive: 1;
       flex-grow: 1;
 }

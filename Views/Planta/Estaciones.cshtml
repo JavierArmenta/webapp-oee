@@ -6,28 +6,24 @@
 
 <div class="container-fluid">
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-hdd-stack me-2"></i>Estaciones de Trabajo
-                </h1>
-                <a asp-action="CreateEstacion" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Nueva Estación
-                </a>
-            </div>
-        </div>
+    <div class="page-header">
+        <h1 class="page-header-title">
+            <i class="ph ph-desktop-tower"></i>Estaciones de Trabajo
+        </h1>
+        <a asp-action="CreateEstacion" class="btn btn-primary btn-sm">
+            <i class="ph ph-plus-circle me-1"></i>Nueva Estación
+        </a>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-body">
             @if (!Model.Any())
             {
                 <div class="text-center py-5">
-                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <i class="ph ph-tray display-1 text-muted"></i>
                     <p class="text-muted mt-3">No hay estaciones registradas.</p>
                     <a asp-action="CreateEstacion" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primera estación
+                        <i class="ph ph-plus-circle me-1"></i>Crear primera estación
                     </a>
                 </div>
             }
@@ -73,29 +69,29 @@
                                     @if (item.Activo)
                                     {
                                         <span class="badge bg-success">
-                                            <i class="fas fa-check me-1"></i>Activo
+                                            <i class="ph ph-check me-1"></i>Activo
                                         </span>
                                     }
                                     else
                                     {
                                         <span class="badge bg-danger">
-                                            <i class="fas fa-times me-1"></i>Inactivo
+                                            <i class="ph ph-x me-1"></i>Inactivo
                                         </span>
                                     }
                                 </td>
                                 <td>
                                     <a asp-action="EstacionDetails" asp-route-id="@item.Id" class="btn btn-sm btn-info">
-                                        <i class="bi bi-eye"></i> Ver
+                                        <i class="ph ph-eye"></i> Ver
                                     </a>
                                     <a asp-action="EditEstacion" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
-                                        <i class="bi bi-pencil"></i> Editar
+                                        <i class="ph ph-pencil-simple"></i> Editar
                                     </a>
                                     @if (item.Activo)
                                     {
                                         <form asp-action="DeactivateEstacion" asp-route-id="@item.Id" method="post" class="d-inline deactivate-form">
                                             @Html.AntiForgeryToken()
                                             <button type="button" class="btn btn-sm btn-warning deactivate-estacion-btn">
-                                                <i class="bi bi-toggle-off me-1"></i>Desactivar
+                                                <i class="ph ph-toggle-left me-1"></i>Desactivar
                                             </button>
                                         </form>
                                     }
@@ -104,7 +100,7 @@
                                         <form asp-action="ActivateEstacion" asp-route-id="@item.Id" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="bi bi-toggle-on me-1"></i>Activar
+                                                <i class="ph ph-toggle-right me-1"></i>Activar
                                             </button>
                                         </form>
                                     }

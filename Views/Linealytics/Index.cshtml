@@ -2,207 +2,431 @@
     ViewData["Title"] = "Linealytics - Dashboard";
 }
 
+<style>
+    /* Hero */
+    .lnx-hero {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2563a8 100%);
+        border-radius: 0.375rem;
+        padding: 2.5rem 2rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+    }
+
+    .lnx-hero::after {
+        content: '';
+        position: absolute;
+        right: -40px;
+        top: -40px;
+        width: 220px;
+        height: 220px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 50%;
+    }
+
+    .lnx-hero::before {
+        content: '';
+        position: absolute;
+        right: 60px;
+        bottom: -60px;
+        width: 160px;
+        height: 160px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 50%;
+    }
+
+    .lnx-hero h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+
+    .lnx-hero p {
+        opacity: 0.8;
+        margin-bottom: 0;
+        font-size: 0.9375rem;
+    }
+
+    .lnx-hero .hero-icon {
+        font-size: 5rem;
+        opacity: 0.12;
+        position: absolute;
+        right: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        line-height: 1;
+    }
+
+    /* Section label */
+    .lnx-section-label {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 1rem;
+        color: #64748b;
+    }
+
+    .lnx-section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e2e8f0;
+    }
+
+    .lnx-section-label .badge-label {
+        background: #f1f5f9;
+        border-radius: 99px;
+        padding: 0.25rem 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    /* Module cards */
+    .lnx-card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        background: #fff;
+        height: 100%;
+        transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lnx-card:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+        border-color: transparent;
+    }
+
+    .lnx-card-top {
+        padding: 1.25rem 1.25rem 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .lnx-icon-box {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.3rem;
+    }
+
+    .lnx-card-title {
+        font-weight: 600;
+        font-size: 0.9375rem;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+        line-height: 1.3;
+    }
+
+    .lnx-card-desc {
+        font-size: 0.8125rem;
+        color: #94a3b8;
+        line-height: 1.5;
+    }
+
+    .lnx-card-footer {
+        padding: 1rem 1.25rem 1.25rem;
+        margin-top: auto;
+    }
+
+    .lnx-card-footer a {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        text-decoration: none;
+        transition: gap 0.2s;
+    }
+
+    .lnx-card-footer a:hover {
+        gap: 0.6rem;
+    }
+
+    /* Color variants */
+    .lnx-icon-blue   { background: #eff6ff; color: #2563eb; }
+    .lnx-icon-red    { background: #fff1f2; color: #e11d48; }
+    .lnx-icon-teal   { background: #f0fdfa; color: #0d9488; }
+    .lnx-icon-slate  { background: #f8fafc; color: #475569; }
+    .lnx-icon-amber  { background: #fffbeb; color: #d97706; }
+    .lnx-icon-green  { background: #f0fdf4; color: #16a34a; }
+    .lnx-icon-purple { background: #faf5ff; color: #7c3aed; }
+    .lnx-icon-orange { background: #fff7ed; color: #ea580c; }
+
+    .lnx-link-blue   { color: #2563eb; }
+    .lnx-link-red    { color: #e11d48; }
+    .lnx-link-teal   { color: #0d9488; }
+    .lnx-link-slate  { color: #475569; }
+    .lnx-link-amber  { color: #d97706; }
+    .lnx-link-green  { color: #16a34a; }
+    .lnx-link-purple { color: #7c3aed; }
+    .lnx-link-orange { color: #ea580c; }
+</style>
+
 <div class="container-fluid">
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-graph-up me-2"></i>Linealytics Dashboard
-                </h1>
-            </div>
+    <!-- Hero -->
+    <div class="lnx-hero">
+        <div style="position:relative; z-index:1;">
+            <h1><i class="ph ph-chart-line me-2"></i>Linealytics</h1>
+            <p>Monitoreo OEE · Paros de Línea · Contadores de Producción · Gestión de Fallas</p>
+        </div>
+        <i class="ph ph-factory hero-icon"></i>
+    </div>
+
+    <!-- ── CATÁLOGOS ── -->
+    <div class="lnx-section-label">
+        <div class="badge-label">
+            <i class="ph ph-folder-open"></i>Catálogos
         </div>
     </div>
 
-    <!-- Segmento Catálogos -->
-    <div class="card shadow-sm mt-3">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="bi bi-folder me-2"></i>Catálogos</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Productos -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-box-seam display-4 text-success"></i>
-                            <h5 class="card-title mt-3">Productos</h5>
-                            <p class="card-text text-muted">Catálogo de productos</p>
-                            <a asp-action="Productos" class="btn btn-success">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                            </a>
-                        </div>
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-green">
+                        <i class="ph ph-package"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Productos</div>
+                        <div class="lnx-card-desc">Catálogo de referencias de producción</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Segmento Paros -->
-    <div class="card shadow-sm mt-3">
-        <div class="card-header bg-danger text-white">
-            <h5 class="mb-0"><i class="bi bi-stop-circle me-2"></i>Paros</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Time Line Paros -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100 border-primary">
-                        <div class="card-body text-center">
-                            <i class="bi bi-speedometer2 display-4 text-primary"></i>
-                            <h5 class="card-title mt-3">Time Line Paros</h5>
-                            <p class="card-text text-muted">Tablero de eficiencia en tiempo real</p>
-                            <a asp-action="Dashboard" class="btn btn-primary">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paros de Línea -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-stop-circle display-4 text-danger"></i>
-                            <h5 class="card-title mt-3">Paros de Línea</h5>
-                            <p class="card-text text-muted">Registro de paros por botonera</p>
-                            <a asp-action="ParosLinea" class="btn btn-danger">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Paros
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botones -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-toggle-on display-4 text-info"></i>
-                            <h5 class="card-title mt-3">Botones</h5>
-                            <p class="card-text text-muted">Gestión de botones por departamento</p>
-                            <a asp-action="Botones" class="btn btn-info">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botoneras -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-hdd-network display-4 text-secondary"></i>
-                            <h5 class="card-title mt-3">Botoneras</h5>
-                            <p class="card-text text-muted">Dispositivos de control por máquina</p>
-                            <a asp-action="Botoneras" class="btn btn-secondary">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Comentarios de Paros -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-chat-left-text display-4 text-warning"></i>
-                            <h5 class="card-title mt-3">Comentarios de Paros</h5>
-                            <p class="card-text text-muted">Ver y documentar paros cerrados</p>
-                            <a asp-action="ParosSinComentar" class="btn btn-warning">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Gestionar Comentarios
-                            </a>
-                        </div>
-                    </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="Productos" class="lnx-link-green">
+                        Administrar <i class="ph ph-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Segmento Contadores -->
-    <div class="card shadow-sm mt-3">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="bi bi-123 me-2"></i>Contadores</h5>
+    <!-- ── PAROS DE LÍNEA ── -->
+    <div class="lnx-section-label">
+        <div class="badge-label">
+            <i class="ph ph-stop-circle"></i>Paros de Línea
         </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Dashboard de Contadores -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100 border-info">
-                        <div class="card-body text-center">
-                            <i class="bi bi-speedometer display-4 text-info"></i>
-                            <h5 class="card-title mt-3">Dashboard Contadores</h5>
-                            <p class="card-text text-muted">Visualización de producción por contador</p>
-                            <a asp-action="Contadores" class="btn btn-info">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
-                            </a>
-                        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-blue">
+                        <i class="ph ph-chart-bar"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Timeline de Paros</div>
+                        <div class="lnx-card-desc">Visualiza la disponibilidad en tiempo real</div>
                     </div>
                 </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="Dashboard" class="lnx-link-blue">
+                        Ver Dashboard <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                <!-- Corridas de Producción -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-play-circle display-4 text-success"></i>
-                            <h5 class="card-title mt-3">Corridas de Producción</h5>
-                            <p class="card-text text-muted">Historial de corridas por contador</p>
-                            <a asp-action="CorridasProduccion" class="btn btn-success">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Corridas
-                            </a>
-                        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-red">
+                        <i class="ph ph-prohibit"></i>
                     </div>
+                    <div>
+                        <div class="lnx-card-title">Paros Registrados</div>
+                        <div class="lnx-card-desc">Historial completo de paros por botonera</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="ParosLinea" class="lnx-link-red">
+                        Ver Paros <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-teal">
+                        <i class="ph ph-hand-tap"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Botones</div>
+                        <div class="lnx-card-desc">Botones asignados por departamento</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="Botones" class="lnx-link-teal">
+                        Administrar <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-slate">
+                        <i class="ph ph-device-mobile-speaker"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Botoneras</div>
+                        <div class="lnx-card-desc">Dispositivos físicos por máquina</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="Botoneras" class="lnx-link-slate">
+                        Administrar <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-amber">
+                        <i class="ph ph-chat-text"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Comentarios de Paros</div>
+                        <div class="lnx-card-desc">Documenta y gestiona paros cerrados</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="ParosSinComentar" class="lnx-link-amber">
+                        Gestionar <i class="ph ph-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Segmento Fallas -->
-    <div class="card shadow-sm mt-3">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Fallas</h5>
+    <!-- ── CONTADORES Y PRODUCCIÓN ── -->
+    <div class="lnx-section-label">
+        <div class="badge-label">
+            <i class="ph ph-gauge"></i>Contadores y Producción
         </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Dashboard de Fallas -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100 border-warning">
-                        <div class="card-body text-center">
-                            <i class="bi bi-graph-up display-4 text-warning"></i>
-                            <h5 class="card-title mt-3">Dashboard de Fallas</h5>
-                            <p class="card-text text-muted">Métricas y análisis de fallas</p>
-                            <a asp-controller="Fallas" asp-action="DashboardFallas" class="btn btn-warning">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Dashboard
-                            </a>
-                        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-purple">
+                        <i class="ph ph-speedometer"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Dashboard Contadores</div>
+                        <div class="lnx-card-desc">Producción en tiempo real por contador</div>
                     </div>
                 </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="Contadores" class="lnx-link-purple">
+                        Ver Dashboard <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                <!-- Catálogo de Fallas -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-folder display-4 text-danger"></i>
-                            <h5 class="card-title mt-3">Catálogo de Fallas</h5>
-                            <p class="card-text text-muted">Tipos de fallas por severidad</p>
-                            <a asp-controller="Fallas" asp-action="CatalogoFallas" class="btn btn-danger">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Administrar
-                            </a>
-                        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-green">
+                        <i class="ph ph-play-circle"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Corridas de Producción</div>
+                        <div class="lnx-card-desc">Historial de corridas por máquina</div>
                     </div>
                 </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="CorridasProduccion" class="lnx-link-green">
+                        Ver Corridas <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- Registros de Fallas -->
-                <div class="col-md-3 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-list-check display-4 text-secondary"></i>
-                            <h5 class="card-title mt-3">Registros de Fallas</h5>
-                            <p class="card-text text-muted">Historial y gestión de fallas</p>
-                            <a asp-controller="Fallas" asp-action="RegistrosFallas" class="btn btn-secondary">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Ver Registros
-                            </a>
-                        </div>
+    <!-- ── GESTIÓN DE FALLAS ── -->
+    <div class="lnx-section-label">
+        <div class="badge-label">
+            <i class="ph ph-warning"></i>Gestión de Fallas
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-orange">
+                        <i class="ph ph-chart-pie-slice"></i>
                     </div>
+                    <div>
+                        <div class="lnx-card-title">Dashboard de Fallas</div>
+                        <div class="lnx-card-desc">Métricas y análisis de severidad</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-controller="Fallas" asp-action="DashboardFallas" class="lnx-link-orange">
+                        Ver Dashboard <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-red">
+                        <i class="ph ph-book-open"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Catálogo de Fallas</div>
+                        <div class="lnx-card-desc">Tipos de fallas clasificados por severidad</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-controller="Fallas" asp-action="CatalogoFallas" class="lnx-link-red">
+                        Administrar <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-slate">
+                        <i class="ph ph-clipboard-text"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Registros de Fallas</div>
+                        <div class="lnx-card-desc">Historial y gestión de fallas reportadas</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-controller="Fallas" asp-action="RegistrosFallas" class="lnx-link-slate">
+                        Ver Registros <i class="ph ph-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>

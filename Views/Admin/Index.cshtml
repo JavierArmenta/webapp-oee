@@ -1,21 +1,22 @@
 @using WebApp.Models
 @model IEnumerable<ApplicationUser>
 
-<!-- Content area -->
-<div class="content">
-
-    <!-- Mini table -->
-    <div class="card">
-        <div class="card-header">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="showInactiveToggle"
-                       @(ViewBag.ShowInactive ? "checked" : "")
-                       onchange="toggleInactiveUsers(this.checked)">
-                <label class="form-check-label" for="showInactiveToggle">
-                    Mostrar usuarios desactivados
-                </label>
-            </div>
+<div class="container-fluid">
+    <div class="page-header">
+        <h1 class="page-header-title">
+            <i class="ph ph-users"></i>Usuarios del Sistema
+        </h1>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="showInactiveToggle"
+                   @(ViewBag.ShowInactive ? "checked" : "")
+                   onchange="toggleInactiveUsers(this.checked)">
+            <label class="form-check-label" for="showInactiveToggle">
+                Mostrar desactivados
+            </label>
         </div>
+    </div>
+
+    <div class="card">
         <div class="table-responsive">
             <table class="table table-xs datatable-basic">
                 <thead>
@@ -43,13 +44,13 @@
                                 @if (user.IsLdapUser)
                                 {
                                     <span class="badge bg-info">
-                                        <i class="fas fa-building me-1"></i>Active Directory
+                                        <i class="ph ph-buildings me-1"></i>Active Directory
                                     </span>
                                 }
                                 else
                                 {
                                     <span class="badge bg-secondary">
-                                        <i class="fas fa-user me-1"></i>Local
+                                        <i class="ph ph-user me-1"></i>Local
                                     </span>
                                 }
                             </td>
@@ -57,13 +58,13 @@
                                 @if (user.IsActive)
                                 {
                                     <span class="badge bg-success">
-                                        <i class="fas fa-check me-1"></i>Activo
+                                        <i class="ph ph-check me-1"></i>Activo
                                     </span>
                                 }
                                 else
                                 {
                                     <span class="badge bg-danger">
-                                        <i class="fas fa-times me-1"></i>Inactivo
+                                        <i class="ph ph-x me-1"></i>Inactivo
                                     </span>
                                 }
                             </td>
@@ -86,7 +87,7 @@
                                 {
                                     <form asp-action="Deactivate" asp-route-id="@user.Id" method="post" class="deactivate-form">
                                         <button type="button" class="btn btn-warning btn-sm deactivate-user-btn">
-                                            <i class="fas fa-user-slash me-1"></i>Desactivar
+                                            <i class="ph ph-user-minus me-1"></i>Desactivar
                                         </button>
                                     </form>
                                 }
@@ -94,7 +95,7 @@
                                 {
                                     <form asp-action="Activate" asp-route-id="@user.Id" method="post">
                                         <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="fas fa-user-check me-1"></i>Activar
+                                            <i class="ph ph-user-check me-1"></i>Activar
                                         </button>
                                     </form>
                                 }
@@ -108,10 +109,8 @@
             </table>
         </div>
     </div>
-    <!-- /mini table -->
 
 </div>
-<!-- /content area -->
 
 @section Scripts
 {

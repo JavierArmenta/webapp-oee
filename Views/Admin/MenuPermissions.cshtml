@@ -4,7 +4,7 @@
     ViewData["Title"] = "Permisos de Menú";
 }
 
-<div class="container mt-4">
+<div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -17,7 +17,7 @@
                         <input type="hidden" asp-for="MenuItemId" />
                         <input type="hidden" asp-for="MenuItemName" />
 
-                        <div class="alert alert-info">
+                        <div class="alert-note">
                             <i class="ph-info me-2"></i>
                             Seleccione los roles que tendrán acceso a este menú. Si es un menú padre, los submenús heredarán la visibilidad solo si también tienen permisos asignados.
                         </div>
