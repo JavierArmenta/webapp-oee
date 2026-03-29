@@ -1,0 +1,453 @@
+@{
+    ViewData["Title"] = "Dashboard de Líneas";
+}
+
+<style>
+    /* ── Hero ── */
+    .dl-hero {
+        background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+        border-radius: 0.375rem;
+        padding: 1.75rem 2rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    .dl-hero h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .dl-hero p  { opacity: 0.75; margin: 0; font-size: 0.9rem; }
+    .dl-hero .hero-icon {
+        font-size: 5rem; opacity: 0.1;
+        position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
+    }
+
+    /* ── Resumen global ── */
+    .dl-summary {
+        display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;
+    }
+    .dl-summary-card {
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 0.5rem;
+        padding: 0.75rem 1.25rem; display: flex; flex-direction: column;
+        align-items: center; min-width: 130px; flex: 1;
+    }
+    .dl-summary-val { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+    .dl-summary-lbl { font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+                      letter-spacing: 0.06em; color: #94a3b8; margin-top: 0.25rem; }
+
+    /* ── Grid de líneas ── */
+    .dl-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.1rem;
+    }
+
+    /* ── Card de línea ── */
+    .dl-card {
+        background: #fff;
+        border-radius: 0.625rem;
+        overflow: hidden;
+        border: 2px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .dl-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .dl-card.sem-Verde   { border-color: #22c55e; }
+    .dl-card.sem-Amarillo{ border-color: #f59e0b; }
+    .dl-card.sem-Rojo    { border-color: #ef4444; }
+    .dl-card.sem-Gris    { border-color: #cbd5e1; }
+
+    /* barra top */
+    .dl-card-bar { height: 5px; }
+    .sem-Verde    .dl-card-bar { background: #22c55e; }
+    .sem-Amarillo .dl-card-bar { background: #f59e0b; }
+    .sem-Rojo     .dl-card-bar { background: #ef4444; }
+    .sem-Gris     .dl-card-bar { background: #cbd5e1; }
+
+    /* header */
+    .dl-card-header {
+        padding: 1rem 1rem 0.5rem;
+        display: flex; align-items: flex-start; gap: 0.75rem;
+    }
+    .dl-semaforo {
+        width: 2.5rem; height: 2.5rem; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; flex-shrink: 0;
+    }
+    .sem-Verde    .dl-semaforo { background: #dcfce7; color: #16a34a; }
+    .sem-Amarillo .dl-semaforo { background: #fef9c3; color: #b45309; }
+    .sem-Rojo     .dl-semaforo { background: #fee2e2; color: #b91c1c; }
+    .sem-Gris     .dl-semaforo { background: #f1f5f9; color: #94a3b8; }
+
+    .dl-line-name { font-weight: 700; font-size: 1rem; color: #1e293b; line-height: 1.3; }
+    .dl-area-name { font-size: 0.75rem; color: #94a3b8; }
+    .dl-sem-badge {
+        margin-left: auto; font-size: 0.7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        padding: 0.2rem 0.65rem; border-radius: 99px; white-space: nowrap;
+    }
+    .sem-Verde    .dl-sem-badge { background: #dcfce7; color: #15803d; }
+    .sem-Amarillo .dl-sem-badge { background: #fef9c3; color: #92400e; }
+    .sem-Rojo     .dl-sem-badge { background: #fee2e2; color: #b91c1c; }
+    .sem-Gris     .dl-sem-badge { background: #f1f5f9; color: #64748b; }
+
+    /* Máquinas mini-barra */
+    .dl-maq-bar-wrap { padding: 0 1rem 0.75rem; }
+    .dl-maq-bar-label {
+        font-size: 0.675rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.07em; color: #94a3b8; margin-bottom: 0.3rem;
+        display: flex; justify-content: space-between;
+    }
+    .dl-maq-bar {
+        height: 8px; border-radius: 99px; background: #f1f5f9;
+        overflow: hidden; display: flex; gap: 2px;
+    }
+    .dl-maq-seg { height: 100%; border-radius: 99px; transition: width 0.4s; }
+    .dl-seg-paro { background: #ef4444; }
+    .dl-seg-prod { background: #22c55e; }
+    .dl-seg-sin  { background: #e2e8f0; }
+
+    .dl-maq-counts {
+        display: flex; gap: 0.6rem; margin-top: 0.4rem; font-size: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .dl-maq-count { display: flex; align-items: center; gap: 0.3rem; font-weight: 600; }
+    .dl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* KPIs: producción y paros */
+    .dl-kpis {
+        display: flex; gap: 0; border-top: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .dl-kpi {
+        flex: 1; padding: 0.6rem 0.75rem; display: flex; flex-direction: column;
+        align-items: center; border-right: 1px solid #f1f5f9;
+    }
+    .dl-kpi:last-child { border-right: none; }
+    .dl-kpi-val { font-size: 1.2rem; font-weight: 800; line-height: 1.1; }
+    .dl-kpi-lbl { font-size: 0.63rem; font-weight: 700; text-transform: uppercase;
+                  letter-spacing: 0.06em; color: #94a3b8; }
+    .kpi-ok   .dl-kpi-val { color: #16a34a; }
+    .kpi-nok  .dl-kpi-val { color: #dc2626; }
+    .kpi-paro .dl-kpi-val { color: #b45309; }
+    .kpi-falla .dl-kpi-val { color: #7c3aed; }
+
+    /* Detalle paros abiertos */
+    .dl-body { padding: 0.6rem 1rem; flex: 1; }
+    .dl-section-title {
+        font-size: 0.67rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.07em; color: #94a3b8; margin-bottom: 0.35rem;
+    }
+    .dl-paro-item {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 0.8rem; margin-bottom: 0.3rem;
+    }
+    .dl-dept-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dl-paro-maq { font-weight: 600; color: #1e293b; }
+    .dl-paro-dept { color: #64748b; font-size: 0.75rem; }
+    .dl-paro-dur  {
+        margin-left: auto; background: #fee2e2; color: #b91c1c;
+        font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.45rem;
+        border-radius: 99px; white-space: nowrap;
+    }
+
+    /* Fallas badge */
+    .dl-fallas { display: flex; gap: 0.4rem; flex-wrap: wrap; padding: 0 1rem 0.5rem; }
+    .dl-falla-badge {
+        font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.55rem;
+        border-radius: 99px; border: 1px solid;
+    }
+    .dl-falla-critica { background: #fff1f2; color: #be123c; border-color: #fda4af; }
+    .dl-falla-alta    { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+    .dl-falla-otras   { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
+
+    /* Footer */
+    .dl-card-footer {
+        padding: 0.5rem 1rem;
+        background: #f8fafc; border-top: 1px solid #f1f5f9;
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 0.72rem; color: #94a3b8;
+    }
+
+    /* Refresco */
+    .dl-refresh-bar { height: 3px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 1rem; }
+    .dl-refresh-progress { height: 100%; background: #16a34a; border-radius: 99px; width: 100%; transition: width 1s linear; }
+
+    /* Skeleton */
+    .dl-skeleton {
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 0.625rem; height: 210px;
+    }
+    @@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .dl-empty { text-align: center; padding: 3rem 1rem; color: #94a3b8; font-size: 0.9rem; }
+    .dl-empty i { font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 0.75rem; }
+</style>
+
+<div class="container-fluid">
+
+    <!-- Hero -->
+    <div class="dl-hero">
+        <div style="position:relative;z-index:1;">
+            <h1><i class="ph ph-chart-bar me-2"></i>Dashboard de Líneas</h1>
+            <p>Vista consolidada por línea · Semáforo de disponibilidad · Producción y fallas en tiempo real</p>
+        </div>
+        <i class="ph ph-buildings hero-icon"></i>
+    </div>
+
+    <!-- Filtro -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-lg-3 col-md-5">
+                    <label class="form-label mb-1 small fw-semibold">Área</label>
+                    <select class="form-select form-select-sm" id="sel-area">
+                        <option value="">Todas las áreas</option>
+                        @foreach (var area in (List<WebApp.Models.Area>)ViewBag.Areas)
+                        {
+                            <option value="@area.Id">@area.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-success" id="btn-actualizar">
+                        <i class="ph ph-arrows-clockwise me-1"></i>Actualizar ahora
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <a asp-action="EstadoMaquinas" class="btn btn-sm btn-outline-secondary">
+                        <i class="ph ph-factory me-1"></i>Ver por Máquina
+                    </a>
+                </div>
+                <div class="col-auto ms-auto">
+                    <span class="text-muted small" id="lbl-ultima-act">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra refresco -->
+    <div class="dl-refresh-bar">
+        <div class="dl-refresh-progress" id="dl-progress"></div>
+    </div>
+
+    <!-- Resumen global -->
+    <div class="dl-summary" id="dl-summary" style="display:none!important;"></div>
+
+    <!-- Grid -->
+    <div class="dl-grid" id="dl-skeleton-grid">
+        @for (int i = 0; i < 4; i++) { <div class="dl-skeleton"></div> }
+    </div>
+    <div class="dl-grid" id="dl-grid" style="display:none;"></div>
+    <div class="dl-empty d-none" id="dl-empty">
+        <i class="ph ph-buildings"></i>
+        No se encontraron líneas activas.
+    </div>
+
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const INTERVAL_S = 30;
+    let secondsLeft  = INTERVAL_S;
+    let timerHandle  = null;
+    let progressHandle = null;
+
+    const gridEl    = document.getElementById('dl-grid');
+    const skelEl    = document.getElementById('dl-skeleton-grid');
+    const emptyEl   = document.getElementById('dl-empty');
+    const summaryEl = document.getElementById('dl-summary');
+    const lblAct    = document.getElementById('lbl-ultima-act');
+    const progressEl= document.getElementById('dl-progress');
+    const selArea   = document.getElementById('sel-area');
+
+    selArea.addEventListener('change', () => { resetCountdown(); cargar(); });
+    document.getElementById('btn-actualizar').addEventListener('click', () => { resetCountdown(); cargar(); });
+
+    // ── Carga ──────────────────────────────────────────────────
+    async function cargar() {
+        const areaId = selArea.value;
+        const params = areaId ? '?areaId=' + areaId : '';
+        try {
+            const resp = await fetch('/Linealytics/GetEstadoLineas' + params);
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            renderizar(data);
+            lblAct.textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-MX');
+        } catch (e) {
+            console.error(e);
+            lblAct.textContent = 'Error al actualizar';
+        }
+    }
+
+    // ── Render ─────────────────────────────────────────────────
+    function renderizar(lineas) {
+        skelEl.style.display = 'none';
+        if (!lineas || lineas.length === 0) {
+            gridEl.style.display = 'none';
+            emptyEl.classList.remove('d-none');
+            summaryEl.style.setProperty('display', 'none', 'important');
+            return;
+        }
+        emptyEl.classList.add('d-none');
+        gridEl.style.display = 'grid';
+
+        // Resumen global
+        const totMaq   = lineas.reduce((s, l) => s + l.totalMaquinas, 0);
+        const totParo  = lineas.reduce((s, l) => s + l.maquinasEnParo, 0);
+        const totProd  = lineas.reduce((s, l) => s + l.maquinasEnProduccion, 0);
+        const totOK    = lineas.reduce((s, l) => s + l.produccionOK, 0);
+        const totNOK   = lineas.reduce((s, l) => s + l.produccionNOK, 0);
+        const totFallas= lineas.reduce((s, l) => s + l.totalFallas, 0);
+        const nVerde   = lineas.filter(l => l.semaforo === 'Verde').length;
+        const nAmarillo= lineas.filter(l => l.semaforo === 'Amarillo').length;
+        const nRojo    = lineas.filter(l => l.semaforo === 'Rojo').length;
+
+        summaryEl.innerHTML = `
+            <div class="dl-summary-card"><span class="dl-summary-val">${lineas.length}</span><span class="dl-summary-lbl">Líneas</span></div>
+            <div class="dl-summary-card"><span class="dl-summary-val" style="color:#16a34a;">${nVerde}</span><span class="dl-summary-lbl">En Operación</span></div>
+            <div class="dl-summary-card"><span class="dl-summary-val" style="color:#d97706;">${nAmarillo}</span><span class="dl-summary-lbl">Parcial</span></div>
+            <div class="dl-summary-card"><span class="dl-summary-val" style="color:#dc2626;">${nRojo}</span><span class="dl-summary-lbl">Detenidas</span></div>
+            <div class="dl-summary-card"><span class="dl-summary-val" style="color:#dc2626;">${totParo}</span><span class="dl-summary-lbl">Máq. en Paro</span></div>
+            <div class="dl-summary-card"><span class="dl-summary-val" style="color:#16a34a;">${totOK.toLocaleString('es-MX')}</span><span class="dl-summary-lbl">Producción OK</span></div>
+            <div class="dl-summary-card"><span class="dl-summary-val" style="color:#dc2626;">${totNOK.toLocaleString('es-MX')}</span><span class="dl-summary-lbl">Producción NOK</span></div>
+            <div class="dl-summary-card"><span class="dl-summary-val" style="color:#7c3aed;">${totFallas}</span><span class="dl-summary-lbl">Fallas Activas</span></div>`;
+        summaryEl.style.removeProperty('display');
+
+        gridEl.innerHTML = lineas.map(l => cardHtml(l)).join('');
+    }
+
+    function cardHtml(l) {
+        const semTxt  = l.semaforo === 'Verde'    ? '● Operando'
+                      : l.semaforo === 'Amarillo' ? '◑ Parcial'
+                      : l.semaforo === 'Rojo'     ? '● Detenida'
+                      : '○ Inactiva';
+        const semIcon = l.semaforo === 'Verde'    ? 'ph-check-circle'
+                      : l.semaforo === 'Amarillo' ? 'ph-warning'
+                      : l.semaforo === 'Rojo'     ? 'ph-x-circle'
+                      : 'ph-minus-circle';
+
+        // Barra de máquinas proporcional
+        const t = l.totalMaquinas || 1;
+        const pParo = ((l.maquinasEnParo  / t) * 100).toFixed(1);
+        const pProd = ((l.maquinasEnProduccion / t) * 100).toFixed(1);
+        const pSin  = ((l.maquinasSinActividad / t) * 100).toFixed(1);
+
+        // KPIs
+        const calidad = (l.produccionOK + l.produccionNOK) > 0
+            ? ((l.produccionOK / (l.produccionOK + l.produccionNOK)) * 100).toFixed(1) + '%'
+            : '—';
+
+        // Paros abiertos detalle
+        let parosHtml = '';
+        if (l.maquinasEnParoDetalle && l.maquinasEnParoDetalle.length > 0) {
+            parosHtml = `<div class="dl-body">
+                <div class="dl-section-title">Máquinas en paro ahora</div>
+                ${l.maquinasEnParoDetalle.map(p => `
+                <div class="dl-paro-item">
+                    <span class="dl-dept-dot" style="background:${escHtml(p.color)}"></span>
+                    <span class="dl-paro-maq">${escHtml(p.nombre)}</span>
+                    <span class="dl-paro-dept">${escHtml(p.departamento ?? '')}</span>
+                    <span class="dl-paro-dur"><i class="ph ph-timer"></i> ${p.duracionMinutos} min</span>
+                </div>`).join('')}
+            </div>`;
+        }
+
+        // Fallas
+        let fallasHtml = '';
+        if (l.totalFallas > 0) {
+            fallasHtml = `<div class="dl-fallas">`;
+            if (l.fallasCriticas > 0) fallasHtml += `<span class="dl-falla-badge dl-falla-critica"><i class="ph ph-warning"></i> ${l.fallasCriticas} Crítica${l.fallasCriticas > 1 ? 's' : ''}</span>`;
+            if (l.fallasAltas    > 0) fallasHtml += `<span class="dl-falla-badge dl-falla-alta"><i class="ph ph-warning"></i> ${l.fallasAltas} Alta${l.fallasAltas > 1 ? 's' : ''}</span>`;
+            const otras = l.totalFallas - l.fallasCriticas - l.fallasAltas;
+            if (otras > 0) fallasHtml += `<span class="dl-falla-badge dl-falla-otras">${otras} otras</span>`;
+            fallasHtml += `</div>`;
+        }
+
+        return `
+        <div class="dl-card sem-${l.semaforo}">
+            <div class="dl-card-bar"></div>
+            <div class="dl-card-header">
+                <div class="dl-semaforo"><i class="ph ${semIcon}"></i></div>
+                <div style="flex:1;min-width:0;">
+                    <div class="dl-line-name">${escHtml(l.nombre)}</div>
+                    <div class="dl-area-name">${escHtml(l.area ?? '')}</div>
+                </div>
+                <span class="dl-sem-badge">${semTxt}</span>
+            </div>
+
+            <div class="dl-maq-bar-wrap">
+                <div class="dl-maq-bar-label">
+                    <span>${l.totalMaquinas} máquinas</span>
+                </div>
+                <div class="dl-maq-bar">
+                    <div class="dl-maq-seg dl-seg-paro" style="width:${pParo}%"></div>
+                    <div class="dl-maq-seg dl-seg-prod" style="width:${pProd}%"></div>
+                    <div class="dl-maq-seg dl-seg-sin"  style="width:${pSin}%"></div>
+                </div>
+                <div class="dl-maq-counts">
+                    <span class="dl-maq-count"><span class="dl-dot" style="background:#ef4444"></span>${l.maquinasEnParo} en paro</span>
+                    <span class="dl-maq-count"><span class="dl-dot" style="background:#22c55e"></span>${l.maquinasEnProduccion} produciendo</span>
+                    <span class="dl-maq-count"><span class="dl-dot" style="background:#e2e8f0"></span>${l.maquinasSinActividad} inactivas</span>
+                </div>
+            </div>
+
+            <div class="dl-kpis">
+                <div class="dl-kpi kpi-ok">
+                    <span class="dl-kpi-val">${l.produccionOK.toLocaleString('es-MX')}</span>
+                    <span class="dl-kpi-lbl">OK</span>
+                </div>
+                <div class="dl-kpi kpi-nok">
+                    <span class="dl-kpi-val">${l.produccionNOK.toLocaleString('es-MX')}</span>
+                    <span class="dl-kpi-lbl">NOK</span>
+                </div>
+                <div class="dl-kpi kpi-paro">
+                    <span class="dl-kpi-val">${l.minutosParo8h}</span>
+                    <span class="dl-kpi-lbl">Min paro 8h</span>
+                </div>
+                <div class="dl-kpi kpi-falla">
+                    <span class="dl-kpi-val">${l.totalFallas}</span>
+                    <span class="dl-kpi-lbl">Fallas</span>
+                </div>
+            </div>
+
+            ${parosHtml}
+            ${fallasHtml}
+
+            <div class="dl-card-footer">
+                <span><i class="ph ph-clock me-1"></i>Actualizado en tiempo real</span>
+                <a href="/Linealytics/EstadoMaquinas?lineaId=${l.lineaId}" class="text-success" style="font-size:.72rem;">Ver máquinas →</a>
+            </div>
+        </div>`;
+    }
+
+    function escHtml(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // ── Auto-refresco ──────────────────────────────────────────
+    function resetCountdown() {
+        secondsLeft = INTERVAL_S;
+        if (progressHandle) clearInterval(progressHandle);
+        progressEl.style.transition = 'none';
+        progressEl.style.width = '100%';
+        void progressEl.offsetWidth;
+        progressEl.style.transition = 'width 1s linear';
+        progressHandle = setInterval(() => {
+            secondsLeft--;
+            progressEl.style.width = ((secondsLeft / INTERVAL_S) * 100) + '%';
+            if (secondsLeft <= 0) clearInterval(progressHandle);
+        }, 1000);
+    }
+
+    resetCountdown();
+    if (timerHandle) clearInterval(timerHandle);
+    timerHandle = setInterval(() => { resetCountdown(); cargar(); }, INTERVAL_S * 1000);
+    cargar();
+})();
+</script>
+}

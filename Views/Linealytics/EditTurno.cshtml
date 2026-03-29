@@ -17,30 +17,23 @@
                 <input type="hidden" asp-for="Id" />
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label asp-for="Nombre" class="form-label">Nombre del Turno</label>
                         <input asp-for="Nombre" class="form-control" />
                         <span asp-validation-for="Nombre" class="text-danger"></span>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="DuracionMinutos" class="form-label">Duración (minutos)</label>
-                        <input asp-for="DuracionMinutos" class="form-control" type="number" min="1" />
-                        <span asp-validation-for="DuracionMinutos" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label asp-for="HoraInicio" class="form-label">Hora de Inicio</label>
-                        <input asp-for="HoraInicio" class="form-control" type="time" />
+                        <input asp-for="HoraInicio" class="form-control" type="time" id="HoraInicio" />
                         <span asp-validation-for="HoraInicio" class="text-danger"></span>
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label asp-for="HoraFin" class="form-label">Hora de Fin</label>
-                        <input asp-for="HoraFin" class="form-control" type="time" />
+                        <input asp-for="HoraFin" class="form-control" type="time" id="HoraFin" />
                         <span asp-validation-for="HoraFin" class="text-danger"></span>
+                        <small class="text-muted" id="lbl-duracion"></small>
                     </div>
                 </div>
 
@@ -70,4 +63,23 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+    (function () {
+        const inicio = document.getElementById('HoraInicio');
+        const fin    = document.getElementById('HoraFin');
+        const lbl    = document.getElementById('lbl-duracion');
+        function actualizar() {
+            if (!inicio.value || !fin.value) { lbl.textContent = ''; return; }
+            const [hI, mI] = inicio.value.split(':').map(Number);
+            const [hF, mF] = fin.value.split(':').map(Number);
+            let mins = (hF * 60 + mF) - (hI * 60 + mI);
+            if (mins <= 0) mins += 1440;
+            const h = Math.floor(mins / 60), m = mins % 60;
+            lbl.textContent = `Duración calculada: ${h}h ${m}min (${mins} min)`;
+        }
+        inicio.addEventListener('change', actualizar);
+        fin.addEventListener('change', actualizar);
+        actualizar(); // mostrar duración actual al cargar
+    })();
+    </script>
 }

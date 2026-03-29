@@ -336,11 +336,12 @@ namespace WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateTurno([Bind("Nombre,HoraInicio,HoraFin,DuracionMinutos")] Turno turno)
+        public async Task<IActionResult> CreateTurno([Bind("Nombre,HoraInicio,HoraFin")] Turno turno)
         {
             if (ModelState.IsValid)
             {
                 turno.Activo = true;
+                turno.DuracionMinutos = CalcularDuracionTurno(turno.HoraInicio, turno.HoraFin);
                 _context.Add(turno);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Turno creado exitosamente.";
@@ -361,12 +362,13 @@ namespace WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditTurno(int id, [Bind("Id,Nombre,HoraInicio,HoraFin,DuracionMinutos,Activo")] Turno turno)
+        public async Task<IActionResult> EditTurno(int id, [Bind("Id,Nombre,HoraInicio,HoraFin,Activo")] Turno turno)
         {
             if (id != turno.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
+                turno.DuracionMinutos = CalcularDuracionTurno(turno.HoraInicio, turno.HoraFin);
                 try
                 {
                     _context.Update(turno);
@@ -1240,6 +1242,13 @@ namespace WebApp.Controllers
             return _context.Turnos.Any(e => e.Id == id);
         }
 
+        private static int CalcularDuracionTurno(TimeSpan inicio, TimeSpan fin)
+        {
+            // Soporta turnos nocturnos que cruzan medianoche
+            var duracion = fin > inicio ? fin - inicio : TimeSpan.FromHours(24) - inicio + fin;
+            return (int)Math.Round(duracion.TotalMinutes);
+        }
+
         private bool ProductoExists(int id)
         {
             return _context.Productos.Any(e => e.Id == id);
@@ -1374,6 +1383,142 @@ namespace WebApp.Controllers
                     }).ToList(),
                     totalFallas = fallas.Count,
                     actualizadoEn = ahora
+                };
+            }).ToList();
+
+            return Json(resultado);
+        }
+
+        // ========== DASHBOARD DE LÍNEAS ==========
+
+        public async Task<IActionResult> EstadoLineas()
+        {
+            ViewBag.Areas = await _context.Areas
+                .Where(a => a.Activo)
+                .OrderBy(a => a.Nombre)
+                .ToListAsync();
+
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetEstadoLineas(int? areaId)
+        {
+            var ahora = DateTime.UtcNow;
+
+            var lineasQuery = _context.Lineas
+                .Include(l => l.Area)
+                .Where(l => l.Activo);
+
+            if (areaId.HasValue)
+                lineasQuery = lineasQuery.Where(l => l.AreaId == areaId.Value);
+
+            var lineas = await lineasQuery
+                .OrderBy(l => l.Area!.Nombre)
+                .ThenBy(l => l.Nombre)
+                .ToListAsync();
+
+            var lineaIds = lineas.Select(l => l.Id).ToList();
+
+            var maquinas = await _context.Maquinas
+                .Include(m => m.Estacion)
+                .Where(m => m.Activo && lineaIds.Contains(m.Estacion.LineaId))
+                .ToListAsync();
+
+            var maquinaIds = maquinas.Select(m => m.Id).ToList();
+
+            var parosAbiertos = await _context.RegistrosParoBotonera
+                .Include(p => p.DepartamentoOperador)
+                .Where(p => maquinaIds.Contains(p.MaquinaId) && p.Estado == "Abierto")
+                .ToListAsync();
+
+            var corridasActivas = await _context.CorridasProduccion
+                .Where(c => maquinaIds.Contains(c.MaquinaId) && c.Estado == "Activa")
+                .ToListAsync();
+
+            var fallasActivas = await _context.RegistrosFallas
+                .Include(f => f.CatalogoFalla)
+                .Where(f => maquinaIds.Contains(f.MaquinaId) && f.Estado != "Resuelta")
+                .ToListAsync();
+
+            var desde8h = ahora.AddHours(-8);
+            var parosCerrados8h = await _context.RegistrosParoBotonera
+                .Where(p => maquinaIds.Contains(p.MaquinaId)
+                    && p.Estado == "Cerrado"
+                    && p.FechaHoraInicio >= desde8h
+                    && p.DuracionMinutos.HasValue)
+                .ToListAsync();
+
+            var resultado = lineas.Select(l =>
+            {
+                var maqsLinea  = maquinas.Where(m => m.Estacion.LineaId == l.Id).ToList();
+                var idsLinea   = maqsLinea.Select(m => m.Id).ToList();
+                var total      = maqsLinea.Count;
+
+                var nParo = idsLinea.Count(id => parosAbiertos.Any(p => p.MaquinaId == id));
+                var nProd = idsLinea.Count(id =>
+                    !parosAbiertos.Any(p => p.MaquinaId == id) &&
+                    corridasActivas.Any(c => c.MaquinaId == id));
+                var nSin  = total - nParo - nProd;
+
+                var prodOK  = corridasActivas.Where(c => idsLinea.Contains(c.MaquinaId)).Sum(c => c.ProduccionOK);
+                var prodNOK = corridasActivas.Where(c => idsLinea.Contains(c.MaquinaId)).Sum(c => c.ProduccionNOK);
+
+                var minCerrados = parosCerrados8h
+                    .Where(p => idsLinea.Contains(p.MaquinaId))
+                    .Sum(p => p.DuracionMinutos ?? 0);
+                var minAbiertos = parosAbiertos
+                    .Where(p => idsLinea.Contains(p.MaquinaId))
+                    .Sum(p => (int)Math.Round((ahora - p.FechaHoraInicio).TotalMinutes));
+                var minParosTotal = minCerrados + minAbiertos;
+
+                string semaforo;
+                if (total == 0)                               semaforo = "Gris";
+                else if (nParo == 0 && nProd > 0)            semaforo = "Verde";
+                else if (nParo > 0 && nParo < total)         semaforo = "Amarillo";
+                else if (nParo > 0 && nParo == total)        semaforo = "Rojo";
+                else                                          semaforo = "Gris";
+
+                var fallasLinea     = fallasActivas.Where(f => idsLinea.Contains(f.MaquinaId)).ToList();
+                var fallasCriticas  = fallasLinea.Count(f => f.CatalogoFalla?.Severidad == "Crítica");
+                var fallasAltas     = fallasLinea.Count(f => f.CatalogoFalla?.Severidad == "Alta");
+
+                var topDept = parosAbiertos
+                    .Where(p => idsLinea.Contains(p.MaquinaId))
+                    .GroupBy(p => new { p.DepartamentoOperador?.Nombre, p.DepartamentoOperador?.Color })
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => new { nombre = g.Key.Nombre, color = g.Key.Color ?? "#666666", cantidad = g.Count() })
+                    .FirstOrDefault();
+
+                var maquinasEnParoDetalle = parosAbiertos
+                    .Where(p => idsLinea.Contains(p.MaquinaId))
+                    .Select(p => new
+                    {
+                        nombre       = maqsLinea.FirstOrDefault(m => m.Id == p.MaquinaId)?.Nombre ?? "—",
+                        departamento = p.DepartamentoOperador?.Nombre,
+                        color        = p.DepartamentoOperador?.Color ?? "#666666",
+                        duracionMinutos = (int)Math.Round((ahora - p.FechaHoraInicio).TotalMinutes)
+                    }).ToList();
+
+                return new
+                {
+                    lineaId = l.Id,
+                    nombre  = l.Nombre,
+                    area    = l.Area?.Nombre,
+                    semaforo,
+                    totalMaquinas          = total,
+                    maquinasEnParo         = nParo,
+                    maquinasEnProduccion   = nProd,
+                    maquinasSinActividad   = nSin,
+                    produccionOK           = prodOK,
+                    produccionNOK          = prodNOK,
+                    minutosParo8h          = minParosTotal,
+                    totalFallas            = fallasLinea.Count,
+                    fallasCriticas,
+                    fallasAltas,
+                    topDepartamento        = topDept,
+                    maquinasEnParoDetalle,
+                    actualizadoEn          = ahora
                 };
             }).ToList();
 
