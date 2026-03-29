@@ -187,6 +187,62 @@
         <i class="ph ph-factory hero-icon"></i>
     </div>
 
+    <!-- ── ESTADO EN TIEMPO REAL ── -->
+    <div class="lnx-section-label">
+        <div class="badge-label">
+            <i class="ph ph-monitor-play"></i>Tiempo Real
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-blue">
+                        <i class="ph ph-factory"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Estado de Máquinas</div>
+                        <div class="lnx-card-desc">Contador actual, paro activo, fallas y estado operativo por máquina</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="EstadoMaquinas" class="lnx-link-blue">
+                        Ver Estado <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── OEE ── -->
+    <div class="lnx-section-label">
+        <div class="badge-label">
+            <i class="ph ph-chart-polar"></i>OEE
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-blue">
+                        <i class="ph ph-gauge"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">OEE en Tiempo Real</div>
+                        <div class="lnx-card-desc">Disponibilidad, Rendimiento y Calidad por turno</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-action="Oee" class="lnx-link-blue">
+                        Ver OEE <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── CATÁLOGOS ── -->
     <div class="lnx-section-label">
         <div class="badge-label">

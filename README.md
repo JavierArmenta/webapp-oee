@@ -83,28 +83,41 @@ Cada nivel incluye operaciones CRUD completas con vistas de detalle.
 
 **Controlador:** [PlantaController.cs](Controllers/PlantaController.cs)
 
-### 4. Módulo Linealytics (Sistema de Métricas)
+### 4. Módulo Linealytics (Sistema de Métricas y OEE)
 
-Sistema avanzado de análisis de producción que incluye:
+Sistema avanzado de análisis de producción en tiempo real. Los datos crudos son capturados por `api-oee` desde hardware (botoneras, PLCs); `webapp-oee` los agrega y calcula las métricas.
 
-#### Métricas OEE (Overall Equipment Effectiveness)
-- **Disponibilidad:** Tiempo operativo vs. tiempo programado
-- **Rendimiento:** Velocidad real vs. velocidad ideal
-- **Calidad:** Producción buena vs. producción total
-- **OEE:** Disponibilidad × Rendimiento × Calidad
+#### Cálculo OEE — `OeeCalculationService`
 
-#### Componentes
-- Dashboard de métricas en tiempo real
-- Gestión de turnos laborales
-- Gestión de productos y artículos
-- Categorías y causas de paros
-- Sistema de botoneras IP para registro de eventos
-- Dispositivos IoT con lecturas de contadores
-- Sesiones de producción por máquina
-- Registros de paros y fallas
-- Auditoría de cambios (HistorialCambioParo)
+Service registrado como `Scoped` que implementa el cálculo completo de OEE:
+
+| Componente | Fórmula |
+|-----------|---------|
+| **Disponibilidad** | `T_produccion / T_disponible × 100` |
+| **Rendimiento** | `P_total / (T_produccion_min × 60 / C_prom_seg) × 100` |
+| **Calidad** | `P_OK / P_total × 100` |
+| **OEE** | `Disponibilidad × Rendimiento × Calidad` |
+
+Donde:
+- `T_disponible` = duración del turno (o rango libre elegido por el usuario)
+- `T_produccion` = `T_disponible` − tiempo en paro (paros recortados al rango, incluye paros abiertos usando `UtcNow`)
+- `P_OK / P_total` = acumulados de `CorridasProduccion` activas en la ventana
+- `C_prom_seg` = promedio ponderado de `Producto.TiempoCicloSegundos` por unidades producidas
+- Soporta turnos nocturnos (HoraFin < HoraInicio → ventana cruza medianoche)
+- Upsert en `MetricasMaquina` al guardar (busca por MaquinaId + TurnoId + FechaInicio antes de crear)
+
+#### Componentes del módulo
+- Vista OEE en tiempo real (`/Linealytics/Oee`) con gauges Chart.js y polling automático cada 30 s
+- Tab "Turno Actual": calcula sin guardar, actualización en vivo
+- Tab "Histórico": calcula y guarda (por turno + fecha, o por rango libre)
+- Tabla historial de `MetricasMaquina` (últimos 30 días)
+- Dashboard de paros y contadores (`/Linealytics/Dashboard`)
+- Gestión de turnos, productos, botoneras, botones
+- Historial de paros con comentarios (`ParosSinComentar`)
+- Corridas de producción con detección de resets de contador
 
 **Controlador:** [LinealyticsController.cs](Controllers/LinealyticsController.cs)
+**Servicio:** [Services/OeeCalculationService.cs](Services/OeeCalculationService.cs)
 
 ### 5. Módulo de Autenticación
 
@@ -151,22 +164,20 @@ El sistema utiliza 4 esquemas para organizar las tablas:
 - **Modelo** - Modelos de máquinas
 
 #### Linealytics (Sistema de Métricas)
-- **Turno** - Turnos laborales (Nombre, HoraInicio, HoraFin, DuracionMinutos)
-- **Producto** - Productos fabricados
-- **CategoriaParo** - Categorización de paros
-- **CausaParo** - Causas específicas de paros
-- **MetricasMaquina** - Métricas OEE por máquina
-- **SesionProduccion** - Sesiones de producción
-- **RegistroParo** - Registros de paros
-- **RegistroProduccionHora** - Producción horaria
-- **HistorialCambioParo** - Auditoría de cambios
-- **Botonera** - Hardware de botoneras IP
-- **RegistroParoBotonera** - Registros desde botoneras
-- **RegistroFalla** - Fallas detectadas
-- **Dispositivo** - Dispositivos IoT
-- **LecturaContador** - Lecturas de contadores
-- **RegistroContador** - Contadores OK/NOK
-- **ComentarioParoBotonera** - Comentarios en registros
+- **Turno** - Turnos laborales (`Nombre`, `HoraInicio`, `HoraFin`, `DuracionMinutos`)
+- **Producto** - Productos fabricados (`TiempoCicloSegundos` usado para calcular Rendimiento)
+- **MetricasMaquina** - Snapshot OEE por máquina+turno (escrito por `OeeCalculationService`)
+- **SesionProduccion** - Sesiones de producción (schema, pendiente de poblar)
+- **RegistroParo** - Paros enriquecidos (schema, no usa api-oee actualmente)
+- **RegistroProduccionHora** - Producción horaria (schema)
+- **HistorialCambioParo** - Auditoría de cambios en paros
+- **Botonera** - Hardware de botoneras IP (gestionado desde webapp)
+- **RegistroParoBotonera** - Paros reales capturados por api-oee desde botoneras físicas
+- **CorridaProduccion** - Corrida activa por máquina/producto; acumula `ProduccionOK/NOK` con detección de resets
+- **LecturaContador** - Lectura individual de contador, vinculada a una `CorridaProduccion`
+- **RegistroFalla** - Fallas detectadas por PLCs (vía api-oee)
+- **CatalogoFalla** - Tipos de falla con severidad y tiempo estimado de solución
+- **ComentarioParoBotonera** - Comentarios de supervisores en paros cerrados
 
 **Archivo DbContext:** [Data/ApplicationDbContext.cs](Data/ApplicationDbContext.cs) (52 DbSets)
 
@@ -198,7 +209,16 @@ Gestión de seguridad de operadores:
 - 10,000 iteraciones
 - Salt aleatorio de 128 bits
 
-### 3. Seed Service
+### 3. OeeCalculationService
+**Archivo:** [Services/OeeCalculationService.cs](Services/OeeCalculationService.cs)
+
+Cálculo OEE bajo demanda o en vivo:
+- `CalcularPorTurnoAsync(maquinaId, turnoId, fecha, guardar)` — ventana definida por `Turno.HoraInicio/HoraFin` + fecha; soporta turnos nocturnos
+- `CalcularPorRangoAsync(maquinaId, fechaInicio, fechaFin, guardar)` — ventana libre
+
+Cuando `guardar = true`, hace upsert en `MetricasMaquina`. Retorna `OeeResultDto` con todos los indicadores y flags de calidad de dato (`SinDatosProduccion`, `SinTiempoCiclo`).
+
+### 4. Seed Service
 **Archivo:** [Services/Seed.cs](Services/Seed.cs)
 
 Inicialización de datos:
@@ -386,13 +406,26 @@ dotnet ef migrations remove
 - `/Planta/Botones` - Gestión de botones
 - `/Planta/Modelos` - Gestión de modelos
 
-### Linealytics (Requiere SuperAdmin/Admin)
-- `/Linealytics` - Dashboard de métricas
+### Linealytics (Requiere autenticación)
+- `/Linealytics` - Índice del módulo
+- `/Linealytics/Oee` - **Vista OEE** con gauges en tiempo real e histórico
+- `/Linealytics/Dashboard` - Timeline de paros y contadores (últimas 24 h)
 - `/Linealytics/Turnos` - Gestión de turnos
 - `/Linealytics/Productos` - Gestión de productos
 - `/Linealytics/Botoneras` - Gestión de botoneras
-- `/Linealytics/CategoriasParo` - Categorías de paro
-- `/Linealytics/CausasParo` - Causas de paro
+- `/Linealytics/Botones` - Gestión de botones
+- `/Linealytics/ParosLinea` - Historial de paros
+- `/Linealytics/ParosSinComentar` - Paros cerrados sin comentar
+- `/Linealytics/Contadores` - Dashboard de producción OK/NOK
+- `/Linealytics/CorridasProduccion` - Historial de corridas
+
+#### Endpoints JSON del módulo OEE
+- `GET /Linealytics/GetOeeActual?maquinaId=&turnoId=` — Calcula OEE en vivo (no guarda)
+- `POST /Linealytics/CalcularOee` — Calcula y guarda en `MetricasMaquina`
+- `GET /Linealytics/GetOeeHistorial?maquinaId=&dias=` — Historial de `MetricasMaquina`
+- `GET /Linealytics/GetDatosParos` — Minutos de paro por línea/día (últimos 7 días)
+- `GET /Linealytics/GetDatosContadores` — Producción OK/NOK por máquina (últimas 24 h)
+- `GET /Linealytics/GetDatosParosPorDepartamento` — Segmentos Gantt de paros por departamento
 
 ### Departamentos (Requiere SuperAdmin/Admin)
 - `/DepartamentosOperador` - Gestión de departamentos

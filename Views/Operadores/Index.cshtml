@@ -33,12 +33,12 @@
                     <table class="table table-hover align-middle datatable-basic">
                         <thead class="table-light">
                         <tr>
-                            <th>Número de Empleado</th>
+                            <th style="width:1%;white-space:nowrap">Número de Empleado</th>
                             <th>Nombre Completo</th>
                             <th class="text-center">Departamentos</th>
-                            <th class="text-center">Estado</th>
-                            <th class="text-center">Fecha de Creación</th>
-                            <th class="text-end">Acciones</th>
+                            <th class="text-center" style="width:1%;white-space:nowrap">Estado</th>
+                            <th class="text-center" style="width:1%;white-space:nowrap">Fecha de Creación</th>
+                            <th class="text-end" style="width:1%;white-space:nowrap">Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -64,7 +64,7 @@
                                         <span class="text-muted">Sin departamentos</span>
                                     }
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center text-nowrap">
                                     @if (item.Activo)
                                     {
                                         <span class="badge bg-success">
@@ -78,10 +78,10 @@
                                         </span>
                                     }
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center text-nowrap">
                                     <span class="text-muted">@item.FechaCreacion.ToString("dd/MM/yyyy")</span>
                                 </td>
-                                <td>
+                                <td class="text-nowrap text-end">
                                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">
                                         <i class="ph ph-eye"></i> Ver
                                     </a>

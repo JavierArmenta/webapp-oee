@@ -6,6 +6,7 @@ using System.Security.Claims;
 using WebApp.Data;
 using WebApp.Models;
 using WebApp.Models.Linealytics;
+using WebApp.Services;
 
 namespace WebApp.Controllers
 {
@@ -13,10 +14,12 @@ namespace WebApp.Controllers
     public class LinealyticsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly OeeCalculationService _oeeService;
 
-        public LinealyticsController(ApplicationDbContext context)
+        public LinealyticsController(ApplicationDbContext context, OeeCalculationService oeeService)
         {
             _context = context;
+            _oeeService = oeeService;
         }
 
         // ========== DASHBOARD ==========
@@ -1104,6 +1107,132 @@ namespace WebApp.Controllers
             });
         }
 
+        // ========== OEE ==========
+
+        [HttpGet]
+        public async Task<IActionResult> Oee()
+        {
+            ViewBag.Maquinas = await _context.Maquinas
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Nombre)
+                .ToListAsync();
+
+            ViewBag.Turnos = await _context.Turnos
+                .Where(t => t.Activo)
+                .OrderBy(t => t.HoraInicio)
+                .ToListAsync();
+
+            return View();
+        }
+
+        /// <summary>
+        /// Calcula OEE en vivo para el turno actual de una máquina. NO guarda en BD.
+        /// GET /Linealytics/GetOeeActual?maquinaId=1&amp;turnoId=2&amp;fecha=2026-03-28
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetOeeActual(int maquinaId, int turnoId, DateTime? fecha)
+        {
+            try
+            {
+                var fechaCalculo = fecha?.ToUniversalTime() ?? DateTime.UtcNow;
+                var resultado = await _oeeService.CalcularPorTurnoAsync(
+                    maquinaId, turnoId, fechaCalculo, guardar: false);
+                return Json(resultado);
+            }
+            catch (ArgumentException ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Calcula y guarda OEE. Acepta por turno o por rango libre.
+        /// POST /Linealytics/CalcularOee
+        /// Body: { maquinaId, turnoId?, fecha?, fechaInicio?, fechaFin? }
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CalcularOee([FromBody] CalcularOeeRequest request)
+        {
+            if (request == null || request.MaquinaId <= 0)
+                return BadRequest(new { error = "MaquinaId es requerido." });
+
+            try
+            {
+                OeeResultDto resultado;
+
+                if (request.TurnoId.HasValue && request.Fecha.HasValue)
+                {
+                    // Por turno
+                    resultado = await _oeeService.CalcularPorTurnoAsync(
+                        request.MaquinaId,
+                        request.TurnoId.Value,
+                        request.Fecha.Value.ToUniversalTime(),
+                        guardar: true);
+                }
+                else if (request.FechaInicio.HasValue && request.FechaFin.HasValue)
+                {
+                    // Por rango libre
+                    resultado = await _oeeService.CalcularPorRangoAsync(
+                        request.MaquinaId,
+                        request.FechaInicio.Value.ToUniversalTime(),
+                        request.FechaFin.Value.ToUniversalTime(),
+                        guardar: true);
+                }
+                else
+                {
+                    return BadRequest(new { error = "Especifica (turnoId + fecha) o (fechaInicio + fechaFin)." });
+                }
+
+                return Json(resultado);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Retorna el historial de MetricasMaquina guardadas para una máquina.
+        /// GET /Linealytics/GetOeeHistorial?maquinaId=1&amp;dias=30
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetOeeHistorial(int maquinaId, int dias = 30)
+        {
+            var desde = DateTime.UtcNow.AddDays(-dias);
+
+            var historial = await _context.MetricasMaquina
+                .Include(m => m.Turno)
+                .Include(m => m.Maquina)
+                .Include(m => m.Producto)
+                .Where(m => m.MaquinaId == maquinaId && m.FechaInicio >= desde)
+                .OrderByDescending(m => m.FechaInicio)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.MaquinaId,
+                    MaquinaNombre = m.Maquina.Nombre,
+                    m.TurnoId,
+                    TurnoNombre = m.Turno != null ? m.Turno.Nombre : "Rango libre",
+                    m.FechaInicio,
+                    m.FechaFin,
+                    m.TiempoDisponibleMinutos,
+                    m.TiempoParoMinutos,
+                    m.TiempoProduccionMinutos,
+                    m.UnidadesBuenas,
+                    m.UnidadesDefectuosas,
+                    m.UnidadesProducidas,
+                    m.DisponibilidadPorcentaje,
+                    m.RendimientoPorcentaje,
+                    m.CalidadPorcentaje,
+                    m.OeePorcentaje,
+                    m.Cerrada,
+                    ProductoNombre = m.Producto != null ? m.Producto.Nombre : null
+                })
+                .ToListAsync();
+
+            return Json(historial);
+        }
+
         // ========== MÉTODOS AUXILIARES ==========
 
         private bool TurnoExists(int id)
@@ -1125,5 +1254,140 @@ namespace WebApp.Controllers
         {
             return _context.Botoneras.Any(e => e.Id == id);
         }
+
+        // ========== ESTADO DE MÁQUINAS ==========
+
+        public async Task<IActionResult> EstadoMaquinas()
+        {
+            ViewBag.Areas = await _context.Areas
+                .Where(a => a.Activo)
+                .OrderBy(a => a.Nombre)
+                .ToListAsync();
+
+            ViewBag.Lineas = await _context.Lineas
+                .Include(l => l.Area)
+                .Where(l => l.Activo)
+                .OrderBy(l => l.Area.Nombre)
+                .ThenBy(l => l.Nombre)
+                .ToListAsync();
+
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetEstadoMaquinas(int? areaId, int? lineaId)
+        {
+            var ahora = DateTime.UtcNow;
+
+            // 1. Máquinas activas con jerarquía completa
+            var maquinasQuery = _context.Maquinas
+                .Include(m => m.Estacion)
+                    .ThenInclude(e => e.Linea)
+                        .ThenInclude(l => l.Area)
+                .Where(m => m.Activo);
+
+            if (areaId.HasValue)
+                maquinasQuery = maquinasQuery.Where(m => m.Estacion.Linea.AreaId == areaId.Value);
+
+            if (lineaId.HasValue)
+                maquinasQuery = maquinasQuery.Where(m => m.Estacion.LineaId == lineaId.Value);
+
+            var maquinas = await maquinasQuery
+                .OrderBy(m => m.Estacion.Linea.Area.Nombre)
+                .ThenBy(m => m.Estacion.Linea.Nombre)
+                .ThenBy(m => m.Estacion.Nombre)
+                .ThenBy(m => m.Nombre)
+                .ToListAsync();
+
+            var maquinaIds = maquinas.Select(m => m.Id).ToList();
+
+            // 2. Paros abiertos
+            var parosAbiertos = await _context.RegistrosParoBotonera
+                .Include(p => p.DepartamentoOperador)
+                .Include(p => p.Boton)
+                .Where(p => maquinaIds.Contains(p.MaquinaId) && p.Estado == "Abierto")
+                .ToListAsync();
+
+            // 3. Corridas activas con producto
+            var corridasActivas = await _context.CorridasProduccion
+                .Include(c => c.Producto)
+                .Where(c => maquinaIds.Contains(c.MaquinaId) && c.Estado == "Activa")
+                .ToListAsync();
+
+            // 4. Fallas activas (Pendiente o EnAtencion)
+            var fallasActivas = await _context.RegistrosFallas
+                .Include(f => f.CatalogoFalla)
+                .Where(f => maquinaIds.Contains(f.MaquinaId) && f.Estado != "Resuelta")
+                .ToListAsync();
+
+            // 5. Ensamblar resultado por máquina
+            var resultado = maquinas.Select(m =>
+            {
+                var paro = parosAbiertos.FirstOrDefault(p => p.MaquinaId == m.Id);
+                var corrida = corridasActivas.FirstOrDefault(c => c.MaquinaId == m.Id);
+                var fallas = fallasActivas.Where(f => f.MaquinaId == m.Id).ToList();
+
+                string estado;
+                if (paro != null)
+                    estado = "EnParo";
+                else if (corrida != null)
+                    estado = "EnProduccion";
+                else
+                    estado = "SinActividad";
+
+                return new
+                {
+                    maquinaId = m.Id,
+                    nombre = m.Nombre,
+                    codigo = m.Codigo,
+                    area = m.Estacion?.Linea?.Area?.Nombre,
+                    linea = m.Estacion?.Linea?.Nombre,
+                    estacion = m.Estacion?.Nombre,
+                    estado,
+                    paro = paro == null ? null : new
+                    {
+                        id = paro.Id,
+                        departamento = paro.DepartamentoOperador?.Nombre,
+                        departamentoColor = paro.DepartamentoOperador?.Color ?? "#666666",
+                        boton = paro.Boton?.Nombre,
+                        inicio = paro.FechaHoraInicio,
+                        duracionMinutos = (int)Math.Round((ahora - paro.FechaHoraInicio).TotalMinutes)
+                    },
+                    corrida = corrida == null ? null : new
+                    {
+                        id = corrida.Id,
+                        productoCodigo = corrida.Producto?.Codigo,
+                        productoNombre = corrida.Producto?.Nombre,
+                        produccionOK = corrida.ProduccionOK,
+                        produccionNOK = corrida.ProduccionNOK,
+                        inicio = corrida.FechaInicio,
+                        lecturas = corrida.NumeroLecturas
+                    },
+                    fallas = fallas.Select(f => new
+                    {
+                        id = f.Id,
+                        tipo = f.CatalogoFalla?.Nombre,
+                        severidad = f.CatalogoFalla?.Severidad,
+                        color = f.CatalogoFalla?.Color ?? "#666666",
+                        estadoFalla = f.Estado,
+                        inicio = f.FechaHoraDeteccion
+                    }).ToList(),
+                    totalFallas = fallas.Count,
+                    actualizadoEn = ahora
+                };
+            }).ToList();
+
+            return Json(resultado);
+        }
+    }
+
+    // Request DTO para CalcularOee
+    public class CalcularOeeRequest
+    {
+        public int MaquinaId { get; set; }
+        public int? TurnoId { get; set; }
+        public DateTime? Fecha { get; set; }
+        public DateTime? FechaInicio { get; set; }
+        public DateTime? FechaFin { get; set; }
     }
 }

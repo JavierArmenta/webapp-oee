@@ -1,0 +1,615 @@
+@{
+    ViewData["Title"] = "OEE - Overall Equipment Effectiveness";
+    var maquinas = ViewBag.Maquinas as IEnumerable<WebApp.Models.Maquina> ?? Enumerable.Empty<WebApp.Models.Maquina>();
+    var turnos = ViewBag.Turnos as IEnumerable<WebApp.Models.Linealytics.Turno> ?? Enumerable.Empty<WebApp.Models.Linealytics.Turno>();
+}
+
+<style>
+    /* ── Layout general ─────────────────────────────────────── */
+    .oee-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+        border-radius: .5rem;
+        padding: 2rem;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .oee-hero::before {
+        content:'';
+        position:absolute;
+        right:-40px; top:-40px;
+        width:220px; height:220px;
+        background:rgba(255,255,255,.04);
+        border-radius:50%;
+    }
+    .oee-hero h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
+    .oee-hero p  { opacity:.75; margin:0; font-size:.9rem; }
+    .oee-hero .hero-icon {
+        position:absolute; right:2rem; top:50%; transform:translateY(-50%);
+        font-size:5rem; opacity:.1; line-height:1;
+    }
+
+    /* ── Gauges ─────────────────────────────────────────────── */
+    .oee-gauge-card {
+        background:#fff;
+        border:1px solid #e9ecef;
+        border-radius:.5rem;
+        padding:1.25rem 1rem 1rem;
+        text-align:center;
+        transition: box-shadow .2s;
+    }
+    .oee-gauge-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .gauge-label {
+        font-size:.7rem;
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        color:#64748b;
+        margin-bottom:.5rem;
+    }
+    .gauge-value {
+        font-size:2rem;
+        font-weight:700;
+        margin:.5rem 0 .15rem;
+        line-height:1;
+    }
+    .gauge-sub { font-size:.75rem; color:#94a3b8; }
+
+    .gauge-green  { color:#16a34a; }
+    .gauge-yellow { color:#d97706; }
+    .gauge-red    { color:#dc2626; }
+    .gauge-gray   { color:#94a3b8; }
+
+    /* ── Tabs ────────────────────────────────────────────────── */
+    .oee-tabs .nav-link {
+        color:#475569; font-weight:500; border-radius:.375rem .375rem 0 0;
+    }
+    .oee-tabs .nav-link.active { color:#1e3a5f; font-weight:700; }
+
+    /* ── Tabla historial ─────────────────────────────────────── */
+    .table-oee thead th { background:#f8fafc; font-size:.78rem; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.05em; }
+    .table-oee td, .table-oee th { vertical-align:middle; font-size:.85rem; }
+
+    /* ── Live badge ─────────────────────────────────────────── */
+    .badge-live {
+        display:inline-flex; align-items:center; gap:.4rem;
+        font-size:.7rem; font-weight:600; padding:.25rem .65rem;
+        border-radius:99px; background:#dcfce7; color:#16a34a;
+    }
+    .badge-live .dot {
+        width:7px; height:7px; border-radius:50%; background:#16a34a;
+        animation: pulse-dot 1.5s infinite;
+    }
+    @@keyframes pulse-dot {
+        0%,100% { opacity:1; } 50%  { opacity:.3; }
+    }
+
+    /* ── Spinner overlay ────────────────────────────────────── */
+    .gauge-spinner {
+        display:flex; align-items:center; justify-content:center;
+        height:80px; color:#94a3b8;
+    }
+    .section-loading { opacity:.4; pointer-events:none; }
+</style>
+
+<div class="container-fluid">
+
+    <!-- Hero -->
+    <div class="oee-hero">
+        <div style="position:relative;z-index:1;">
+            <h1><i class="ph ph-chart-polar me-2"></i>OEE — Overall Equipment Effectiveness</h1>
+            <p>Disponibilidad · Rendimiento · Calidad · en tiempo real y por turno</p>
+        </div>
+        <i class="ph ph-gauge hero-icon"></i>
+    </div>
+
+    <!-- Selector de máquina -->
+    <div class="row mb-3 align-items-end g-2">
+        <div class="col-md-4 col-lg-3">
+            <label class="form-label fw-semibold small text-secondary mb-1">
+                <i class="ph ph-factory me-1"></i>Máquina
+            </label>
+            <select id="selMaquina" class="form-select form-select-sm">
+                <option value="">— Selecciona una máquina —</option>
+                @foreach (var m in maquinas)
+                {
+                    <option value="@m.Id">@m.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <a href="@Url.Action("Index", "Linealytics")" class="btn btn-sm btn-outline-secondary">
+                <i class="ph ph-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs principales -->
+    <ul class="nav nav-tabs oee-tabs mb-0" id="oeeMainTabs">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabActual">
+                <i class="ph ph-broadcast me-1"></i>Turno Actual
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabHistorico">
+                <i class="ph ph-clock-counter-clockwise me-1"></i>Histórico
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 rounded-bottom bg-white p-3 mb-4">
+
+        <!-- ══════ TAB: TURNO ACTUAL ══════════════════════════════════════ -->
+        <div class="tab-pane fade show active" id="tabActual">
+
+            <div class="row align-items-end g-2 mb-3 mt-1">
+                <div class="col-md-4 col-lg-3">
+                    <label class="form-label small fw-semibold text-secondary mb-1">
+                        <i class="ph ph-sun me-1"></i>Turno
+                    </label>
+                    <select id="selTurnoActual" class="form-select form-select-sm">
+                        <option value="">— Selecciona turno —</option>
+                        @foreach (var t in turnos)
+                        {
+                            <option value="@t.Id">@t.Nombre (@t.HoraInicio.ToString(@"hh\:mm") – @t.HoraFin.ToString(@"hh\:mm"))</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <span class="badge-live" id="liveBadge" style="display:none;">
+                        <span class="dot"></span>En vivo · se actualiza cada 30 s
+                    </span>
+                </div>
+                <div class="col-auto ms-auto text-muted small" id="lblUltimaActualizacion"></div>
+            </div>
+
+            <!-- Gauges -->
+            <div class="row g-3 mb-3" id="gaugesActual">
+                @for (int i = 0; i < 4; i++)
+                {
+                    var labels = new[] { "Disponibilidad", "Rendimiento", "Calidad", "OEE" };
+                    var icons  = new[] { "ph-clock", "ph-lightning", "ph-check-circle", "ph-chart-polar" };
+                    <div class="col-6 col-md-3">
+                        <div class="oee-gauge-card">
+                            <div class="gauge-label"><i class="ph @icons[i] me-1"></i>@labels[i]</div>
+                            <canvas id="gauge@(i)" width="120" height="80" style="max-width:120px;margin:0 auto;display:block;"></canvas>
+                            <div class="gauge-value gauge-gray" id="val@(i)">—</div>
+                            <div class="gauge-sub" id="sub@(i)"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Tabla de tiempos y conteos -->
+            <div id="tablaDetalleActual" style="display:none;">
+                <h6 class="text-secondary fw-semibold small text-uppercase mb-2 mt-3">
+                    <i class="ph ph-table me-1"></i>Detalle del periodo
+                </h6>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-bordered table-oee mb-0">
+                            <thead><tr><th>Tiempo</th><th class="text-end">Minutos</th></tr></thead>
+                            <tbody>
+                                <tr><td>Disponible planeado</td><td class="text-end" id="dTiempoDisponible">—</td></tr>
+                                <tr class="table-danger"><td>Tiempo en paro</td><td class="text-end" id="dTiempoParo">—</td></tr>
+                                <tr class="table-success"><td>Tiempo producción</td><td class="text-end" id="dTiempoProduccion">—</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-bordered table-oee mb-0">
+                            <thead><tr><th>Producción</th><th class="text-end">Unidades</th></tr></thead>
+                            <tbody>
+                                <tr class="table-success"><td>Buenas (OK)</td><td class="text-end" id="dProdOK">—</td></tr>
+                                <tr class="table-danger"><td>Defectuosas (NOK)</td><td class="text-end" id="dProdNOK">—</td></tr>
+                                <tr><td><strong>Total</strong></td><td class="text-end fw-bold" id="dProdTotal">—</td></tr>
+                                <tr><td>Ciclo promedio</td><td class="text-end" id="dCiclo">—</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="alert alert-warning py-1 px-2 mt-2 small d-none" id="alertSinCiclo">
+                    <i class="ph ph-warning me-1"></i>
+                    El <strong>Rendimiento</strong> no pudo calcularse: producto(s) sin tiempo de ciclo configurado.
+                </div>
+                <div class="alert alert-secondary py-1 px-2 mt-2 small d-none" id="alertSinProd">
+                    <i class="ph ph-info me-1"></i>
+                    No se registró producción en este periodo.
+                </div>
+            </div>
+
+            <div id="placeholderActual" class="text-center text-muted py-5">
+                <i class="ph ph-factory" style="font-size:3rem;opacity:.3;"></i>
+                <p class="mt-2 mb-0">Selecciona una máquina y un turno para ver el OEE en vivo.</p>
+            </div>
+        </div>
+
+        <!-- ══════ TAB: HISTÓRICO ════════════════════════════════════════ -->
+        <div class="tab-pane fade" id="tabHistorico">
+
+            <!-- Sub-tabs -->
+            <ul class="nav nav-pills mt-2 mb-3 gap-1" id="histSubTabs">
+                <li class="nav-item">
+                    <button class="nav-link active btn-sm" data-bs-toggle="tab" data-bs-target="#subPorTurno">
+                        <i class="ph ph-sun me-1"></i>Por turno
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link btn-sm" data-bs-toggle="tab" data-bs-target="#subPorRango">
+                        <i class="ph ph-calendar-range me-1"></i>Por rango libre
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content mb-3">
+                <!-- Sub-tab: Por turno -->
+                <div class="tab-pane fade show active" id="subPorTurno">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Turno</label>
+                            <select id="selTurnoHist" class="form-select form-select-sm">
+                                <option value="">— Turno —</option>
+                                @foreach (var t in turnos)
+                                {
+                                    <option value="@t.Id">@t.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Fecha</label>
+                            <input type="date" id="inpFechaHist" class="form-control form-control-sm"
+                                   value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary btn-sm" id="btnCalcularTurno">
+                                <i class="ph ph-calculator me-1"></i>Calcular y Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Sub-tab: Por rango -->
+                <div class="tab-pane fade" id="subPorRango">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Inicio</label>
+                            <input type="datetime-local" id="inpRangoInicio" class="form-control form-control-sm" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Fin</label>
+                            <input type="datetime-local" id="inpRangoFin" class="form-control form-control-sm" />
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary btn-sm" id="btnCalcularRango">
+                                <i class="ph ph-calculator me-1"></i>Calcular y Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultado cálculo histórico (gauges reutilizados) -->
+            <div id="resultHistorico" style="display:none;" class="mb-4">
+                <h6 class="text-secondary fw-semibold small text-uppercase mb-2">
+                    <i class="ph ph-check-circle me-1 text-success"></i>Resultado calculado
+                </h6>
+                <div class="row g-3 mb-2">
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        var labels = new[] { "Disponibilidad", "Rendimiento", "Calidad", "OEE" };
+                        var icons  = new[] { "ph-clock", "ph-lightning", "ph-check-circle", "ph-chart-polar" };
+                        <div class="col-6 col-md-3">
+                            <div class="oee-gauge-card">
+                                <div class="gauge-label"><i class="ph @icons[i] me-1"></i>@labels[i]</div>
+                                <canvas id="gaugeH@(i)" width="120" height="80" style="max-width:120px;margin:0 auto;display:block;"></canvas>
+                                <div class="gauge-value gauge-gray" id="valH@(i)">—</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Tabla historial guardado -->
+            <h6 class="text-secondary fw-semibold small text-uppercase mb-2">
+                <i class="ph ph-database me-1"></i>Historial guardado (últimos 30 días)
+            </h6>
+            <div id="historialContainer">
+                <div class="text-muted small text-center py-3">Selecciona una máquina primero.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function colorPct(v) {
+    if (v === null || v === undefined || isNaN(v)) return '#94a3b8';
+    if (v >= 85) return '#16a34a';
+    if (v >= 60) return '#d97706';
+    return '#dc2626';
+}
+function colorClass(v) {
+    if (v === null || v === undefined || isNaN(v)) return 'gauge-gray';
+    if (v >= 85) return 'gauge-green';
+    if (v >= 60) return 'gauge-yellow';
+    return 'gauge-red';
+}
+
+// ─── Chart.js semi-donut gauges ───────────────────────────────────────────────
+const gaugeCharts = {};
+
+function createGauge(canvasId, value) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+
+    const pct = (value == null || isNaN(value)) ? 0 : Math.min(Math.max(value, 0), 100);
+    const color = colorPct(pct);
+    const data = {
+        datasets: [{
+            data: [pct, 100 - pct],
+            backgroundColor: [color, '#f1f5f9'],
+            borderWidth: 0,
+            circumference: 180,
+            rotation: 270
+        }]
+    };
+
+    if (gaugeCharts[canvasId]) {
+        gaugeCharts[canvasId].data.datasets[0].data = [pct, 100 - pct];
+        gaugeCharts[canvasId].data.datasets[0].backgroundColor[0] = color;
+        gaugeCharts[canvasId].update('none');
+        return;
+    }
+
+    gaugeCharts[canvasId] = new Chart(ctx, {
+        type: 'doughnut',
+        data,
+        options: {
+            responsive: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            animation: { duration: 500 }
+        }
+    });
+}
+
+function initGauges(prefix) {
+    ['0','1','2','3'].forEach(i => createGauge(prefix + i, 0));
+}
+initGauges('gauge');
+initGauges('gaugeH');
+
+function updateGauges(prefix, valPrefix, res) {
+    const vals = [res.disponibilidadPorcentaje, res.rendimientoPorcentaje, res.calidadPorcentaje, res.oeePorcentaje];
+    vals.forEach((v, i) => {
+        createGauge(prefix + i, v);
+        const el = document.getElementById(valPrefix + i);
+        if (el) {
+            el.textContent = v != null ? v.toFixed(1) + '%' : 'N/A';
+            el.className = 'gauge-value ' + colorClass(v);
+        }
+    });
+}
+
+// ─── Polling live ─────────────────────────────────────────────────────────────
+let pollingTimer = null;
+
+function detenerPolling() {
+    if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; }
+    document.getElementById('liveBadge').style.display = 'none';
+}
+
+function iniciarPolling() {
+    detenerPolling();
+    cargarOeeActual();
+    pollingTimer = setInterval(cargarOeeActual, 30000);
+    document.getElementById('liveBadge').style.display = 'inline-flex';
+}
+
+async function cargarOeeActual() {
+    const mId = document.getElementById('selMaquina').value;
+    const tId = document.getElementById('selTurnoActual').value;
+    if (!mId || !tId) return;
+
+    try {
+        const url = `/Linealytics/GetOeeActual?maquinaId=${mId}&turnoId=${tId}`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+
+        if (data.error) {
+            console.error(data.error);
+            return;
+        }
+
+        mostrarDetalleActual(data);
+        document.getElementById('lblUltimaActualizacion').textContent =
+            'Actualizado: ' + new Date().toLocaleTimeString();
+    } catch (e) { console.error(e); }
+}
+
+function mostrarDetalleActual(res) {
+    updateGauges('gauge', 'val', res);
+
+    // Sub-labels
+    const subs = [
+        res.tiempoProduccionMinutos?.toFixed(1) + ' / ' + res.tiempoDisponibleMinutos?.toFixed(1) + ' min',
+        res.sinTiempoCiclo ? 'Sin tiempo de ciclo' : (res.produccionTotal + ' / ' + (res.tiempoProduccionMinutos > 0 && res.tiempoCicloPromedioSegundos > 0 ? (res.tiempoProduccionMinutos * 60 / res.tiempoCicloPromedioSegundos).toFixed(0) : '—') + ' teórico'),
+        res.produccionOK + ' / ' + res.produccionTotal + ' unidades',
+        ''
+    ];
+    subs.forEach((s, i) => {
+        const el = document.getElementById('sub' + i);
+        if (el) el.textContent = s;
+    });
+
+    // Tabla detalle
+    document.getElementById('dTiempoDisponible').textContent = res.tiempoDisponibleMinutos?.toFixed(1);
+    document.getElementById('dTiempoParo').textContent       = res.tiempoParoMinutos?.toFixed(1);
+    document.getElementById('dTiempoProduccion').textContent = res.tiempoProduccionMinutos?.toFixed(1);
+    document.getElementById('dProdOK').textContent    = res.produccionOK?.toLocaleString();
+    document.getElementById('dProdNOK').textContent   = res.produccionNOK?.toLocaleString();
+    document.getElementById('dProdTotal').textContent = res.produccionTotal?.toLocaleString();
+    document.getElementById('dCiclo').textContent     = res.tiempoCicloPromedioSegundos > 0
+        ? res.tiempoCicloPromedioSegundos.toFixed(1) + ' s' : '—';
+
+    document.getElementById('alertSinCiclo').classList.toggle('d-none', !res.sinTiempoCiclo);
+    document.getElementById('alertSinProd').classList.toggle('d-none',  !res.sinDatosProduccion);
+
+    document.getElementById('tablaDetalleActual').style.display = '';
+    document.getElementById('placeholderActual').style.display  = 'none';
+}
+
+// ─── Cálculo histórico ────────────────────────────────────────────────────────
+async function calcularOee(payload) {
+    const resp = await fetch('/Linealytics/CalcularOee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgeryToken() },
+        body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Error desconocido' }));
+        throw new Error(err.error || 'HTTP ' + resp.status);
+    }
+    return resp.json();
+}
+
+function getAntiForgeryToken() {
+    const el = document.querySelector('input[name="__RequestVerificationToken"]');
+    return el ? el.value : '';
+}
+
+document.getElementById('btnCalcularTurno').addEventListener('click', async () => {
+    const mId  = document.getElementById('selMaquina').value;
+    const tId  = document.getElementById('selTurnoHist').value;
+    const fecha = document.getElementById('inpFechaHist').value;
+    if (!mId || !tId || !fecha) {
+        alert('Selecciona máquina, turno y fecha.');
+        return;
+    }
+    try {
+        const res = await calcularOee({ maquinaId: +mId, turnoId: +tId, fecha: fecha + 'T00:00:00' });
+        mostrarResultadoHistorico(res);
+        cargarHistorial();
+    } catch (e) { alert('Error: ' + e.message); }
+});
+
+document.getElementById('btnCalcularRango').addEventListener('click', async () => {
+    const mId  = document.getElementById('selMaquina').value;
+    const ini  = document.getElementById('inpRangoInicio').value;
+    const fin  = document.getElementById('inpRangoFin').value;
+    if (!mId || !ini || !fin) {
+        alert('Selecciona máquina, fecha inicio y fecha fin.');
+        return;
+    }
+    try {
+        const res = await calcularOee({ maquinaId: +mId, fechaInicio: ini, fechaFin: fin });
+        mostrarResultadoHistorico(res);
+        cargarHistorial();
+    } catch (e) { alert('Error: ' + e.message); }
+});
+
+function mostrarResultadoHistorico(res) {
+    updateGauges('gaugeH', 'valH', res);
+    document.getElementById('resultHistorico').style.display = '';
+}
+
+// ─── Tabla historial ──────────────────────────────────────────────────────────
+async function cargarHistorial() {
+    const mId = document.getElementById('selMaquina').value;
+    if (!mId) return;
+
+    const resp = await fetch(`/Linealytics/GetOeeHistorial?maquinaId=${mId}&dias=30`);
+    const datos = await resp.json();
+
+    const container = document.getElementById('historialContainer');
+    if (!datos.length) {
+        container.innerHTML = '<div class="text-muted small text-center py-3">Sin registros guardados para esta máquina.</div>';
+        return;
+    }
+
+    const rows = datos.map(d => {
+        const oee = d.oeePorcentaje?.toFixed(1) + '%';
+        const dis = d.disponibilidadPorcentaje?.toFixed(1) + '%';
+        const ren = d.rendimientoPorcentaje?.toFixed(1) + '%';
+        const cal = d.calidadPorcentaje?.toFixed(1) + '%';
+        const fechaStr = new Date(d.fechaInicio).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+        const badge = d.cerrada
+            ? '<span class="badge bg-secondary">Cerrado</span>'
+            : '<span class="badge bg-success">Abierto</span>';
+        return `<tr>
+            <td>${fechaStr} ${badge}</td>
+            <td>${d.turnoNombre ?? '—'}</td>
+            <td class="fw-bold" style="color:${colorPct(d.oeePorcentaje)}">${oee}</td>
+            <td style="color:${colorPct(d.disponibilidadPorcentaje)}">${dis}</td>
+            <td style="color:${colorPct(d.rendimientoPorcentaje)}">${ren}</td>
+            <td style="color:${colorPct(d.calidadPorcentaje)}">${cal}</td>
+            <td>${d.unidadesBuenas?.toLocaleString()}</td>
+            <td>${d.unidadesDefectuosas?.toLocaleString()}</td>
+        </tr>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-sm table-hover table-oee mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha / Estado</th>
+                        <th>Turno</th>
+                        <th>OEE %</th>
+                        <th>Disponib. %</th>
+                        <th>Rendim. %</th>
+                        <th>Calidad %</th>
+                        <th>OK</th>
+                        <th>NOK</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+}
+
+// ─── Events: selectores ───────────────────────────────────────────────────────
+document.getElementById('selMaquina').addEventListener('change', () => {
+    // Reiniciar datos
+    ['0','1','2','3'].forEach(i => {
+        const el = document.getElementById('val' + i);
+        if (el) { el.textContent = '—'; el.className = 'gauge-value gauge-gray'; }
+        createGauge('gauge' + i, 0);
+        createGauge('gaugeH' + i, 0);
+        const elH = document.getElementById('valH' + i);
+        if (elH) { elH.textContent = '—'; elH.className = 'gauge-value gauge-gray'; }
+    });
+    document.getElementById('tablaDetalleActual').style.display = 'none';
+    document.getElementById('placeholderActual').style.display  = '';
+    document.getElementById('resultHistorico').style.display    = 'none';
+    detenerPolling();
+
+    cargarHistorial();
+
+    // Si ya había turno seleccionado, reiniciar polling
+    if (document.getElementById('selTurnoActual').value) iniciarPolling();
+});
+
+document.getElementById('selTurnoActual').addEventListener('change', () => {
+    if (document.getElementById('selMaquina').value &&
+        document.getElementById('selTurnoActual').value) {
+        iniciarPolling();
+    } else {
+        detenerPolling();
+    }
+});
+
+// Inicializar rango de fechas con valor por defecto (última hora)
+(function() {
+    const now = new Date();
+    const pad = n => n.toString().padStart(2,'0');
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const hace1h = new Date(now.getTime() - 3600*1000);
+    document.getElementById('inpRangoInicio').value = fmt(hace1h);
+    document.getElementById('inpRangoFin').value    = fmt(now);
+})();
+</script>
+}

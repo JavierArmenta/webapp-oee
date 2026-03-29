@@ -33,6 +33,8 @@ builder.Services.AddScoped<ILdapService, LdapService>();
 builder.Services.AddScoped<IOperadorService, OperadorService>();
 // Registrar servicio de Menús dinámicos
 builder.Services.AddScoped<IMenuService, MenuService>();
+// Registrar servicio de cálculo OEE
+builder.Services.AddScoped<WebApp.Services.OeeCalculationService>();
 
 builder.Services
     .AddDefaultIdentity<ApplicationUser>(options => {
