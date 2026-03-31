@@ -1,0 +1,190 @@
+@{
+    ViewData["Title"] = "Contadores y Producción";
+}
+
+<style>
+    .lnx-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .lnx-hero h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .lnx-hero p {
+        font-size: 15px;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .lnx-section-label {
+        display: flex;
+        align-items: center;
+        margin: 40px 0 20px 0;
+        gap: 15px;
+    }
+
+    .badge-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .badge-label i {
+        font-size: 20px;
+    }
+
+    .lnx-card {
+        background: white;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .lnx-card:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+    }
+
+    .lnx-card-top {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .lnx-icon-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .lnx-icon-purple {
+        background: #f0f4ff;
+        color: #667eea;
+    }
+
+    .lnx-icon-green {
+        background: #f0fff4;
+        color: #10b981;
+    }
+
+    .lnx-card-title {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 15px;
+        margin-bottom: 5px;
+    }
+
+    .lnx-card-desc {
+        font-size: 13px;
+        color: #7f8c8d;
+    }
+
+    .lnx-card-footer {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .lnx-link-purple {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .lnx-link-purple:hover {
+        gap: 12px;
+        color: #764ba2;
+    }
+
+    .lnx-link-green {
+        color: #10b981;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .lnx-link-green:hover {
+        gap: 12px;
+        color: #059669;
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="lnx-hero">
+    <h1><i class="ph ph-gauge"></i> Contadores y Producción</h1>
+    <p>Monitoreo en tiempo real de contadores de producción y corridas activas</p>
+</div>
+
+<!-- Contadores y Producción Section -->
+<div class="lnx-section-label">
+    <div class="badge-label">
+        <i class="ph ph-gauge"></i>Contadores y Producción
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="lnx-card">
+            <div class="lnx-card-top">
+                <div class="lnx-icon-box lnx-icon-purple">
+                    <i class="ph ph-speedometer"></i>
+                </div>
+                <div>
+                    <div class="lnx-card-title">Dashboard Contadores</div>
+                    <div class="lnx-card-desc">Producción en tiempo real por contador</div>
+                </div>
+            </div>
+            <div class="lnx-card-footer">
+                <a asp-action="Contadores" class="lnx-link-purple">
+                    Ver Dashboard <i class="ph ph-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+        <div class="lnx-card">
+            <div class="lnx-card-top">
+                <div class="lnx-icon-box lnx-icon-green">
+                    <i class="ph ph-play-circle"></i>
+                </div>
+                <div>
+                    <div class="lnx-card-title">Corridas de Producción</div>
+                    <div class="lnx-card-desc">Historial de corridas por máquina</div>
+                </div>
+            </div>
+            <div class="lnx-card-footer">
+                <a asp-action="CorridasProduccion" class="lnx-link-green">
+                    Ver Corridas <i class="ph ph-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

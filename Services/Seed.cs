@@ -205,19 +205,52 @@ namespace WebApp.Services
             if (menuLinealytics == null)
                 return;
 
-            // Renombrar "Dashboard" → "General" si aún existe con el nombre antiguo
-            var subDashboard = context.MenuItems.FirstOrDefault(m => m.Nombre == "Dashboard" && m.ParentId == menuLinealytics.Id);
-            if (subDashboard != null)
+            // Actualizar el primer submenú (Orden 1) para asegurar que se llame "General" y apunte a ~/Linealytics
+            var subGeneral = context.MenuItems.FirstOrDefault(m => m.ParentId == menuLinealytics.Id && m.Orden == 1);
+            if (subGeneral != null)
             {
-                subDashboard.Nombre = "General";
+                subGeneral.Nombre = "General";
+                subGeneral.Url = "~/Linealytics";
                 context.SaveChanges();
+            }
+            else
+            {
+                // Si no existe, crear el menú "General"
+                var newGeneral = new MenuItem 
+                { 
+                    Nombre = "General", 
+                    Url = "~/Linealytics", 
+                    ParentId = menuLinealytics.Id, 
+                    Orden = 1,
+                    Activo = true
+                };
+                context.MenuItems.Add(newGeneral);
+                context.SaveChanges();
+                
+                // Asignar permisos
+                var superAdmin = roleManager.FindByNameAsync(Roles.SuperAdmin.ToString()).Result;
+                var admin = roleManager.FindByNameAsync(Roles.Admin.ToString()).Result;
+                var user = roleManager.FindByNameAsync(Roles.User.ToString()).Result;
+                
+                if (superAdmin != null && admin != null && user != null)
+                {
+                    foreach (var roleId in new[] { superAdmin.Id, admin.Id, user.Id })
+                    {
+                        if (!context.MenuRolePermissions.Any(p => p.MenuItemId == newGeneral.Id && p.RoleId == roleId))
+                        {
+                            context.MenuRolePermissions.Add(new MenuRolePermission { MenuItemId = newGeneral.Id, RoleId = roleId });
+                        }
+                    }
+                    context.SaveChanges();
+                }
             }
 
             var nuevos = new[]
             {
-                new { Nombre = "Paros",      Url = "~/Linealytics/ParosLinea",       Orden = 2 },
-                new { Nombre = "Contadores", Url = "~/Linealytics/Contadores",       Orden = 3 },
-                new { Nombre = "Fallas",     Url = "~/Fallas/RegistrosFallas",       Orden = 4 },
+                new { Nombre = "Paros",      Url = "~/Linealytics/ParosDirectory",       Orden = 2 },
+                new { Nombre = "Contadores", Url = "~/Linealytics/ContadoresDirectory",  Orden = 3 },
+                new { Nombre = "OEE",        Url = "~/Linealytics/OeeDirectory",         Orden = 4 },
+                new { Nombre = "Fallas",     Url = "~/Linealytics/FallasDirectory",      Orden = 5 },
             };
 
             var superAdminRole = roleManager.FindByNameAsync(Roles.SuperAdmin.ToString()).Result;
@@ -231,9 +264,19 @@ namespace WebApp.Services
 
             foreach (var def in nuevos)
             {
-                var existe = context.MenuItems.Any(m => m.Nombre == def.Nombre && m.ParentId == menuLinealytics.Id);
-                if (existe)
+                var existe = context.MenuItems.FirstOrDefault(m => m.Nombre == def.Nombre && m.ParentId == menuLinealytics.Id);
+                if (existe != null)
+                {
+                    // Actualizar URL si cambió
+                    if (existe.Url != def.Url || existe.Orden != def.Orden)
+                    {
+                        existe.Url = def.Url;
+                        existe.Orden = def.Orden;
+                        existe.Activo = true;
+                        context.SaveChanges();
+                    }
                     continue;
+                }
 
                 var item = new MenuItem
                 {

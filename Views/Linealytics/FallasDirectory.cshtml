@@ -1,0 +1,260 @@
+@{
+    ViewData["Title"] = "Gestión de Fallas";
+}
+
+<style>
+    /* Hero */
+    .lnx-hero {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2563a8 100%);
+        border-radius: 0.375rem;
+        padding: 2.5rem 2rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+    }
+
+    .lnx-hero::after {
+        content: '';
+        position: absolute;
+        right: -40px;
+        top: -40px;
+        width: 220px;
+        height: 220px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 50%;
+    }
+
+    .lnx-hero::before {
+        content: '';
+        position: absolute;
+        right: 60px;
+        bottom: -60px;
+        width: 160px;
+        height: 160px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 50%;
+    }
+
+    .lnx-hero h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+
+    .lnx-hero p {
+        opacity: 0.8;
+        margin-bottom: 0;
+        font-size: 0.9375rem;
+    }
+
+    /* Section Label */
+    .lnx-section-label {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 2.5rem 0 1.5rem 0;
+    }
+
+    .badge-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f3f4f6;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        color: #374151;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    /* Card Styles */
+    .lnx-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        background: #fff;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lnx-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .lnx-card-top {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex: 1;
+    }
+
+    .lnx-icon-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 0.375rem;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .lnx-icon-orange {
+        background: #fed7aa;
+        color: #92400e;
+    }
+
+    .lnx-icon-red {
+        background: #fecaca;
+        color: #991b1b;
+    }
+
+    .lnx-icon-slate {
+        background: #cbd5e1;
+        color: #1e293b;
+    }
+
+    .lnx-card-title {
+        font-weight: 600;
+        font-size: 1rem;
+        color: #1f2937;
+    }
+
+    .lnx-card-desc {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+
+    .lnx-card-footer {
+        margin-top: auto;
+    }
+
+    .lnx-link-orange {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #d97706;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .lnx-link-orange:hover {
+        color: #b45309;
+        gap: 0.75rem;
+    }
+
+    .lnx-link-red {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #dc2626;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .lnx-link-red:hover {
+        color: #b91c1c;
+        gap: 0.75rem;
+    }
+
+    .lnx-link-slate {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .lnx-link-slate:hover {
+        color: #475569;
+        gap: 0.75rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Hero -->
+    <div class="lnx-hero">
+        <h1>Gestión de Fallas</h1>
+        <p>Monitoreo, análisis y resolución de fallas en líneas de producción</p>
+    </div>
+
+    <!-- ── GESTIÓN DE FALLAS ── -->
+    <div class="lnx-section-label">
+        <div class="badge-label">
+            <i class="ph ph-warning"></i>Gestión de Fallas
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-orange">
+                        <i class="ph ph-chart-pie-slice"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Dashboard de Fallas</div>
+                        <div class="lnx-card-desc">Métricas y análisis de severidad</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-controller="Fallas" asp-action="DashboardFallas" class="lnx-link-orange">
+                        Ver Dashboard <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-red">
+                        <i class="ph ph-book-open"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Catálogo de Fallas</div>
+                        <div class="lnx-card-desc">Tipos de fallas clasificados por severidad</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-controller="Fallas" asp-action="CatalogoFallas" class="lnx-link-red">
+                        Administrar <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="lnx-card">
+                <div class="lnx-card-top">
+                    <div class="lnx-icon-box lnx-icon-slate">
+                        <i class="ph ph-clipboard-text"></i>
+                    </div>
+                    <div>
+                        <div class="lnx-card-title">Registros de Fallas</div>
+                        <div class="lnx-card-desc">Historial y gestión de fallas reportadas</div>
+                    </div>
+                </div>
+                <div class="lnx-card-footer">
+                    <a asp-controller="Fallas" asp-action="RegistrosFallas" class="lnx-link-slate">
+                        Ver Registros <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

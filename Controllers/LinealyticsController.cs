@@ -1128,6 +1128,38 @@ namespace WebApp.Controllers
         }
 
         /// <summary>
+        /// Vista de directorio OEE - solo muestra el apartado OEE del dashboard
+        /// </summary>
+        public IActionResult OeeDirectory()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Vista de directorio Paros - solo muestra el apartado de Paros de Línea del dashboard
+        /// </summary>
+        public IActionResult ParosDirectory()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Vista de directorio Contadores - solo muestra el apartado de Contadores y Producción del dashboard
+        /// </summary>
+        public IActionResult ContadoresDirectory()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Vista de directorio Fallas - solo muestra el apartado de Gestión de Fallas del dashboard
+        /// </summary>
+        public IActionResult FallasDirectory()
+        {
+            return View();
+        }
+
+        /// <summary>
         /// Calcula OEE en vivo para el turno actual de una máquina. NO guarda en BD.
         /// GET /Linealytics/GetOeeActual?maquinaId=1&amp;turnoId=2&amp;fecha=2026-03-28
         /// </summary>
