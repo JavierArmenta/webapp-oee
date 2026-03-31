@@ -227,10 +227,24 @@
                         }
                     </select>
                 </div>
+                <div class="col-lg-3 col-md-5">
+                    <label class="form-label mb-1 small fw-semibold">Rango de tiempo</label>
+                    <select class="form-select form-select-sm" id="sel-rango-tiempo">
+                        <option value="turno-actual">Turno actual</option>
+                        <option value="24h">24 horas</option>
+                        <option value="semana" selected>Semana</option>
+                        <option value="mes">Mes</option>
+                    </select>
+                </div>
                 <div class="col-auto">
                     <button class="btn btn-sm btn-primary" id="btn-actualizar">
                         <i class="ph ph-arrows-clockwise me-1"></i>Actualizar ahora
                     </button>
+                </div>
+                <div class="col-auto">
+                    <a href="@Url.Action("EstadoLineas", "Linealytics")" class="btn btn-sm btn-outline-secondary">
+                        <i class="ph ph-lines me-1"></i>Ver por Líneas
+                    </a>
                 </div>
                 <div class="col-auto ms-auto">
                     <span class="text-muted small" id="lbl-ultima-act">—</span>
@@ -281,6 +295,7 @@
     const progressEl   = document.getElementById('refresh-progress');
     const selArea      = document.getElementById('sel-area');
     const selLinea     = document.getElementById('sel-linea');
+    const selRangoTiempo = document.getElementById('sel-rango-tiempo');
 
     // ── Filtro Area/Linea ──────────────────────────────────────
     selArea.addEventListener('change', function () {
@@ -303,6 +318,7 @@
     });
 
     selLinea.addEventListener('change', cargar);
+    selRangoTiempo.addEventListener('change', cargar);
 
     document.getElementById('btn-actualizar').addEventListener('click', function () {
         resetCountdown();
@@ -313,9 +329,11 @@
     async function cargar() {
         const areaId  = selArea.value  || '';
         const lineaId = selLinea.value || '';
+        const rangoTiempo = selRangoTiempo.value || 'semana';
         const params  = new URLSearchParams();
         if (areaId)  params.append('areaId',  areaId);
         if (lineaId) params.append('lineaId', lineaId);
+        params.append('rangoTiempo', rangoTiempo);
 
         try {
             const resp = await fetch('/Linealytics/GetEstadoMaquinas?' + params.toString());

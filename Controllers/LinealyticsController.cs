@@ -1284,9 +1284,56 @@ namespace WebApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetEstadoMaquinas(int? areaId, int? lineaId)
+        public async Task<IActionResult> GetEstadoMaquinas(int? areaId, int? lineaId, string? rangoTiempo)
         {
             var ahora = DateTime.UtcNow;
+            
+            // Calcular fechas según rango de tiempo
+            DateTime fechaInicio = ahora;
+            
+            if (string.IsNullOrEmpty(rangoTiempo))
+                rangoTiempo = "semana";
+            
+            switch (rangoTiempo.ToLower())
+            {
+                case "turno-actual":
+                    // Obtener el turno actual según la hora actual
+                    var horaAhora = ahora.TimeOfDay;
+                    var turnoActual = await _context.Turnos
+                        .Where(t => t.Activo && t.HoraInicio <= horaAhora && t.HoraFin > horaAhora)
+                        .FirstOrDefaultAsync();
+                    
+                    if (turnoActual != null)
+                    {
+                        // Calcular la fecha del turno actual
+                        var inicio = new DateTime(ahora.Year, ahora.Month, ahora.Day, 
+                            turnoActual.HoraInicio.Hours, turnoActual.HoraInicio.Minutes, 0);
+                        if (inicio > ahora)
+                            inicio = inicio.AddDays(-1); // Si el turno cruza medianoche, ajustar
+                        fechaInicio = inicio;
+                    }
+                    else
+                    {
+                        fechaInicio = ahora.AddHours(-8); // Default si no hay turno
+                    }
+                    break;
+                    
+                case "24h":
+                    fechaInicio = ahora.AddHours(-24);
+                    break;
+                    
+                case "semana":
+                    fechaInicio = ahora.AddDays(-7);
+                    break;
+                    
+                case "mes":
+                    fechaInicio = ahora.AddDays(-30);
+                    break;
+                    
+                default:
+                    fechaInicio = ahora.AddDays(-7);
+                    break;
+            }
 
             // 1. Máquinas activas con jerarquía completa
             var maquinasQuery = _context.Maquinas
@@ -1310,17 +1357,28 @@ namespace WebApp.Controllers
 
             var maquinaIds = maquinas.Select(m => m.Id).ToList();
 
-            // 2. Paros abiertos
+            // 2. Paros dentro del rango de tiempo
             var parosAbiertos = await _context.RegistrosParoBotonera
                 .Include(p => p.DepartamentoOperador)
                 .Include(p => p.Boton)
                 .Where(p => maquinaIds.Contains(p.MaquinaId) && p.Estado == "Abierto")
                 .ToListAsync();
 
-            // 3. Corridas activas con producto
+            var parosCerrados = await _context.RegistrosParoBotonera
+                .Include(p => p.DepartamentoOperador)
+                .Include(p => p.Boton)
+                .Where(p => maquinaIds.Contains(p.MaquinaId) 
+                    && p.Estado == "Cerrado"
+                    && p.FechaHoraInicio >= fechaInicio
+                    && p.DuracionMinutos.HasValue)
+                .ToListAsync();
+
+            // 3. Corridas activas con producto (filtradas por rango de tiempo)
             var corridasActivas = await _context.CorridasProduccion
                 .Include(c => c.Producto)
-                .Where(c => maquinaIds.Contains(c.MaquinaId) && c.Estado == "Activa")
+                .Where(c => maquinaIds.Contains(c.MaquinaId) 
+                    && c.Estado == "Activa"
+                    && c.FechaInicio >= fechaInicio)
                 .ToListAsync();
 
             // 4. Fallas activas (Pendiente o EnAtencion)
@@ -1402,9 +1460,56 @@ namespace WebApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetEstadoLineas(int? areaId)
+        public async Task<IActionResult> GetEstadoLineas(int? areaId, string? rangoTiempo)
         {
             var ahora = DateTime.UtcNow;
+            
+            // Calcular fechas según rango de tiempo
+            DateTime fechaInicio = ahora;
+            
+            if (string.IsNullOrEmpty(rangoTiempo))
+                rangoTiempo = "semana";
+            
+            switch (rangoTiempo.ToLower())
+            {
+                case "turno-actual":
+                    // Obtener el turno actual según la hora actual
+                    var horaAhora = ahora.TimeOfDay;
+                    var turnoActual = await _context.Turnos
+                        .Where(t => t.Activo && t.HoraInicio <= horaAhora && t.HoraFin > horaAhora)
+                        .FirstOrDefaultAsync();
+                    
+                    if (turnoActual != null)
+                    {
+                        // Calcular la fecha del turno actual
+                        var inicio = new DateTime(ahora.Year, ahora.Month, ahora.Day, 
+                            turnoActual.HoraInicio.Hours, turnoActual.HoraInicio.Minutes, 0);
+                        if (inicio > ahora)
+                            inicio = inicio.AddDays(-1); // Si el turno cruza medianoche, ajustar
+                        fechaInicio = inicio;
+                    }
+                    else
+                    {
+                        fechaInicio = ahora.AddHours(-8); // Default si no hay turno
+                    }
+                    break;
+                    
+                case "24h":
+                    fechaInicio = ahora.AddHours(-24);
+                    break;
+                    
+                case "semana":
+                    fechaInicio = ahora.AddDays(-7);
+                    break;
+                    
+                case "mes":
+                    fechaInicio = ahora.AddDays(-30);
+                    break;
+                    
+                default:
+                    fechaInicio = ahora.AddDays(-7);
+                    break;
+            }
 
             var lineasQuery = _context.Lineas
                 .Include(l => l.Area)
@@ -1433,7 +1538,9 @@ namespace WebApp.Controllers
                 .ToListAsync();
 
             var corridasActivas = await _context.CorridasProduccion
-                .Where(c => maquinaIds.Contains(c.MaquinaId) && c.Estado == "Activa")
+                .Where(c => maquinaIds.Contains(c.MaquinaId) 
+                    && c.Estado == "Activa"
+                    && c.FechaInicio >= fechaInicio)
                 .ToListAsync();
 
             var fallasActivas = await _context.RegistrosFallas
@@ -1441,11 +1548,10 @@ namespace WebApp.Controllers
                 .Where(f => maquinaIds.Contains(f.MaquinaId) && f.Estado != "Resuelta")
                 .ToListAsync();
 
-            var desde8h = ahora.AddHours(-8);
-            var parosCerrados8h = await _context.RegistrosParoBotonera
+            var parosCerrados = await _context.RegistrosParoBotonera
                 .Where(p => maquinaIds.Contains(p.MaquinaId)
                     && p.Estado == "Cerrado"
-                    && p.FechaHoraInicio >= desde8h
+                    && p.FechaHoraInicio >= fechaInicio
                     && p.DuracionMinutos.HasValue)
                 .ToListAsync();
 
@@ -1464,7 +1570,7 @@ namespace WebApp.Controllers
                 var prodOK  = corridasActivas.Where(c => idsLinea.Contains(c.MaquinaId)).Sum(c => c.ProduccionOK);
                 var prodNOK = corridasActivas.Where(c => idsLinea.Contains(c.MaquinaId)).Sum(c => c.ProduccionNOK);
 
-                var minCerrados = parosCerrados8h
+                var minCerrados = parosCerrados
                     .Where(p => idsLinea.Contains(p.MaquinaId))
                     .Sum(p => p.DuracionMinutos ?? 0);
                 var minAbiertos = parosAbiertos
@@ -1512,7 +1618,7 @@ namespace WebApp.Controllers
                     maquinasSinActividad   = nSin,
                     produccionOK           = prodOK,
                     produccionNOK          = prodNOK,
-                    minutosParo8h          = minParosTotal,
+                    minutosParo            = minParosTotal,
                     totalFallas            = fallasLinea.Count,
                     fallasCriticas,
                     fallasAltas,

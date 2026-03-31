@@ -3,59 +3,145 @@
 }
 
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="ph ph-chart-line-up"></i> Dashboard de Fallas</h2>
-        <div>
-            <a asp-action="RegistrosFallas" class="btn btn-primary">
-                <i class="ph ph-list-check"></i> Ver Registros
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-header-title">
+            <i class="ph ph-warning-octagon"></i>
+            Dashboard de Fallas
+        </h1>
+        <div class="d-flex gap-2">
+            <a asp-action="RegistrosFallas" class="btn btn-outline-primary btn-sm">
+                <i class="ph ph-list-checks me-1"></i>Ver Registros
             </a>
-            <a asp-action="CatalogoFallas" class="btn btn-secondary">
-                <i class="ph ph-folder"></i> Catálogo
+            <a asp-action="CatalogoFallas" class="btn btn-outline-secondary btn-sm">
+                <i class="ph ph-folder me-1"></i>Catálogo
             </a>
         </div>
     </div>
 
-    <!-- Tarjetas de Resumen -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-warning">
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-xl-3">
+            <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Fallas Pendientes</h5>
-                    <h2 id="fallasAbiertas" class="mb-0">-</h2>
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div>
+                            <div class="text-muted small mb-1">Total Fallas</div>
+                            <div class="fs-2 fw-bold lh-1" id="totalFallas">—</div>
+                            <div class="text-muted small mt-2">en el período</div>
+                        </div>
+                        <div class="rounded-2 p-2" style="background:#f1f5f9">
+                            <i class="ph ph-clipboard-text" style="font-size:1.6rem;color:#64748b"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info">
+        <div class="col-6 col-xl-3">
+            <div class="card h-100 border-start border-warning border-3">
                 <div class="card-body">
-                    <h5 class="card-title">En Atención</h5>
-                    <h2 id="fallasEnAtencion" class="mb-0">-</h2>
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div>
+                            <div class="text-muted small mb-1">Pendientes</div>
+                            <div class="fs-2 fw-bold lh-1 text-warning" id="fallasAbiertas">—</div>
+                            <div class="text-muted small mt-2">sin atender</div>
+                        </div>
+                        <div class="rounded-2 p-2" style="background:#fff7ed">
+                            <i class="ph ph-clock" style="font-size:1.6rem;color:#f59e0b"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
+        <div class="col-6 col-xl-3">
+            <div class="card h-100 border-start border-info border-3">
                 <div class="card-body">
-                    <h5 class="card-title">Resueltas</h5>
-                    <h2 id="fallasResueltas" class="mb-0">-</h2>
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div>
+                            <div class="text-muted small mb-1">En Atención</div>
+                            <div class="fs-2 fw-bold lh-1 text-info" id="fallasEnAtencion">—</div>
+                            <div class="text-muted small mt-2">en proceso</div>
+                        </div>
+                        <div class="rounded-2 p-2" style="background:#ecfeff">
+                            <i class="ph ph-wrench" style="font-size:1.6rem;color:#0891b2"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-primary">
+        <div class="col-6 col-xl-3">
+            <div class="card h-100 border-start border-success border-3">
                 <div class="card-body">
-                    <h5 class="card-title">MTTR (min)</h5>
-                    <h2 id="mttr" class="mb-0">-</h2>
-                    <small>Mean Time To Repair</small>
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div>
+                            <div class="text-muted small mb-1">Resueltas</div>
+                            <div class="fs-2 fw-bold lh-1 text-success" id="fallasResueltas">—</div>
+                            <div class="text-muted small mt-2" id="tasaResolucionLabel">—</div>
+                        </div>
+                        <div class="rounded-2 p-2" style="background:#f0fdf4">
+                            <i class="ph ph-check-circle" style="font-size:1.6rem;color:#16a34a"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MTTR + Tasa de resolución -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card h-100 border-start border-primary border-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div>
+                            <div class="text-muted small mb-1">MTTR</div>
+                            <div class="lh-1">
+                                <span class="fs-2 fw-bold text-primary" id="mttr">—</span>
+                                <span class="text-muted ms-1">min</span>
+                            </div>
+                            <div class="text-muted small mt-2">Mean Time To Repair</div>
+                        </div>
+                        <div class="rounded-2 p-2" style="background:#eff6ff">
+                            <i class="ph ph-timer" style="font-size:1.6rem;color:#2563eb"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small text-muted fw-semibold">Tasa de Resolución</span>
+                        <span class="small fw-bold" id="tasaResolucionPct">—</span>
+                    </div>
+                    <div class="progress" style="height:10px;border-radius:99px">
+                        <div class="progress-bar bg-success" id="progressResolucion"
+                             role="progressbar" style="width:0%;border-radius:99px"
+                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span class="text-muted" style="font-size:.75rem">0%</span>
+                        <span class="text-muted" style="font-size:.75rem">100%</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Filtros -->
-    <div class="card mb-4">
+    <div class="card mb-3">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><i class="ph ph-funnel me-2"></i>Filtros</h5>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn btn-sm btn-light border" onclick="setRango(7)">7 días</button>
+                <button type="button" class="btn btn-sm btn-light border" onclick="setRango(30)">30 días</button>
+                <button type="button" class="btn btn-sm btn-light border" onclick="setRango(90)">90 días</button>
+            </div>
+        </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label">Fecha Inicio</label>
                     <input type="date" id="fechaInicio" class="form-control" />
@@ -64,87 +150,119 @@
                     <label class="form-label">Fecha Fin</label>
                     <input type="date" id="fechaFin" class="form-control" />
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Máquina</label>
                     <select id="maquinaId" class="form-select">
-                        <option value="">Todas</option>
+                        <option value="">Todas las máquinas</option>
                         @foreach (var maquina in ViewBag.Maquinas as IEnumerable<WebApp.Models.Maquina>)
                         {
                             <option value="@maquina.Id">@maquina.Nombre</option>
                         }
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="button" class="btn btn-primary w-100" onclick="cargarDatos()">
-                        <i class="bi bi-search"></i> Buscar
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-primary w-100" id="btnBuscar" onclick="cargarDatos()">
+                        <i class="ph ph-magnifying-glass me-1"></i>Buscar
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Gráficas -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Top 10 Fallas Más Frecuentes</h5>
+    <!-- Loading -->
+    <div id="loadingCharts" class="text-center py-5 d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted mt-3 mb-0">Cargando datos...</p>
+    </div>
+
+    <!-- Error state -->
+    <div id="errorState" class="d-none">
+        <div class="alert alert-danger d-flex gap-2 align-items-start">
+            <i class="ph ph-warning-circle mt-1"></i>
+            <div>
+                <strong>Error al cargar los datos</strong>
+                <div class="small mt-1" id="errorMsg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div id="chartsContainer">
+        <!-- Row 1: Top 10 + Severidad -->
+        <div class="row g-3 mb-3">
+            <div class="col-xl-7">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="ph ph-chart-bar me-2"></i>Top 10 Fallas Más Frecuentes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="position:relative;height:280px">
+                            <canvas id="chartTop10Fallas"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <canvas id="chartTop10Fallas" height="300"></canvas>
+            </div>
+            <div class="col-xl-5">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="ph ph-chart-pie-slice me-2"></i>Por Severidad</h5>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div style="position:relative;height:280px;width:100%">
+                            <canvas id="chartSeveridad"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Distribución por Severidad</h5>
+        <!-- Row 2: Categoría + Máquinas -->
+        <div class="row g-3 mb-3">
+            <div class="col-xl-5">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="ph ph-tag me-2"></i>Por Categoría</h5>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div style="position:relative;height:280px;width:100%">
+                            <canvas id="chartCategoria"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <canvas id="chartSeveridad" height="300"></canvas>
+            </div>
+            <div class="col-xl-7">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="ph ph-factory me-2"></i>Top 10 Máquinas con Más Fallas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="position:relative;height:280px">
+                            <canvas id="chartMaquinas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Tendencia diaria -->
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="ph ph-trend-up me-2"></i>Tendencia Diaria de Fallas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="position:relative;height:200px">
+                            <canvas id="chartTendencia"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Fallas por Categoría</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartCategoria" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Top 10 Máquinas con Más Fallas</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartMaquinas" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Tendencia Diaria</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartTendencia" height="100"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 @section Scripts {
@@ -152,107 +270,189 @@
     <script>
         let chartTop10, chartSeveridad, chartCategoria, chartMaquinas, chartTendencia;
 
+        // Global Chart.js defaults
+        Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.plugins.tooltip.padding = 10;
+        Chart.defaults.plugins.tooltip.cornerRadius = 6;
+        Chart.defaults.plugins.tooltip.titleFont = { size: 12, weight: '600' };
+
+        const SEVERIDAD_COLORS = {
+            'Crítica': '#ef4444',
+            'Alta':    '#f97316',
+            'Media':   '#eab308',
+            'Baja':    '#22c55e',
+            'Sin clasificar': '#94a3b8'
+        };
+
+        const CATEGORIA_PALETTE = [
+            '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e',
+            '#0ea5e9', '#14b8a6', '#f59e0b', '#10b981'
+        ];
+
         document.addEventListener('DOMContentLoaded', function () {
-            // Inicializar fechas
-            const fechaFin = new Date();
-            const fechaInicio = new Date();
-            fechaInicio.setDate(fechaInicio.getDate() - 30);
-
-            document.getElementById('fechaInicio').valueAsDate = fechaInicio;
-            document.getElementById('fechaFin').valueAsDate = fechaFin;
-
+            setRango(30);
             cargarDatos();
         });
 
+        function setRango(dias) {
+            const fin = new Date();
+            const ini = new Date();
+            ini.setDate(ini.getDate() - dias);
+            document.getElementById('fechaFin').valueAsDate = fin;
+            document.getElementById('fechaInicio').valueAsDate = ini;
+        }
+
+        function setLoading(loading) {
+            const spinner  = document.getElementById('loadingCharts');
+            const charts   = document.getElementById('chartsContainer');
+            const kpis     = document.getElementById('kpiCards');   // no existe como id, handled via btn
+            const btn      = document.getElementById('btnBuscar');
+            if (loading) {
+                spinner.classList.remove('d-none');
+                charts.style.opacity = '0.35';
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Cargando…';
+            } else {
+                spinner.classList.add('d-none');
+                charts.style.opacity = '1';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-magnifying-glass me-1"></i>Buscar';
+            }
+        }
+
         function cargarDatos() {
             const fechaInicio = document.getElementById('fechaInicio').value;
-            const fechaFin = document.getElementById('fechaFin').value;
-            const maquinaId = document.getElementById('maquinaId').value;
+            const fechaFin    = document.getElementById('fechaFin').value;
+            const maquinaId   = document.getElementById('maquinaId').value;
+
+            document.getElementById('errorState').classList.add('d-none');
+            setLoading(true);
 
             const url = `/Fallas/GetDatosFallas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&maquinaId=${maquinaId}`;
 
             fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
+                .then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.json();
                 })
                 .then(data => {
+                    setLoading(false);
                     if (data.error) {
-                        console.error('Error del servidor:', data.mensaje, data.detalle);
-                        alert(`Error: ${data.mensaje}\n\nDetalles: ${data.detalle}\n\nAsegúrese de que la base de datos esté actualizada ejecutando: dotnet ef database update`);
+                        mostrarError(data.mensaje + (data.detalle ? ` — ${data.detalle}` : ''));
                         return;
                     }
                     actualizarResumen(data);
                     actualizarGraficas(data);
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(`Error al cargar los datos: ${error.message}\n\nPosibles causas:\n1. La migración no se ha aplicado (ejecute: dotnet ef database update)\n2. Error de conexión con la base de datos\n3. Las tablas CatalogoFallas o RegistrosFallas no existen`);
+                .catch(err => {
+                    setLoading(false);
+                    mostrarError(err.message);
                 });
         }
 
+        function mostrarError(msg) {
+            document.getElementById('errorMsg').textContent = msg;
+            document.getElementById('errorState').classList.remove('d-none');
+        }
+
         function actualizarResumen(data) {
-            document.getElementById('fallasAbiertas').textContent = data.fallasAbiertas;
-            document.getElementById('fallasEnAtencion').textContent = data.fallasEnAtencion;
-            document.getElementById('fallasResueltas').textContent = data.fallasResueltas;
-            document.getElementById('mttr').textContent = data.mttr;
+            document.getElementById('totalFallas').textContent     = data.totalFallas ?? 0;
+            document.getElementById('fallasAbiertas').textContent  = data.fallasAbiertas ?? 0;
+            document.getElementById('fallasEnAtencion').textContent= data.fallasEnAtencion ?? 0;
+            document.getElementById('fallasResueltas').textContent = data.fallasResueltas ?? 0;
+            document.getElementById('mttr').textContent            = data.mttr ?? '—';
+
+            const total = data.totalFallas || 0;
+            const resueltas = data.fallasResueltas || 0;
+            const pct = total > 0 ? Math.round((resueltas / total) * 100) : 0;
+            document.getElementById('tasaResolucionLabel').textContent = total > 0 ? `${pct}% del total` : 'sin datos';
+            document.getElementById('tasaResolucionPct').textContent   = total > 0 ? `${pct}%` : '—';
+            const bar = document.getElementById('progressResolucion');
+            bar.style.width      = pct + '%';
+            bar.setAttribute('aria-valuenow', pct);
         }
 
         function actualizarGraficas(data) {
-            // Validar que existan los datos
-            if (!data || !data.top10Fallas) {
-                console.warn('No hay datos para mostrar en las gráficas');
-                return;
-            }
+            if (!data?.top10Fallas) return;
 
-            // Top 10 Fallas
+            const gridColor  = 'rgba(0,0,0,.05)';
+            const tooltipBg  = '#1e293b';
+
+            // ── Top 10 Fallas (bar, vertical) ──────────────────────────
             if (chartTop10) chartTop10.destroy();
+            const top10Labels = data.top10Fallas.length ? data.top10Fallas.map(f => f.nombre) : ['Sin datos'];
+            const top10Data   = data.top10Fallas.length ? data.top10Fallas.map(f => f.cantidad) : [0];
+            const top10Colors = data.top10Fallas.length ? data.top10Fallas.map(f => f.color || '#6366f1') : ['#e2e8f0'];
             chartTop10 = new Chart(document.getElementById('chartTop10Fallas'), {
                 type: 'bar',
                 data: {
-                    labels: data.top10Fallas.length > 0 ? data.top10Fallas.map(f => f.nombre) : ['Sin datos'],
+                    labels: top10Labels,
                     datasets: [{
-                        label: 'Cantidad',
-                        data: data.top10Fallas.length > 0 ? data.top10Fallas.map(f => f.cantidad) : [0],
-                        backgroundColor: data.top10Fallas.length > 0 ? data.top10Fallas.map(f => f.color) : ['#cccccc']
+                        label: 'Ocurrencias',
+                        data: top10Data,
+                        backgroundColor: top10Colors.map(c => c + 'cc'),
+                        borderColor: top10Colors,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: tooltipBg,
+                            callbacks: {
+                                label: ctx => `  ${ctx.parsed.y} ocurrencia${ctx.parsed.y !== 1 ? 's' : ''}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { maxRotation: 35, minRotation: 20 } },
+                        y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } }
                     }
                 }
             });
 
-            // Severidad
+            // ── Severidad (doughnut) ────────────────────────────────────
             if (chartSeveridad) chartSeveridad.destroy();
-            const severidadColors = {
-                'Crítica': '#dc3545',
-                'Alta': '#ffc107',
-                'Media': '#0dcaf0',
-                'Baja': '#198754',
-                'Sin clasificar': '#6c757d'
-            };
             chartSeveridad = new Chart(document.getElementById('chartSeveridad'), {
-                type: 'pie',
+                type: 'doughnut',
                 data: {
                     labels: data.porSeveridad.map(s => s.severidad),
                     datasets: [{
                         data: data.porSeveridad.map(s => s.cantidad),
-                        backgroundColor: data.porSeveridad.map(s => severidadColors[s.severidad] || '#6c757d')
+                        backgroundColor: data.porSeveridad.map(s => SEVERIDAD_COLORS[s.severidad] || '#94a3b8'),
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        hoverOffset: 6
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true } },
+                        tooltip: {
+                            backgroundColor: tooltipBg,
+                            callbacks: {
+                                label: ctx => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total ? Math.round((ctx.parsed / total) * 100) : 0;
+                                    return `  ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
                 }
             });
 
-            // Categoría
+            // ── Categoría (doughnut) ────────────────────────────────────
             if (chartCategoria) chartCategoria.destroy();
             chartCategoria = new Chart(document.getElementById('chartCategoria'), {
                 type: 'doughnut',
@@ -260,25 +460,45 @@
                     labels: data.porCategoria.map(c => c.categoria),
                     datasets: [{
                         data: data.porCategoria.map(c => c.cantidad),
-                        backgroundColor: ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14']
+                        backgroundColor: CATEGORIA_PALETTE,
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        hoverOffset: 6
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true } },
+                        tooltip: {
+                            backgroundColor: tooltipBg,
+                            callbacks: {
+                                label: ctx => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total ? Math.round((ctx.parsed / total) * 100) : 0;
+                                    return `  ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
                 }
             });
 
-            // Máquinas
+            // ── Máquinas (horizontal bar) ───────────────────────────────
             if (chartMaquinas) chartMaquinas.destroy();
             chartMaquinas = new Chart(document.getElementById('chartMaquinas'), {
                 type: 'bar',
                 data: {
                     labels: data.porMaquina.map(m => m.maquina),
                     datasets: [{
-                        label: 'Cantidad de Fallas',
+                        label: 'Fallas',
                         data: data.porMaquina.map(m => m.cantidad),
-                        backgroundColor: '#0d6efd'
+                        backgroundColor: 'rgba(99,102,241,.75)',
+                        borderColor: '#6366f1',
+                        borderWidth: 1,
+                        borderRadius: 3
                     }]
                 },
                 options: {
@@ -286,29 +506,57 @@
                     maintainAspectRatio: false,
                     indexAxis: 'y',
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: { backgroundColor: tooltipBg }
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } },
+                        y: { grid: { display: false } }
                     }
                 }
             });
 
-            // Tendencia
+            // ── Tendencia diaria (area line) ────────────────────────────
             if (chartTendencia) chartTendencia.destroy();
             chartTendencia = new Chart(document.getElementById('chartTendencia'), {
                 type: 'line',
                 data: {
                     labels: data.tendenciaDiaria.map(t => t.fecha),
                     datasets: [{
-                        label: 'Fallas por Día',
+                        label: 'Fallas / día',
                         data: data.tendenciaDiaria.map(t => t.cantidad),
-                        borderColor: '#0d6efd',
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderColor: '#6366f1',
+                        backgroundColor: (ctx) => {
+                            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+                            gradient.addColorStop(0,   'rgba(99,102,241,.25)');
+                            gradient.addColorStop(1,   'rgba(99,102,241,0)');
+                            return gradient;
+                        },
                         fill: true,
-                        tension: 0.3
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#6366f1',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: tooltipBg,
+                            callbacks: {
+                                label: ctx => `  ${ctx.parsed.y} falla${ctx.parsed.y !== 1 ? 's' : ''}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor } },
+                        y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
                 }
             });
         }

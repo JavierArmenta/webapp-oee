@@ -210,6 +210,15 @@
                         }
                     </select>
                 </div>
+                <div class="col-lg-3 col-md-5">
+                    <label class="form-label mb-1 small fw-semibold">Rango de tiempo</label>
+                    <select class="form-select form-select-sm" id="sel-rango-tiempo">
+                        <option value="turno-actual">Turno actual</option>
+                        <option value="24h">24 horas</option>
+                        <option value="semana" selected>Semana</option>
+                        <option value="mes">Mes</option>
+                    </select>
+                </div>
                 <div class="col-auto">
                     <button class="btn btn-sm btn-success" id="btn-actualizar">
                         <i class="ph ph-arrows-clockwise me-1"></i>Actualizar ahora
@@ -262,16 +271,21 @@
     const lblAct    = document.getElementById('lbl-ultima-act');
     const progressEl= document.getElementById('dl-progress');
     const selArea   = document.getElementById('sel-area');
+    const selRangoTiempo = document.getElementById('sel-rango-tiempo');
 
     selArea.addEventListener('change', () => { resetCountdown(); cargar(); });
+    selRangoTiempo.addEventListener('change', () => { resetCountdown(); cargar(); });
     document.getElementById('btn-actualizar').addEventListener('click', () => { resetCountdown(); cargar(); });
 
     // ── Carga ──────────────────────────────────────────────────
     async function cargar() {
         const areaId = selArea.value;
-        const params = areaId ? '?areaId=' + areaId : '';
+        const rangoTiempo = selRangoTiempo.value || 'semana';
+        const params = new URLSearchParams();
+        if (areaId) params.append('areaId', areaId);
+        params.append('rangoTiempo', rangoTiempo);
         try {
-            const resp = await fetch('/Linealytics/GetEstadoLineas' + params);
+            const resp = await fetch('/Linealytics/GetEstadoLineas?' + params.toString());
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();
             renderizar(data);
@@ -404,7 +418,7 @@
                     <span class="dl-kpi-lbl">NOK</span>
                 </div>
                 <div class="dl-kpi kpi-paro">
-                    <span class="dl-kpi-val">${l.minutosParo8h}</span>
+                    <span class="dl-kpi-val">${l.minutosParo || 0}</span>
                     <span class="dl-kpi-lbl">Min paro 8h</span>
                 </div>
                 <div class="dl-kpi kpi-falla">
