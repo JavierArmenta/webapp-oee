@@ -286,19 +286,55 @@ namespace WebApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDatosFallas(DateTime? fechaInicio, DateTime? fechaFin, int? maquinaId, int? catalogoFallaId)
+        public async Task<IActionResult> GetDatosFallas(string? rangoTiempo, int? maquinaId, int? catalogoFallaId)
         {
             try
             {
-                fechaInicio ??= DateTime.UtcNow.AddDays(-30);
-                fechaFin ??= DateTime.UtcNow;
+                DateTime fechaInicio;
+                DateTime fechaFin = DateTime.UtcNow;
+
+                // Calcular fechaInicio según rangoTiempo
+                if (rangoTiempo == "turno-actual")
+                {
+                    var ahora = DateTime.UtcNow;
+                    var horaActual = ahora.TimeOfDay;
+                    
+                    var turnoActual = await _context.Turnos
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(t => 
+                            t.Activo && 
+                            t.HoraInicio <= horaActual &&
+                            t.HoraFin > horaActual);
+
+                    if (turnoActual != null)
+                    {
+                        fechaInicio = ahora.Date.Add(turnoActual.HoraInicio);
+                    }
+                    else
+                    {
+                        // Si no hay turno activo, usar últimas 24 horas
+                        fechaInicio = DateTime.UtcNow.AddHours(-24);
+                    }
+                }
+                else if (rangoTiempo == "semana")
+                {
+                    fechaInicio = DateTime.UtcNow.AddDays(-7);
+                }
+                else if (rangoTiempo == "mes")
+                {
+                    fechaInicio = DateTime.UtcNow.AddDays(-30);
+                }
+                else // "24h" o null (default)
+                {
+                    fechaInicio = DateTime.UtcNow.AddHours(-24);
+                }
 
                 // Convertir fechas a UTC para compatibilidad con PostgreSQL timestamptz
-                if (fechaInicio.Value.Kind == DateTimeKind.Unspecified)
-                    fechaInicio = DateTime.SpecifyKind(fechaInicio.Value, DateTimeKind.Utc);
+                if (fechaInicio.Kind == DateTimeKind.Unspecified)
+                    fechaInicio = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
 
-                if (fechaFin.Value.Kind == DateTimeKind.Unspecified)
-                    fechaFin = DateTime.SpecifyKind(fechaFin.Value, DateTimeKind.Utc);
+                if (fechaFin.Kind == DateTimeKind.Unspecified)
+                    fechaFin = DateTime.SpecifyKind(fechaFin, DateTimeKind.Utc);
 
                 var query = _context.RegistrosFallas
                     .Include(r => r.CatalogoFalla)

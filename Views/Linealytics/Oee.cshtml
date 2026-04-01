@@ -104,27 +104,6 @@
         <i class="ph ph-gauge hero-icon"></i>
     </div>
 
-    <!-- Selector de máquina -->
-    <div class="row mb-3 align-items-end g-2">
-        <div class="col-md-4 col-lg-3">
-            <label class="form-label fw-semibold small text-secondary mb-1">
-                <i class="ph ph-factory me-1"></i>Máquina
-            </label>
-            <select id="selMaquina" class="form-select form-select-sm">
-                <option value="">— Selecciona una máquina —</option>
-                @foreach (var m in maquinas)
-                {
-                    <option value="@m.Id">@m.Nombre</option>
-                }
-            </select>
-        </div>
-        <div class="col-auto">
-            <a href="@Url.Action("Index", "Linealytics")" class="btn btn-sm btn-outline-secondary">
-                <i class="ph ph-arrow-left me-1"></i>Volver
-            </a>
-        </div>
-    </div>
-
     <!-- Tabs principales -->
     <ul class="nav nav-tabs oee-tabs mb-0" id="oeeMainTabs">
         <li class="nav-item">
@@ -145,17 +124,33 @@
         <div class="tab-pane fade show active" id="tabActual">
 
             <div class="row align-items-end g-2 mb-3 mt-1">
-                <div class="col-md-4 col-lg-3">
-                    <label class="form-label small fw-semibold text-secondary mb-1">
-                        <i class="ph ph-sun me-1"></i>Turno
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small text-secondary mb-1">
+                        <i class="ph ph-factory me-1"></i>Máquina
                     </label>
-                    <select id="selTurnoActual" class="form-select form-select-sm">
-                        <option value="">— Selecciona turno —</option>
-                        @foreach (var t in turnos)
+                    <select id="selMaquina" class="form-select form-select-sm">
+                        <option value="">— Selecciona una máquina —</option>
+                        @foreach (var m in maquinas)
                         {
-                            <option value="@t.Id">@t.Nombre (@t.HoraInicio.ToString(@"hh\:mm") – @t.HoraFin.ToString(@"hh\:mm"))</option>
+                            <option value="@m.Id">@m.Nombre</option>
                         }
                     </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary mb-1">
+                        <i class="ph ph-calendar-range me-1"></i>Rango
+                    </label>
+                    <select id="selRangoOee" class="form-select form-select-sm">
+                        <option value="turno-actual">Turno Actual</option>
+                        <option value="24h" selected>24 Horas</option>
+                        <option value="semana">Semana</option>
+                        <option value="mes">Mes</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-outline-primary" id="btnActualizarOee">
+                        <i class="ph ph-arrow-clockwise me-1"></i>Actualizar
+                    </button>
                 </div>
                 <div class="col-auto">
                     <span class="badge-live" id="liveBadge" style="display:none;">
@@ -163,6 +158,11 @@
                     </span>
                 </div>
                 <div class="col-auto ms-auto text-muted small" id="lblUltimaActualizacion"></div>
+            </div>
+
+            <!-- Barra de progreso de recarga -->
+            <div style="height:3px; background:#e0e7ff; border-radius:99px; margin-bottom:1.5rem; overflow:hidden;">
+                <div id="progressBarOee" style="height:100%; background:#16a34a; width:100%; border-radius:99px; transition:width 1s linear;"></div>
             </div>
 
             <!-- Gauges -->
@@ -410,11 +410,35 @@ function iniciarPolling() {
 
 async function cargarOeeActual() {
     const mId = document.getElementById('selMaquina').value;
-    const tId = document.getElementById('selTurnoActual').value;
+    
+    // Si no seleccionó nada, no cargar
+    if (!mId) {
+        detenerPolling();
+        return;
+    }
+
+    // Cargar el turno actual automáticamente si no está cargado
+    if (!window.turnoActualId) {
+        try {
+            const turnoResp = await fetch('/Linealytics/GetTurnoActual');
+            if (turnoResp.ok) {
+                const turnoData = await turnoResp.json();
+                if (turnoData.id) {
+                    window.turnoActualId = turnoData.id;
+                }
+            }
+        } catch (e) {
+            console.error('Error cargando turno actual:', e);
+        }
+    }
+
+    const tId = window.turnoActualId;
+    const rangoTiempo = document.getElementById('selRangoOee')?.value || '24h';
+    
     if (!mId || !tId) return;
 
     try {
-        const url = `/Linealytics/GetOeeActual?maquinaId=${mId}&turnoId=${tId}`;
+        const url = `/Linealytics/GetOeeActual?maquinaId=${mId}&turnoId=${tId}&rangoTiempo=${rangoTiempo}`;
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
@@ -573,6 +597,8 @@ async function cargarHistorial() {
 
 // ─── Events: selectores ───────────────────────────────────────────────────────
 document.getElementById('selMaquina').addEventListener('change', () => {
+    const mId = document.getElementById('selMaquina').value;
+    
     // Reiniciar datos
     ['0','1','2','3'].forEach(i => {
         const el = document.getElementById('val' + i);
@@ -586,20 +612,67 @@ document.getElementById('selMaquina').addEventListener('change', () => {
     document.getElementById('placeholderActual').style.display  = '';
     document.getElementById('resultHistorico').style.display    = 'none';
     detenerPolling();
-
-    cargarHistorial();
-
-    // Si ya había turno seleccionado, reiniciar polling
-    if (document.getElementById('selTurnoActual').value) iniciarPolling();
+    
+    // Cargar turno actual si se selecciona una máquina específica
+    if (mId) {
+        window.turnoActualId = null; // Reset para que se cargue de nuevo
+        cargarHistorial();
+        iniciarPolling();
+    }
 });
 
-document.getElementById('selTurnoActual').addEventListener('change', () => {
-    if (document.getElementById('selMaquina').value &&
-        document.getElementById('selTurnoActual').value) {
+document.getElementById('selRangoOee').addEventListener('change', () => {
+    resetProgressBar();
+    const mId = document.getElementById('selMaquina').value;
+    if (mId) {
         iniciarPolling();
-    } else {
-        detenerPolling();
     }
+});
+
+// ─── Progress bar ─────────────────────────────────────────────────────────────
+(function() {
+    const progressBar = document.getElementById('progressBarOee');
+    if (!progressBar) return;
+
+    let counter = 0;
+    let progressInterval = null;
+    const interval = 100;
+    const total = 30000;
+    const step = 100 / (total / interval);
+
+    function startProgress() {
+        if (progressInterval) clearInterval(progressInterval);
+        counter = 0;
+        progressBar.style.width = '0%';
+        progressInterval = setInterval(() => {
+            counter += step;
+            if (counter >= 100) {
+                counter = 100;
+                progressBar.style.width = '100%';
+                clearInterval(progressInterval);
+                progressInterval = null;
+            } else {
+                progressBar.style.width = counter + '%';
+            }
+        }, interval);
+    }
+
+    window.resetProgressBar = function() {
+        startProgress();
+    };
+
+    startProgress();
+})();
+
+// Botón actualizar manual
+document.getElementById('btnActualizarOee')?.addEventListener('click', () => {
+    const mId = document.getElementById('selMaquina').value;
+    if (!mId) {
+        alert('Selecciona una máquina primero.');
+        return;
+    }
+    resetProgressBar();
+    cargarOeeActual();
 });
 
 // Inicializar rango de fechas con valor por defecto (última hora)

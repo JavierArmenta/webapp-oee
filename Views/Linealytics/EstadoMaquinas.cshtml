@@ -165,7 +165,7 @@
     /* Barra de refresco */
     .em-refresh-bar {
         height: 3px; background: #e2e8f0; border-radius: 99px; overflow: hidden;
-        margin-bottom: 1rem;
+        margin-top: 0.75rem;
     }
     .em-refresh-progress {
         height: 100%; background: #3b82f6; border-radius: 99px;
@@ -207,7 +207,7 @@
     <div class="card mb-3">
         <div class="card-body py-2">
             <div class="row g-2 align-items-end">
-                <div class="col-lg-3 col-md-5">
+                <div class="col-lg-2 col-md-4">
                     <label class="form-label mb-1 small fw-semibold">Área</label>
                     <select class="form-select form-select-sm" id="sel-area">
                         <option value="">Todas las áreas</option>
@@ -217,7 +217,7 @@
                         }
                     </select>
                 </div>
-                <div class="col-lg-3 col-md-5">
+                <div class="col-lg-2 col-md-4">
                     <label class="form-label mb-1 small fw-semibold">Línea</label>
                     <select class="form-select form-select-sm" id="sel-linea" disabled>
                         <option value="">Seleccione un área primero</option>
@@ -227,7 +227,7 @@
                         }
                     </select>
                 </div>
-                <div class="col-lg-3 col-md-5">
+                <div class="col-lg-2 col-md-4">
                     <label class="form-label mb-1 small fw-semibold">Rango de tiempo</label>
                     <select class="form-select form-select-sm" id="sel-rango-tiempo">
                         <option value="turno-actual">Turno actual</option>
@@ -250,12 +250,12 @@
                     <span class="text-muted small" id="lbl-ultima-act">—</span>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Barra de progreso refresco -->
-    <div class="em-refresh-bar">
-        <div class="em-refresh-progress" id="refresh-progress"></div>
+            <!-- Barra de progreso refresco -->
+            <div class="em-refresh-bar mt-2">
+                <div class="em-refresh-progress" id="refresh-progress"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Resumen -->

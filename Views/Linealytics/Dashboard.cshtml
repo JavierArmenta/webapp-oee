@@ -2,13 +2,74 @@
     ViewData["Title"] = "Dashboard - Linealytics";
 }
 
+<style>
+    /* Barra refresco */
+    .dl-refresh-bar { height: 3px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 1rem; }
+    .dl-refresh-progress { height: 100%; background: #16a34a; border-radius: 99px; width: 100%; transition: width 1s linear; }
+
+    /* Hero */
+    .lnx-hero {
+        background: linear-gradient(135deg, #7c2d12 0%, #c2410c 100%);
+        border-radius: 0.375rem;
+        padding: 2.5rem 2rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+    }
+
+    .lnx-hero::after {
+        content: '';
+        position: absolute;
+        right: -40px;
+        top: -40px;
+        width: 220px;
+        height: 220px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 50%;
+    }
+
+    .lnx-hero::before {
+        content: '';
+        position: absolute;
+        right: 60px;
+        bottom: -60px;
+        width: 160px;
+        height: 160px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 50%;
+    }
+
+    .lnx-hero h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+
+    .lnx-hero p {
+        opacity: 0.8;
+        margin-bottom: 0;
+        font-size: 0.9375rem;
+    }
+
+    .lnx-hero .hero-icon {
+        font-size: 5rem;
+        opacity: 0.12;
+        position: absolute;
+        right: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        line-height: 1;
+    }
+</style>
+
 <div class="container-fluid">
-    <div class="card mt-3">
-        <div class="card-body">
-            <h1 class="h3 mb-0">
-                <i class="ph ph-gauge me-2"></i>Dashboard - Linealytics
-            </h1>
-        </div>
+    <div class="lnx-hero">
+        <h1>
+            <i class="ph ph-clock me-2"></i>Paros Timeline
+        </h1>
+        <p>Seguimiento de paros por departamento en tiempo real</p>
+        <i class="ph ph-warning hero-icon"></i>
     </div>
 
     <!-- Select with search -->
@@ -17,11 +78,11 @@
             <h5 class="mb-0">Filtros</h5>
         </div>
 
-        <div class="card-body">
-            <div class="row">
-                <div class="col-lg-3">
-                    <label class="form-label">Área</label>
-                    <select class="form-control select" id="select-area">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Área</label>
+                    <select class="form-select form-select-sm" id="select-area">
                         <option value="">Todas las áreas</option>
                         @foreach (var area in (List<WebApp.Models.Area>)ViewBag.Areas)
                         {
@@ -30,9 +91,9 @@
                     </select>
                 </div>
 
-                <div class="col-lg-3">
-                    <label class="form-label">Línea</label>
-                    <select class="form-control select" id="select-linea" disabled>
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Línea</label>
+                    <select class="form-select form-select-sm" id="select-linea" disabled>
                         <option value="">Seleccione un área primero</option>
                         @foreach (var linea in (List<WebApp.Models.Linea>)ViewBag.Lineas)
                         {
@@ -41,9 +102,9 @@
                     </select>
                 </div>
 
-                <div class="col-lg-3">
-                    <label class="form-label">Estación</label>
-                    <select class="form-control select" id="select-estacion" disabled>
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Estación</label>
+                    <select class="form-select form-select-sm" id="select-estacion" disabled>
                         <option value="">Seleccione una línea primero</option>
                         @foreach (var estacion in (List<WebApp.Models.Estacion>)ViewBag.Estaciones)
                         {
@@ -54,9 +115,9 @@
                     </select>
                 </div>
 
-                <div class="col-lg-3">
-                    <label class="form-label">Máquina</label>
-                    <select class="form-control select" id="select-maquina" disabled>
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Máquina</label>
+                    <select class="form-select form-select-sm" id="select-maquina" disabled>
                         <option value="">Seleccione una estación primero</option>
                         @foreach (var maquina in (List<WebApp.Models.Maquina>)ViewBag.Maquinas)
                         {
@@ -66,6 +127,30 @@
                         }
                     </select>
                 </div>
+
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Rango de tiempo</label>
+                    <select class="form-select form-select-sm" id="select-rango-tiempo">
+                        <option value="turno-actual">Turno actual</option>
+                        <option value="24h">24 horas</option>
+                        <option value="semana" selected>Semana</option>
+                        <option value="mes">Mes</option>
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-success" id="btn-actualizar">
+                        <i class="ph ph-arrows-clockwise me-1"></i>Actualizar ahora
+                    </button>
+                </div>
+
+                <div class="col-auto ms-auto">
+                    <span class="text-muted small" id="lbl-ultima-act">—</span>
+                </div>
+            </div>
+            <!-- Barra refresco -->
+            <div class="dl-refresh-bar" style="margin-top: 0.75rem;">
+                <div class="dl-refresh-progress" id="dl-progress"></div>
             </div>
         </div>
     </div>
@@ -356,16 +441,32 @@
                     var lineaId = $('#select-linea').val();
                     var estacionId = $('#select-estacion').val();
                     var maquinaId = $('#select-maquina').val();
+                    var rangoTiempo = $('#select-rango-tiempo').val();
 
                     console.log('Filtro cambiado:', {
                         area: areaId,
                         linea: lineaId,
                         estacion: estacionId,
-                        maquina: maquinaId
+                        maquina: maquinaId,
+                        rangoTiempo: rangoTiempo
                     });
 
                     // Actualizar la gráfica con los filtros seleccionados
-                    EchartsBarsStackedLight.update(areaId || null, lineaId || null, estacionId || null, maquinaId || null);
+                    EchartsBarsStackedLight.update(areaId || null, lineaId || null, estacionId || null, maquinaId || null, rangoTiempo || 'semana');
+                });
+
+                // Evento para cambios en el rango de tiempo
+                $('#select-rango-tiempo').on('change', function() {
+                    var areaId = $('#select-area').val();
+                    var lineaId = $('#select-linea').val();
+                    var estacionId = $('#select-estacion').val();
+                    var maquinaId = $('#select-maquina').val();
+                    var rangoTiempo = $(this).val();
+
+                    console.log('Rango de tiempo cambiado:', rangoTiempo);
+
+                    // Actualizar la gráfica
+                    EchartsBarsStackedLight.update(areaId || null, lineaId || null, estacionId || null, maquinaId || null, rangoTiempo || 'semana');
                 });
             };
 
@@ -405,7 +506,7 @@
                     chartInstance = bars_stacked;
 
                     // Cargar todas las máquinas al iniciar
-                    updateChart(null, null, null, null);
+                    updateChart(null, null, null, null, 'semana');
 
                     // Resize handlers
                     var triggerChartResize = function() {
@@ -864,7 +965,7 @@
             }
 
             // Función para actualizar la gráfica con nuevos datos
-            function updateChart(areaId, lineaId, estacionId, maquinaId) {
+            function updateChart(areaId, lineaId, estacionId, maquinaId, rangoTiempo) {
                 var url = '/Linealytics/GetDatosParosPorDepartamento?';
                 var params = [];
 
@@ -872,6 +973,7 @@
                 if (lineaId) params.push('lineaId=' + lineaId);
                 if (estacionId) params.push('estacionId=' + estacionId);
                 if (maquinaId) params.push('maquinaId=' + maquinaId);
+                if (rangoTiempo) params.push('rangoTiempo=' + rangoTiempo);
 
                 url += params.join('&');
 
@@ -892,8 +994,8 @@
                 init: function() {
                     _barsStackedLightExample();
                 },
-                update: function(areaId, lineaId, estacionId, maquinaId) {
-                    updateChart(areaId, lineaId, estacionId, maquinaId);
+                update: function(areaId, lineaId, estacionId, maquinaId, rangoTiempo) {
+                    updateChart(areaId, lineaId, estacionId, maquinaId, rangoTiempo);
                 }
             }
         }();
@@ -901,6 +1003,67 @@
         // Initialize ECharts
         document.addEventListener('DOMContentLoaded', function() {
             EchartsBarsStackedLight.init();
+
+            // Variables para auto-refresco
+            const INTERVAL_S = 30;
+            let secondsLeft = INTERVAL_S;
+            let timerHandle = null;
+            let progressHandle = null;
+            
+            const progressEl = document.getElementById('dl-progress');
+            const lblAct = document.getElementById('lbl-ultima-act');
+            const btnActualizar = document.getElementById('btn-actualizar');
+
+            // Función para actualizar datos y resetear countdown
+            function cargarDatos() {
+                const areaId = document.getElementById('select-area').value;
+                const lineaId = document.getElementById('select-linea').value;
+                const estacionId = document.getElementById('select-estacion').value;
+                const maquinaId = document.getElementById('select-maquina').value;
+                const rangoTiempo = document.getElementById('select-rango-tiempo').value;
+
+                EchartsBarsStackedLight.update(areaId || null, lineaId || null, estacionId || null, maquinaId || null, rangoTiempo || 'semana');
+                lblAct.textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-MX');
+            }
+
+            // Resetear countdown de barra de carga
+            function resetCountdown() {
+                secondsLeft = INTERVAL_S;
+                if (progressHandle) clearInterval(progressHandle);
+                progressEl.style.transition = 'none';
+                progressEl.style.width = '100%';
+                void progressEl.offsetWidth;
+                progressEl.style.transition = 'width 1s linear';
+                progressHandle = setInterval(() => {
+                    secondsLeft--;
+                    progressEl.style.width = ((secondsLeft / INTERVAL_S) * 100) + '%';
+                    if (secondsLeft <= 0) clearInterval(progressHandle);
+                }, 1000);
+            }
+
+            // Evento botón actualizar
+            if (btnActualizar) {
+                btnActualizar.addEventListener('click', () => {
+                    resetCountdown();
+                    cargarDatos();
+                });
+            }
+
+            // Cambios en filtros
+            document.getElementById('select-area').addEventListener('change', () => { resetCountdown(); cargarDatos(); });
+            document.getElementById('select-linea').addEventListener('change', () => { resetCountdown(); cargarDatos(); });
+            document.getElementById('select-estacion').addEventListener('change', () => { resetCountdown(); cargarDatos(); });
+            document.getElementById('select-maquina').addEventListener('change', () => { resetCountdown(); cargarDatos(); });
+            document.getElementById('select-rango-tiempo').addEventListener('change', () => { resetCountdown(); cargarDatos(); });
+
+            // Auto-refresco cada 30 segundos
+            resetCountdown();
+            cargarDatos();
+            if (timerHandle) clearInterval(timerHandle);
+            timerHandle = setInterval(() => {
+                resetCountdown();
+                cargarDatos();
+            }, INTERVAL_S * 1000);
         });
     </script>
 }

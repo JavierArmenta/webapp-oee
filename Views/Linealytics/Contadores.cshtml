@@ -5,29 +5,49 @@
 @section Styles {
     <!-- C3.js CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/c3.min.css" rel="stylesheet" type="text/css">
+    
+    <style>
+        /* ── Hero ── */
+        .ctr-hero {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            border-radius: 0.375rem;
+            padding: 1.75rem 2rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .ctr-hero h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .ctr-hero p  { opacity: 0.75; margin: 0; font-size: 0.9rem; }
+        .ctr-hero .hero-icon {
+            font-size: 5rem; opacity: 0.1;
+            position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
+        }
+        
+        /* ── Barra de refresco ── */
+        .ctr-refresh-bar { height: 3px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 1rem; }
+        .ctr-refresh-progress { height: 100%; background: #16a34a; border-radius: 99px; width: 100%; transition: width 1s linear; }
+    </style>
 }
 
 <div class="container-fluid">
-    <div class="card mt-3">
-        <div class="card-body">
-            <h1 class="h3 mb-0">
-                <i class="ph ph-speedometer me-2"></i>Contadores de Produccion (Ultimas 24 hrs)
-            </h1>
+    <!-- Hero -->
+    <div class="ctr-hero">
+        <div style="position:relative;z-index:1;">
+            <h1><i class="ph ph-speedometer me-2"></i>Contadores de Producción</h1>
+            <p>Monitoreo de producción OK/NOK · Últimas 24 horas · Segmentación por máquina</p>
         </div>
+        <i class="ph ph-chart-line hero-icon"></i>
     </div>
 
     <!-- Filtros -->
-    <div class="card mt-3">
-        <div class="card-header">
-            <h5 class="mb-0">Filtros</h5>
-        </div>
-
-        <div class="card-body">
-            <div class="row">
-                <div class="col-lg-3">
-                    <label class="form-label">Area</label>
-                    <select class="form-control select" id="select-area">
-                        <option value="">Todas las areas</option>
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Área</label>
+                    <select class="form-select form-select-sm" id="select-area">
+                        <option value="">Todas las áreas</option>
                         @foreach (var area in (List<WebApp.Models.Area>)ViewBag.Areas)
                         {
                             <option value="@area.Id">@area.Nombre</option>
@@ -35,10 +55,10 @@
                     </select>
                 </div>
 
-                <div class="col-lg-3">
-                    <label class="form-label">Linea</label>
-                    <select class="form-control select" id="select-linea" disabled>
-                        <option value="">Seleccione un area primero</option>
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Línea</label>
+                    <select class="form-select form-select-sm" id="select-linea" disabled>
+                        <option value="">Seleccione un área primero</option>
                         @foreach (var linea in (List<WebApp.Models.Linea>)ViewBag.Lineas)
                         {
                             <option value="@linea.Id" data-area="@linea.AreaId">@linea.Nombre</option>
@@ -46,10 +66,10 @@
                     </select>
                 </div>
 
-                <div class="col-lg-3">
-                    <label class="form-label">Estacion</label>
-                    <select class="form-control select" id="select-estacion" disabled>
-                        <option value="">Seleccione una linea primero</option>
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Estación</label>
+                    <select class="form-select form-select-sm" id="select-estacion" disabled>
+                        <option value="">Seleccione una línea primero</option>
                         @foreach (var estacion in (List<WebApp.Models.Estacion>)ViewBag.Estaciones)
                         {
                             <option value="@estacion.Id" data-linea="@estacion.LineaId" data-area="@estacion.Linea.AreaId">
@@ -59,11 +79,29 @@
                     </select>
                 </div>
 
-                <div class="col-lg-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary w-100" id="btn-actualizar">
-                        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                <div class="col-lg-2">
+                    <label class="form-label mb-1 small fw-semibold">Rango de tiempo</label>
+                    <select class="form-select form-select-sm" id="select-rango-tiempo">
+                        <option value="turno-actual">Turno actual</option>
+                        <option value="24h" selected>24 horas</option>
+                        <option value="semana">Semana</option>
+                        <option value="mes">Mes</option>
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <button type="button" class="btn btn-sm btn-success" id="btn-actualizar">
+                        <i class="ph ph-arrows-clockwise me-1"></i>Actualizar ahora
                     </button>
                 </div>
+
+                <div class="col-auto ms-auto">
+                    <span class="text-muted small" id="lbl-ultima-act">—</span>
+                </div>
+            </div>
+            <!-- Barra refresco -->
+            <div class="ctr-refresh-bar" style="margin-top: 0.75rem;">
+                <div class="ctr-refresh-progress" id="reload-progress"></div>
             </div>
         </div>
     </div>
@@ -86,7 +124,6 @@
     <!-- D3.js v5.16.0 compatible con C3.js v0.7.20 -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/c3.min.js"></script>
-    <script src="~/assets/js/vendor/forms/selects/select2.min.js"></script>
 
 
     <script>
@@ -99,11 +136,6 @@
 
             // Inicializar Select2 y filtros
             var _initFilters = function() {
-                if (!$().select2) {
-                    console.warn('Warning - select2.min.js is not loaded.');
-                    return;
-                }
-
                 // Guardar opciones originales
                 $('#select-linea option').each(function() {
                     if ($(this).val() !== '') {
@@ -126,12 +158,6 @@
                     }
                 });
 
-                // Initialize Select2
-                $('.select').select2({
-                    placeholder: 'Seleccionar...',
-                    allowClear: true
-                });
-
                 // Filtro Area
                 $('#select-area').on('change', function() {
                     var areaId = $(this).val();
@@ -139,13 +165,13 @@
                     if (!areaId) {
                         $('#select-linea').prop('disabled', true);
                         $('#select-estacion').prop('disabled', true);
-                        $('#select-linea').empty().append('<option value="">Seleccione un area primero</option>');
-                        $('#select-estacion').empty().append('<option value="">Seleccione un area primero</option>');
-                        $('#select-linea').val('').trigger('change.select2');
-                        $('#select-estacion').val('').trigger('change.select2');
+                        $('#select-linea').empty().append('<option value="">Seleccione un área primero</option>');
+                        $('#select-estacion').empty().append('<option value="">Seleccione un área primero</option>');
+                        $('#select-linea').val('');
+                        $('#select-estacion').val('');
                     } else {
                         $('#select-linea').prop('disabled', false);
-                        $('#select-linea').empty().append('<option value="">Todas las lineas</option>');
+                        $('#select-linea').empty().append('<option value="">Todas las líneas</option>');
 
                         todasLineas.filter(function(linea) {
                             return linea.area == areaId;
@@ -172,9 +198,12 @@
                         });
 
                         $('#select-estacion').prop('disabled', false);
-                        $('#select-linea').val('').trigger('change.select2');
-                        $('#select-estacion').val('').trigger('change.select2');
+                        $('#select-linea').val('');
+                        $('#select-estacion').val('');
                     }
+                    
+                    resetProgressBar();
+                    loadCharts();
                 });
 
                 // Filtro Linea
@@ -208,11 +237,27 @@
                         );
                     });
 
-                    $('#select-estacion').val('').trigger('change.select2');
+                    $('#select-estacion').val('');
+                    
+                    resetProgressBar();
+                    loadCharts();
+                });
+
+                // Filtro Estacion
+                $('#select-estacion').on('change', function() {
+                    resetProgressBar();
+                    loadCharts();
                 });
 
                 // Boton actualizar
                 $('#btn-actualizar').on('click', function() {
+                    resetProgressBar();
+                    loadCharts();
+                });
+
+                // Cambio de rango de tiempo
+                $('#select-rango-tiempo').on('change', function() {
+                    resetProgressBar();
                     loadCharts();
                 });
             };
@@ -222,6 +267,7 @@
                 var areaId = $('#select-area').val();
                 var lineaId = $('#select-linea').val();
                 var estacionId = $('#select-estacion').val();
+                var rangoTiempo = $('#select-rango-tiempo').val();
 
                 var url = '/Linealytics/GetDatosContadores?';
                 var params = [];
@@ -229,6 +275,7 @@
                 if (areaId) params.push('areaId=' + areaId);
                 if (lineaId) params.push('lineaId=' + lineaId);
                 if (estacionId) params.push('estacionId=' + estacionId);
+                if (rangoTiempo) params.push('rangoTiempo=' + rangoTiempo);
 
                 url += params.join('&');
 
@@ -247,6 +294,7 @@
                     type: 'GET',
                     success: function(data) {
                         renderCharts(data);
+                        updateTimestamp();
                     },
                     error: function(error) {
                         console.error('Error al cargar datos:', error);
@@ -395,6 +443,66 @@
                 }
             }
         }();
+
+        // Auto-reload progress bar
+        (function() {
+            var reloadIntervalSeconds = 30;
+            var elapsedSeconds = 0;
+            var reloadTimer = null;
+            var progressTimer = null;
+
+            var updateProgressBar = function() {
+                elapsedSeconds += 0.1;
+                var progress = (elapsedSeconds / reloadIntervalSeconds) * 100;
+                var progressBar = document.getElementById('reload-progress');
+                if (progressBar) {
+                    progressBar.style.width = progress + '%';
+                }
+
+                if (elapsedSeconds >= reloadIntervalSeconds) {
+                    if (progressTimer) clearInterval(progressTimer);
+                    if (reloadTimer) clearInterval(reloadTimer);
+                    ContadoresCharts.init();
+                    startAutoReload();
+                }
+            };
+
+            var startAutoReload = function() {
+                elapsedSeconds = 0;
+                var progressBar = document.getElementById('reload-progress');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+                progressTimer = setInterval(updateProgressBar, 100);
+            };
+
+            // Initial start
+            startAutoReload();
+
+            // Reset on filter changes
+            window.resetProgressBar = function() {
+                if (progressTimer) clearInterval(progressTimer);
+                if (reloadTimer) clearInterval(reloadTimer);
+                var progressBar = document.getElementById('reload-progress');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+                startAutoReload();
+            };
+        })();
+
+        // Actualizar timestamp de última actualización
+        window.updateTimestamp = function() {
+            var now = new Date();
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            var timeStr = hours + ':' + minutes + ':' + seconds;
+            var lblElement = document.getElementById('lbl-ultima-act');
+            if (lblElement) {
+                lblElement.textContent = 'Última actualización: ' + timeStr;
+            }
+        };
 
         // Initialize on DOM ready
         document.addEventListener('DOMContentLoaded', function() {

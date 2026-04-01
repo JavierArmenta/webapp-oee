@@ -168,9 +168,43 @@ namespace WebApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDatosContadores(int? areaId, int? lineaId, int? estacionId)
+        public async Task<IActionResult> GetDatosContadores(int? areaId, int? lineaId, int? estacionId, string? rangoTiempo)
         {
-            var fechaInicio = DateTime.UtcNow.AddHours(-24); // Ultimas 24 horas
+            var fechaInicio = DateTime.UtcNow.AddHours(-24); // Default: Ultimas 24 horas
+
+            // Calcular fecha de inicio según el rango de tiempo
+            if (!string.IsNullOrEmpty(rangoTiempo))
+            {
+                switch (rangoTiempo.ToLower())
+                {
+                    case "turno-actual":
+                        // Obtener turno actual y usar su hora de inicio
+                        var turnoActual = await _context.Turnos
+                            .FirstOrDefaultAsync(t => t.Activo);
+                        if (turnoActual != null)
+                        {
+                            var ahora = DateTime.UtcNow;
+                            fechaInicio = ahora.Date.Add(turnoActual.HoraInicio);
+
+                            // Si la hora de inicio es después de la hora actual, es del día anterior
+                            if (fechaInicio > ahora)
+                            {
+                                fechaInicio = fechaInicio.AddDays(-1);
+                            }
+                        }
+                        break;
+                    case "semana":
+                        fechaInicio = DateTime.UtcNow.AddDays(-7);
+                        break;
+                    case "mes":
+                        fechaInicio = DateTime.UtcNow.AddDays(-30);
+                        break;
+                    case "24h":
+                    default:
+                        fechaInicio = DateTime.UtcNow.AddHours(-24);
+                        break;
+                }
+            }
 
             // Query base de lecturas de contadores
             var query = _context.LecturasContador
@@ -227,10 +261,56 @@ namespace WebApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDatosParosPorDepartamento(int? areaId, int? lineaId, int? estacionId, int? maquinaId)
+        public async Task<IActionResult> GetDatosParosPorDepartamento(int? areaId, int? lineaId, int? estacionId, int? maquinaId, string? rangoTiempo)
         {
-            var fechaInicio = DateTime.UtcNow.AddHours(-24); // Últimas 24 horas
             var ahora = DateTime.UtcNow;
+            
+            // Calcular fechas según rango de tiempo
+            DateTime fechaInicio = ahora;
+            
+            if (string.IsNullOrEmpty(rangoTiempo))
+                rangoTiempo = "24h";
+            
+            switch (rangoTiempo.ToLower())
+            {
+                case "turno-actual":
+                    // Obtener el turno actual según la hora actual
+                    var horaAhora = ahora.TimeOfDay;
+                    var turnoActual = await _context.Turnos
+                        .Where(t => t.Activo && t.HoraInicio <= horaAhora && t.HoraFin > horaAhora)
+                        .FirstOrDefaultAsync();
+                    
+                    if (turnoActual != null)
+                    {
+                        // Calcular la fecha del turno actual
+                        var inicio = new DateTime(ahora.Year, ahora.Month, ahora.Day, 
+                            turnoActual.HoraInicio.Hours, turnoActual.HoraInicio.Minutes, 0);
+                        if (inicio > ahora)
+                            inicio = inicio.AddDays(-1); // Si el turno cruza medianoche, ajustar
+                        fechaInicio = inicio;
+                    }
+                    else
+                    {
+                        fechaInicio = ahora.AddHours(-8); // Default si no hay turno
+                    }
+                    break;
+                    
+                case "24h":
+                    fechaInicio = ahora.AddHours(-24);
+                    break;
+                    
+                case "semana":
+                    fechaInicio = ahora.AddDays(-7);
+                    break;
+                    
+                case "mes":
+                    fechaInicio = ahora.AddDays(-30);
+                    break;
+                    
+                default:
+                    fechaInicio = ahora.AddHours(-24);
+                    break;
+            }
 
             // Query base de paros de botonera - incluir paros cerrados Y abiertos
             var query = _context.RegistrosParoBotonera
@@ -1161,19 +1241,82 @@ namespace WebApp.Controllers
 
         /// <summary>
         /// Calcula OEE en vivo para el turno actual de una máquina. NO guarda en BD.
-        /// GET /Linealytics/GetOeeActual?maquinaId=1&amp;turnoId=2&amp;fecha=2026-03-28
+        /// GET /Linealytics/GetOeeActual?maquinaId=1&amp;turnoId=2&amp;rangoTiempo=24h
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetOeeActual(int maquinaId, int turnoId, DateTime? fecha)
+        public async Task<IActionResult> GetOeeActual(int maquinaId, int turnoId, string? rangoTiempo = "24h")
         {
             try
             {
-                var fechaCalculo = fecha?.ToUniversalTime() ?? DateTime.UtcNow;
+                var ahora = DateTime.UtcNow;
+                DateTime fechaCalculo = ahora;
+
+                if (rangoTiempo == "turno-actual")
+                {
+                    var turnoActual = await _context.Turnos.FirstOrDefaultAsync(t => t.Id == turnoId);
+                    if (turnoActual != null)
+                    {
+                        fechaCalculo = ahora.Date.Add(turnoActual.HoraInicio);
+                    }
+                }
+                else if (rangoTiempo == "semana")
+                {
+                    fechaCalculo = ahora.AddDays(-7);
+                }
+                else if (rangoTiempo == "mes")
+                {
+                    fechaCalculo = ahora.AddDays(-30);
+                }
+                // "24h" usa ahora.AddDays(-1) por defecto en CalcularPorTurnoAsync
+
                 var resultado = await _oeeService.CalcularPorTurnoAsync(
                     maquinaId, turnoId, fechaCalculo, guardar: false);
                 return Json(resultado);
             }
             catch (ArgumentException ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el turno actual según la hora del sistema.
+        /// GET /Linealytics/GetTurnoActual
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetTurnoActual()
+        {
+            try
+            {
+                var ahora = DateTime.UtcNow;
+                var horaActual = ahora.TimeOfDay;
+
+                // Buscar turno que contenga la hora actual
+                var turnoActual = await _context.Turnos
+                    .Where(t => t.Activo && t.HoraInicio <= horaActual && horaActual < t.HoraFin)
+                    .FirstOrDefaultAsync();
+
+                if (turnoActual == null)
+                {
+                    // Si no hay turno en el rango actual, buscar el primer turno del día
+                    turnoActual = await _context.Turnos
+                        .Where(t => t.Activo)
+                        .OrderBy(t => t.HoraInicio)
+                        .FirstOrDefaultAsync();
+                }
+
+                if (turnoActual == null)
+                    return Json(new { error = "No hay turnos disponibles" });
+
+                return Json(new 
+                { 
+                    id = turnoActual.Id,
+                    nombre = turnoActual.Nombre,
+                    horaInicio = turnoActual.HoraInicio.ToString(@"hh\:mm"),
+                    horaFin = turnoActual.HoraFin.ToString(@"hh\:mm")
+                });
+            }
+            catch (Exception ex)
             {
                 return Json(new { error = ex.Message });
             }
